@@ -1,4 +1,5 @@
-﻿using ExtendInput.Providers;
+﻿using ExtendInput.Controls;
+using ExtendInput.Providers;
 using System;
 using System.Drawing;
 using System.Linq;
@@ -164,14 +165,14 @@ namespace ExtendInput.Controller
 
                     (State.Controls["stick_right"] as ControlStick).Click = (buttons & 0x0080) == 0x0080;
                     (State.Controls["stick_left"] as ControlStick).Click = (buttons & 0x0040) == 0x0040;
-                    (State.Controls["menu"] as ControlButtonPair).Right = (buttons & 0x0010) == 0x0010;
-                    (State.Controls["menu"] as ControlButtonPair).Left = (buttons & 0x0020) == 0x0020;
-                    (State.Controls["bumpers"] as ControlButtonPair).Right = (buttons & 0x0200) == 0x0200;
-                    (State.Controls["bumpers"] as ControlButtonPair).Left = (buttons & 0x0100) == 0x0100;
+                    (State.Controls["menu"] as ControlButtonPair).Right.Button0 = (buttons & 0x0010) == 0x0010;
+                    (State.Controls["menu"] as ControlButtonPair).Left.Button0 = (buttons & 0x0020) == 0x0020;
+                    (State.Controls["bumpers"] as ControlButtonPair).Right.Button0 = (buttons & 0x0200) == 0x0200;
+                    (State.Controls["bumpers"] as ControlButtonPair).Left.Button0 = (buttons & 0x0100) == 0x0100;
 
                     //(State.Controls["home"] as ControlButton).Button0 = (buttons & 0x1) == 0x1;
-                    (State.Controls["triggers"] as ControlTriggerPair).L_Analog = (float)reportData[2] / byte.MaxValue;
-                    (State.Controls["triggers"] as ControlTriggerPair).R_Analog = (float)reportData[3] / byte.MaxValue;
+                    (State.Controls["triggers"] as ControlTriggerPair).Left.Analog = (float)reportData[2] / byte.MaxValue;
+                    (State.Controls["triggers"] as ControlTriggerPair).Right.Analog = (float)reportData[3] / byte.MaxValue;
 
                     ControllerState NewState = GetState();
                     //OnStateUpdated(NewState);

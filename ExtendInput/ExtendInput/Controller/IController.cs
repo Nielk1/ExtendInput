@@ -1,4 +1,5 @@
-﻿using ExtendInput.Providers;
+﻿using ExtendInput.Controls;
+using ExtendInput.Providers;
 
 namespace ExtendInput.Controller
 {
