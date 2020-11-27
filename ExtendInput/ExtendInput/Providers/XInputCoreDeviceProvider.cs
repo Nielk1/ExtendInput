@@ -21,7 +21,6 @@ namespace ExtendInput.Providers
 
         public XInputCoreDeviceProvider()
         {
-            HidSharp.DeviceList.Local.Changed += DeviceListChanged;
         }
 
         public void ScanNow()
@@ -54,22 +53,5 @@ namespace ExtendInput.Providers
                 catch { }
             }
         }
-
-        private void DeviceListChanged(object sender, HidSharp.DeviceListChangedEventArgs e)
-        {
-            ScanNow();
-        }
-
-        /*public static IEnumerable<HidDevice> Enumerate(int vendorId, params int[] productIds)
-        {
-            return HidSharp.DeviceList.Local.GetHidDevices(vendorId).Where(dr => productIds.Contains(dr.ProductID)).Select(dr => new HidDevice(dr));
-        }*/
-
-        /*public void X()
-        {
-            HidSharp.DeviceList.Local.Changed
-        }*/
-
-
     }
 }
