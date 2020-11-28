@@ -121,7 +121,7 @@ namespace ExtendInput.Providers
         {
             lock (readingLock)
             {
-                if (ControllerNameUpdated == null)
+                if (DeviceReport == null)
                     reading = false;
 
                 if (reading)
@@ -133,7 +133,7 @@ namespace ExtendInput.Providers
                 {
                     while (reading)
                     {
-                        if (ControllerNameUpdated == null)
+                        if (DeviceReport == null)
                         {
                             break;
                         }
@@ -145,7 +145,7 @@ namespace ExtendInput.Providers
                             {
                                 byte[] data = _stream.Read();
 
-                                DeviceReportEvent threadSafeEvent = ControllerNameUpdated;
+                                DeviceReportEvent threadSafeEvent = DeviceReport;
                                 threadSafeEvent?.Invoke(data.Skip(1).ToArray(), data[0]);
                             }
                         }
@@ -175,7 +175,7 @@ namespace ExtendInput.Providers
             return this.UniqueKey == other.UniqueKey;
         }
 
-        public event DeviceReportEvent ControllerNameUpdated;
+        public event DeviceReportEvent DeviceReport;
     }
 
     public delegate void DeviceReportEvent(byte[] report, int reportID);

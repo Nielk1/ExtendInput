@@ -51,6 +51,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Controller\IControllerFactory.cs" />
     <Compile Include="Controls\ControlButton.cs" />
     <Compile Include="Controls\ControlButtonGrid.cs" />
     <Compile Include="Controls\ControlButtonPair.cs" />
@@ -58,12 +59,12 @@
     <Compile Include="Controls\ControlDPad.cs" />
     <Compile Include="Controls\ControllerState.cs" />
     <Compile Include="Controller\DualShock4Controller.cs" />
-    <Compile Include="Controller\DualShock4DeviceProvider.cs" />
+    <Compile Include="Controller\DualShock4ControllerFactory.cs" />
     <Compile Include="Controller\IController.cs" />
     <Compile Include="Controller\SteamController.cs" />
-    <Compile Include="Controller\SteamControllerDeviceProvider.cs" />
+    <Compile Include="Controller\SteamControllerControllerFactory.cs" />
     <Compile Include="Controller\XInputController.cs" />
-    <Compile Include="Controller\XInputDeviceProvider.cs" />
+    <Compile Include="Controller\XInputControllerFactory.cs" />
     <Compile Include="Controls\ControlCollection.cs" />
     <Compile Include="Controls\ControlMotion.cs" />
     <Compile Include="Controls\ControlStick.cs" />

@@ -9,47 +9,20 @@ namespace ExtendInput
 {
     public class DeviceManager
     {
-        List<ICoreDeviceProvider> CoreDeviceProviders;
-        List<IDeviceProvider> DeviceProviders;
+        List<IDeviceProvider> CoreDeviceProviders;
+        List<IControllerFactory> DeviceProviders;
 
         public event ControllerChangeEventHandler ControllerAdded;
         public event DeviceChangeEventHandler ControllerRemoved;
 
         public DeviceManager()
         {
-            CoreDeviceProviders = new List<ICoreDeviceProvider>();
-            DeviceProviders = new List<IDeviceProvider>();
-
-            foreach (Type item in typeof(ICoreDeviceProvider).GetTypeInfo().Assembly.GetTypes())
-            {
-                //if (!item.IsClass) continue;
-                if (item.GetInterfaces().Contains(typeof(ICoreDeviceProvider)))
-                {
-                    ConstructorInfo[] cons = item.GetConstructors();
-                    foreach (ConstructorInfo con in cons)
-                    {
-                        try
-                        {
-                            ParameterInfo[] @params = con.GetParameters();
-                            object[] paramList = new object[@params.Length];
-                            // don't worry about paramaters for now
-                            //for (int i = 0; i < @params.Length; i++)
-                            //{
-                            //    paramList[i] = ServiceProvider.GetService(@params[i].ParameterType);
-                            //}
-
-                            ICoreDeviceProvider plugin = (ICoreDeviceProvider)Activator.CreateInstance(item, paramList);
-                            CoreDeviceProviders.Add(plugin);
-
-                            break;
-                        }
-                        catch { }
-                    }
-                }
-            }
+            CoreDeviceProviders = new List<IDeviceProvider>();
+            DeviceProviders = new List<IControllerFactory>();
 
             foreach (Type item in typeof(IDeviceProvider).GetTypeInfo().Assembly.GetTypes())
             {
+                //if (!item.IsClass) continue;
                 if (item.GetInterfaces().Contains(typeof(IDeviceProvider)))
                 {
                     ConstructorInfo[] cons = item.GetConstructors();
@@ -66,6 +39,33 @@ namespace ExtendInput
                             //}
 
                             IDeviceProvider plugin = (IDeviceProvider)Activator.CreateInstance(item, paramList);
+                            CoreDeviceProviders.Add(plugin);
+
+                            break;
+                        }
+                        catch { }
+                    }
+                }
+            }
+
+            foreach (Type item in typeof(IControllerFactory).GetTypeInfo().Assembly.GetTypes())
+            {
+                if (item.GetInterfaces().Contains(typeof(IControllerFactory)))
+                {
+                    ConstructorInfo[] cons = item.GetConstructors();
+                    foreach (ConstructorInfo con in cons)
+                    {
+                        try
+                        {
+                            ParameterInfo[] @params = con.GetParameters();
+                            object[] paramList = new object[@params.Length];
+                            // don't worry about paramaters for now
+                            //for (int i = 0; i < @params.Length; i++)
+                            //{
+                            //    paramList[i] = ServiceProvider.GetService(@params[i].ParameterType);
+                            //}
+
+                            IControllerFactory plugin = (IControllerFactory)Activator.CreateInstance(item, paramList);
                             DeviceProviders.Add(plugin);
 
                             break;
@@ -75,7 +75,7 @@ namespace ExtendInput
                 }
             }
 
-            foreach (ICoreDeviceProvider deviceProvider in CoreDeviceProviders)
+            foreach (IDeviceProvider deviceProvider in CoreDeviceProviders)
             {
                 deviceProvider.DeviceAdded += DeviceAdded;
                 deviceProvider.DeviceRemoved += DeviceRemoved;
@@ -84,7 +84,7 @@ namespace ExtendInput
 
         private void DeviceAdded(object sender, IDevice e)
         {
-            foreach (IDeviceProvider factory in DeviceProviders)
+            foreach (IControllerFactory factory in DeviceProviders)
             {
                 IController d = factory.NewDevice(e);
                 if (d != null)
@@ -103,7 +103,7 @@ namespace ExtendInput
 
         public void ScanNow()
         {
-            foreach (ICoreDeviceProvider provider in CoreDeviceProviders)
+            foreach (IDeviceProvider provider in CoreDeviceProviders)
             {
                 provider.ScanNow();
             }

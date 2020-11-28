@@ -7,7 +7,7 @@ using System.Linq;
 namespace ExtendInput.Providers
 {
     [CoreDeviceProvider(TypeString = "XInput", SupportsAutomaticDetection = true, SupportsManualyQuery = true, RequiresManualConfiguration = false)]
-    public class XInputCoreDeviceProvider : ICoreDeviceProvider
+    public class XInputDeviceProvider : IDeviceProvider
     {
         private const int MAX_SLOT = 4;
 
@@ -19,7 +19,7 @@ namespace ExtendInput.Providers
         SharpDX.XInput.Controller[] Controllers = new SharpDX.XInput.Controller[MAX_SLOT];
         bool[] ControllerActive = new bool[MAX_SLOT];
 
-        public XInputCoreDeviceProvider()
+        public XInputDeviceProvider()
         {
         }
 

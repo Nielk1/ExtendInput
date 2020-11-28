@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace ExtendInput.Controller
 {
-    public class DualShock4DeviceProvider : IDeviceProvider
+    public class DualShock4ControllerFactory : IControllerFactory
     {
         public IController NewDevice(IDevice device)
         {

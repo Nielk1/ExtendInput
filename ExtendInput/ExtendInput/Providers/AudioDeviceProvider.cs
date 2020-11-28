@@ -7,13 +7,13 @@ using System.Linq;
 namespace ExtendInput.Providers
 {
     [CoreDeviceProvider(TypeString = "Audio", SupportsAutomaticDetection = false, SupportsManualyQuery = true, RequiresManualConfiguration = true)]
-    public class AudioCoreProvider : ICoreDeviceProvider
+    public class AudioDeviceProvider : IDeviceProvider
     {
 
         public event DeviceChangeEventHandler DeviceAdded;
         public event DeviceChangeEventHandler DeviceRemoved;
 
-        public AudioCoreProvider()
+        public AudioDeviceProvider()
         {
         }
 

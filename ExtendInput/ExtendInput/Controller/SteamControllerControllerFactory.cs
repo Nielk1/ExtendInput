@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace ExtendInput.Controller
 {
-    public class SteamControllerDeviceProvider : IDeviceProvider
+    public class SteamControllerControllerFactory : IControllerFactory
     {
         public IController NewDevice(IDevice device)
         {

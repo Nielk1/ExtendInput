@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace ExtendInput.Controller
 {
-    public class XInputDeviceProvider : IDeviceProvider
+    public class XInputControllerFactory : IControllerFactory
     {
         public IController NewDevice(IDevice device)
         {

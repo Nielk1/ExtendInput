@@ -7,7 +7,7 @@ using System.Linq;
 namespace ExtendInput.Providers
 {
     [CoreDeviceProvider(TypeString = "HID", SupportsAutomaticDetection = true, SupportsManualyQuery = true, RequiresManualConfiguration = false)]
-    public class HidCoreDeviceProvider : ICoreDeviceProvider
+    public class HidDeviceProvider : IDeviceProvider
     {
         public event DeviceChangeEventHandler DeviceAdded;
         public event DeviceChangeEventHandler DeviceRemoved;
@@ -15,7 +15,7 @@ namespace ExtendInput.Providers
         HashSet<HidSharp.HidDevice> KnownDevices = new HashSet<HidSharp.HidDevice>();
         object lock_device_list = new object();
 
-        public HidCoreDeviceProvider()
+        public HidDeviceProvider()
         {
             HidSharp.DeviceList.Local.Changed += DeviceListChanged;
         }
@@ -89,7 +89,7 @@ namespace ExtendInput.Providers
     }
 
     public delegate void DeviceChangeEventHandler(object sender, IDevice e);
-    public interface ICoreDeviceProvider
+    public interface IDeviceProvider
     {
         event DeviceChangeEventHandler DeviceAdded;
         event DeviceChangeEventHandler DeviceRemoved;

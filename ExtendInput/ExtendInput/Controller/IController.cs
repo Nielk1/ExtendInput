@@ -25,9 +25,4 @@ namespace ExtendInput.Controller
         void Identify();
         string GetName();
     }
-
-    public interface IDeviceProvider
-    {
-        IController NewDevice(IDevice device);
-    }
 }
