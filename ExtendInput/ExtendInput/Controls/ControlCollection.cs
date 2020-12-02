@@ -10,13 +10,14 @@ namespace ExtendInput.Controls
     {
         private Dictionary<string, IControl> Data = new Dictionary<string, IControl>();
 
-        /*public string[] Keys
+        public string[] Keys
         {
             get
             {
                 return Data.Keys.ToArray();
             }
-        }*/
+        }
+
         public IControl this[string key]
         {
             get

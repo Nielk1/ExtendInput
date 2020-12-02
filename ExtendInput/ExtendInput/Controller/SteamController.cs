@@ -643,13 +643,13 @@ namespace ExtendInput.Controller
 
                                         bool LeftAnalogMultiplexMode = (RawState.ulButtons[2] & 128) == 128;
                                         bool LeftStickClick = (RawState.ulButtons[2] & 64) == 64;
-                                        (State.Controls["stick_left"] as ControlStick).Click = LeftStickClick;
+                                        (State.Controls["stick_left"] as ControlStick).PendingClick = LeftStickClick;
                                         bool Unknown = (RawState.ulButtons[2] & 32) == 32; // what is this?
                                         bool RightPadTouch = (RawState.ulButtons[2] & 16) == 16;
                                         bool LeftPadTouch = (RawState.ulButtons[2] & 8) == 8;
-                                        (State.Controls["touch_right"] as ControlTouch).Click = (RawState.ulButtons[2] & 4) == 4;
+                                        (State.Controls["touch_right"] as ControlTouch).PendingClick = (RawState.ulButtons[2] & 4) == 4;
                                         bool ThumbOrLeftPadPress = (RawState.ulButtons[2] & 2) == 2; // what is this even for?
-                                        (State.Controls["grip"] as ControlButtonPair).Right.Button0 = (RawState.ulButtons[2] & 1) == 1;
+                                        (State.Controls["grip"] as ControlButtonPair).Right.PendingButton0 = (RawState.ulButtons[2] & 1) == 1;
 
                                         RawState.sTriggerL = reportData[8 + 3];
                                         RawState.sTriggerR = reportData[8 + 4];
@@ -820,67 +820,67 @@ namespace ExtendInput.Controller
             //OldState = State; // shouldn't this be a clone?
             OldState = (ControllerState)State.Clone(); // shouldn't this be a clone?
 
-            (State.Controls["quad_right"] as ControlButtonQuad).ButtonS = (RawState.ulButtons[0] & 128) == 128; // A - S SE
-            (State.Controls["quad_right"] as ControlButtonQuad).ButtonW = (RawState.ulButtons[0] & 64) == 64;   // X - W SW
-            (State.Controls["quad_right"] as ControlButtonQuad).ButtonE = (RawState.ulButtons[0] & 32) == 32;   // B - E NE
-            (State.Controls["quad_right"] as ControlButtonQuad).ButtonN = (RawState.ulButtons[0] & 16) == 16;   // Y - N NW
-            (State.Controls["bumpers"] as ControlButtonPair).Left.Button0 = (RawState.ulButtons[0] & 8) == 8;
-            (State.Controls["bumpers"] as ControlButtonPair).Right.Button0 = (RawState.ulButtons[0] & 4) == 4;
-            (State.Controls["triggers"] as ControlTriggerPair).Left.Stage2 = (RawState.ulButtons[0] & 2) == 2;
-            (State.Controls["triggers"] as ControlTriggerPair).Right.Stage2 = (RawState.ulButtons[0] & 1) == 1;
+            (State.Controls["quad_right"] as ControlButtonQuad).PendingButtonS = (RawState.ulButtons[0] & 128) == 128; // A - S SE
+            (State.Controls["quad_right"] as ControlButtonQuad).PendingButtonW = (RawState.ulButtons[0] & 64) == 64;   // X - W SW
+            (State.Controls["quad_right"] as ControlButtonQuad).PendingButtonE = (RawState.ulButtons[0] & 32) == 32;   // B - E NE
+            (State.Controls["quad_right"] as ControlButtonQuad).PendingButtonN = (RawState.ulButtons[0] & 16) == 16;   // Y - N NW
+            (State.Controls["bumpers"] as ControlButtonPair).Left.PendingButton0 = (RawState.ulButtons[0] & 8) == 8;
+            (State.Controls["bumpers"] as ControlButtonPair).Right.PendingButton0 = (RawState.ulButtons[0] & 4) == 4;
+            (State.Controls["triggers"] as ControlTriggerPair).Left.PendingStage2 = (RawState.ulButtons[0] & 2) == 2;
+            (State.Controls["triggers"] as ControlTriggerPair).Right.PendingStage2 = (RawState.ulButtons[0] & 1) == 1;
 
-            (State.Controls["grip"] as ControlButtonPair).Left.Button0 = (RawState.ulButtons[1] & 128) == 128;
-            (State.Controls["menu"] as ControlButtonPair).Right.Button0 = (RawState.ulButtons[1] & 64) == 64;
-            (State.Controls["home"] as ControlButton).Button0 = (RawState.ulButtons[1] & 32) == 32;
-            (State.Controls["menu"] as ControlButtonPair).Left.Button0 = (RawState.ulButtons[1] & 16) == 16;
+            (State.Controls["grip"] as ControlButtonPair).Left.PendingButton0 = (RawState.ulButtons[1] & 128) == 128;
+            (State.Controls["menu"] as ControlButtonPair).Right.PendingButton0 = (RawState.ulButtons[1] & 64) == 64;
+            (State.Controls["home"] as ControlButton).PendingButton0 = (RawState.ulButtons[1] & 32) == 32;
+            (State.Controls["menu"] as ControlButtonPair).Left.PendingButton0 = (RawState.ulButtons[1] & 16) == 16;
 
             if (ControllerType == EControllerType.Chell)
             {
                 // for the Chell controller, these are the 4 face buttons
-                (State.Controls["grid_center"] as ControlButtonGrid).Button[0, 0] = (RawState.ulButtons[1] & 0x01) == 0x01; // State.ButtonsOld.Touch0 = (RawState.ulButtons[1] & 0x01) == 0x01; // NW
-                (State.Controls["grid_center"] as ControlButtonGrid).Button[1, 0] = (RawState.ulButtons[1] & 0x02) == 0x02; // State.ButtonsOld.Touch1 = (RawState.ulButtons[1] & 0x02) == 0x02; // NE
-                (State.Controls["grid_center"] as ControlButtonGrid).Button[0, 1] = (RawState.ulButtons[1] & 0x04) == 0x04; // State.ButtonsOld.Touch2 = (RawState.ulButtons[1] & 0x04) == 0x04; // SW
-                (State.Controls["grid_center"] as ControlButtonGrid).Button[1, 1] = (RawState.ulButtons[1] & 0x08) == 0x08; // State.ButtonsOld.Touch3 = (RawState.ulButtons[1] & 0x08) == 0x08; // SE
+                (State.Controls["grid_center"] as ControlButtonGrid).PendingButton[0, 0] = (RawState.ulButtons[1] & 0x01) == 0x01; // State.ButtonsOld.Touch0 = (RawState.ulButtons[1] & 0x01) == 0x01; // NW
+                (State.Controls["grid_center"] as ControlButtonGrid).PendingButton[1, 0] = (RawState.ulButtons[1] & 0x02) == 0x02; // State.ButtonsOld.Touch1 = (RawState.ulButtons[1] & 0x02) == 0x02; // NE
+                (State.Controls["grid_center"] as ControlButtonGrid).PendingButton[0, 1] = (RawState.ulButtons[1] & 0x04) == 0x04; // State.ButtonsOld.Touch2 = (RawState.ulButtons[1] & 0x04) == 0x04; // SW
+                (State.Controls["grid_center"] as ControlButtonGrid).PendingButton[1, 1] = (RawState.ulButtons[1] & 0x08) == 0x08; // State.ButtonsOld.Touch3 = (RawState.ulButtons[1] & 0x08) == 0x08; // SE
             }
             else
             {
                 // these are mutually exclusive in the raw data, so let's act like they are in the code too, even though they use 4 bits
                 if ((RawState.ulButtons[1] & 1) == 1)
                 {
-                    (State.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.North;
+                    (State.Controls["quad_left"] as ControlDPad).PendingDirection = EDPadDirection.North;
                 }
                 else if ((RawState.ulButtons[1] & 2) == 2)
                 {
-                    (State.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.East;
+                    (State.Controls["quad_left"] as ControlDPad).PendingDirection = EDPadDirection.East;
                 }
                 else if ((RawState.ulButtons[1] & 8) == 8)
                 {
-                    (State.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.South;
+                    (State.Controls["quad_left"] as ControlDPad).PendingDirection = EDPadDirection.South;
                 }
                 else if ((RawState.ulButtons[1] & 4) == 4)
                 {
-                    (State.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.West;
+                    (State.Controls["quad_left"] as ControlDPad).PendingDirection = EDPadDirection.West;
                 }
                 else
                 {
-                    (State.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.None;
+                    (State.Controls["quad_left"] as ControlDPad).PendingDirection = EDPadDirection.None;
                 }
             }
             //bool LeftAnalogMultiplexMode = (RawState.ulButtons[2] & 128) == 128;
             bool LeftStickClick = (RawState.ulButtons[2] & 64) == 64;
-            (State.Controls["stick_left"] as ControlStick).Click = LeftStickClick;
+            (State.Controls["stick_left"] as ControlStick).PendingClick = LeftStickClick;
             //bool Unknown = (RawState.ulButtons[2] & 32) == 32; // what is this?
             bool RightPadTouch = (RawState.ulButtons[2] & 16) == 16;
             bool LeftPadTouch = (RawState.ulButtons[2] & 8) == 8;
-            (State.Controls["touch_right"] as ControlTouch).Click = (RawState.ulButtons[2] & 4) == 4;
+            (State.Controls["touch_right"] as ControlTouch).PendingClick = (RawState.ulButtons[2] & 4) == 4;
             bool ThumbOrLeftPadPress = (RawState.ulButtons[2] & 2) == 2; // what is this even for?
-            (State.Controls["grip"] as ControlButtonPair).Right.Button0 = (RawState.ulButtons[2] & 1) == 1;
+            (State.Controls["grip"] as ControlButtonPair).Right.PendingButton0 = (RawState.ulButtons[2] & 1) == 1;
 
-            (State.Controls["triggers"] as ControlTriggerPair).Left.Analog = (float)RawState.sTriggerL / byte.MaxValue;
-            (State.Controls["triggers"] as ControlTriggerPair).Right.Analog = (float)RawState.sTriggerR / byte.MaxValue;
+            (State.Controls["triggers"] as ControlTriggerPair).Left.PendingAnalog = (float)RawState.sTriggerL / byte.MaxValue;
+            (State.Controls["triggers"] as ControlTriggerPair).Right.PendingAnalog = (float)RawState.sTriggerR / byte.MaxValue;
 
-            (State.Controls["stick_left"] as ControlStick).X = (float)RawState.sLeftStickX / Int16.MaxValue;
-            (State.Controls["stick_left"] as ControlStick).Y = (float)-RawState.sLeftStickY / Int16.MaxValue;
+            (State.Controls["stick_left"] as ControlStick).PendingX = (float)RawState.sLeftStickX / Int16.MaxValue;
+            (State.Controls["stick_left"] as ControlStick).PendingY = (float)-RawState.sLeftStickY / Int16.MaxValue;
             if (RawState.LeftTouchChange)
             {
                 float LeftPadX = LeftPadTouch ? (float)RawState.sLeftPadX / Int16.MaxValue : 0f;
@@ -892,7 +892,7 @@ namespace ExtendInput.Controller
             float RightPadY = (float)-RawState.sRightPadY / Int16.MaxValue;
 
             (State.Controls["touch_right"] as ControlTouch).AddTouch(0, RightPadTouch, RightPadX, RightPadY, 0);
-            (State.Controls["touch_left"] as ControlTouch).Click = ThumbOrLeftPadPress && !LeftStickClick;
+            (State.Controls["touch_left"] as ControlTouch).PendingClick = ThumbOrLeftPadPress && !LeftStickClick;
 
             /*
             State.DataStuck = CheckSensorDataStuck();
@@ -911,6 +911,11 @@ namespace ExtendInput.Controller
             (State.Controls["motion"] as ControlMotion).OrientationZ = RawState.sGyroQuatZ;
 
             RawState.LeftTouchChange = false;
+
+            foreach (string controlKey in State.Controls.Keys)
+            {
+                State.Controls[controlKey].ProcessPendingInputs();
+            }
         }
 
         /*private void DeviceAttachedHandler()

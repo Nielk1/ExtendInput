@@ -10,5 +10,7 @@ namespace ExtendInput.Controls
     {
         T Value<T>(string key);
         Type Type(string key);
+
+        void ProcessPendingInputs();
     }
 }

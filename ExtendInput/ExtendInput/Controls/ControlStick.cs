@@ -5,9 +5,13 @@ namespace ExtendInput.Controls
     public class ControlStick : IControl
     {
         public bool HasClick { get; private set; }
-        public float X { get; set; }
-        public float Y { get; set; }
-        public bool Click { get; internal set; }
+        public float X { get; private set; }
+        public float Y { get; private set; }
+        public bool Click { get; private set; }
+
+        public float? PendingX { get; set; }
+        public float? PendingY { get; set; }
+        public bool? PendingClick { get; set; }
 
         public ControlStick(bool HasClick)
         {
@@ -52,6 +56,17 @@ namespace ExtendInput.Controls
             newData.Click = this.Click;
 
             return newData;
+        }
+
+        public void ProcessPendingInputs()
+        {
+            X = PendingX ?? X;
+            Y = PendingY ?? Y;
+            Click = PendingClick ?? Click;
+
+            PendingX = null;
+            PendingY = null;
+            PendingClick = null;
         }
     }
 }

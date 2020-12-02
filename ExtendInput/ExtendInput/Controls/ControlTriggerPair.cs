@@ -5,8 +5,8 @@ namespace ExtendInput.Controls
     public class ControlTriggerPair : IControl, IControlPair<ControlTrigger>
     {
         public bool HasStage2 { get; private set; }
-        public ControlTrigger Left { get; set; }
-        public ControlTrigger Right { get; set; }
+        public ControlTrigger Left { get; private set; }
+        public ControlTrigger Right { get; private set; }
 
         public ControlTriggerPair(bool HasStage2)
         {
@@ -48,6 +48,12 @@ namespace ExtendInput.Controls
             newData.Right = (ControlTrigger)this.Right.Clone();
 
             return newData;
+        }
+
+        public void ProcessPendingInputs()
+        {
+            Left.ProcessPendingInputs();
+            Right.ProcessPendingInputs();
         }
     }
 }

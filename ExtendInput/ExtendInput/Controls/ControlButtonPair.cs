@@ -4,8 +4,8 @@ namespace ExtendInput.Controls
 {
     public class ControlButtonPair : IControl, IControlPair<ControlButton>
     {
-        public ControlButton Left { get; set; }
-        public ControlButton Right { get; set; }
+        public ControlButton Left { get; private set; }
+        public ControlButton Right { get; private set; }
 
         public ControlButtonPair()
         {
@@ -38,6 +38,12 @@ namespace ExtendInput.Controls
             newData.Right = (ControlButton)this.Right.Clone();
 
             return newData;
+        }
+
+        public void ProcessPendingInputs()
+        {
+            Left.ProcessPendingInputs();
+            Right.ProcessPendingInputs();
         }
     }
 }

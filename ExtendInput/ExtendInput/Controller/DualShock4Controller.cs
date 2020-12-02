@@ -362,45 +362,45 @@ namespace ExtendInput.Controller
 
                 if (HasStateData)
                 {
-                    (State.Controls["stick_left"] as ControlStick).X = (reportData[baseOffset + 0] - 128) / 128f;
-                    (State.Controls["stick_left"] as ControlStick).Y = (reportData[baseOffset + 1] - 128) / 128f;
-                    (State.Controls["stick_right"] as ControlStick).X = (reportData[baseOffset + 2] - 128) / 128f;
-                    (State.Controls["stick_right"] as ControlStick).Y = (reportData[baseOffset + 3] - 128) / 128f;
+                    (State.Controls["stick_left"] as ControlStick).PendingX = (reportData[baseOffset + 0] - 128) / 128f;
+                    (State.Controls["stick_left"] as ControlStick).PendingY = (reportData[baseOffset + 1] - 128) / 128f;
+                    (State.Controls["stick_right"] as ControlStick).PendingX = (reportData[baseOffset + 2] - 128) / 128f;
+                    (State.Controls["stick_right"] as ControlStick).PendingY = (reportData[baseOffset + 3] - 128) / 128f;
 
-                    (State.Controls["quad_right"] as ControlButtonQuad).ButtonN = (reportData[baseOffset + 4] & 128) == 128;
-                    (State.Controls["quad_right"] as ControlButtonQuad).ButtonE = (reportData[baseOffset + 4] & 64) == 64;
-                    (State.Controls["quad_right"] as ControlButtonQuad).ButtonS = (reportData[baseOffset + 4] & 32) == 32;
-                    (State.Controls["quad_right"] as ControlButtonQuad).ButtonW = (reportData[baseOffset + 4] & 16) == 16;
+                    (State.Controls["quad_right"] as ControlButtonQuad).PendingButtonN = (reportData[baseOffset + 4] & 128) == 128;
+                    (State.Controls["quad_right"] as ControlButtonQuad).PendingButtonE = (reportData[baseOffset + 4] & 64) == 64;
+                    (State.Controls["quad_right"] as ControlButtonQuad).PendingButtonS = (reportData[baseOffset + 4] & 32) == 32;
+                    (State.Controls["quad_right"] as ControlButtonQuad).PendingButtonW = (reportData[baseOffset + 4] & 16) == 16;
 
                     switch ((reportData[baseOffset + 4] & 0x0f))
                     {
-                        case 0: (State.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.North; break;
-                        case 1: (State.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.NorthEast; break;
-                        case 2: (State.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.East; break;
-                        case 3: (State.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.SouthEast; break;
-                        case 4: (State.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.South; break;
-                        case 5: (State.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.SouthWest; break;
-                        case 6: (State.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.West; break;
-                        case 7: (State.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.NorthWest; break;
-                        default: (State.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.None; break;
+                        case 0: (State.Controls["quad_left"] as ControlDPad).PendingDirection = EDPadDirection.North; break;
+                        case 1: (State.Controls["quad_left"] as ControlDPad).PendingDirection = EDPadDirection.NorthEast; break;
+                        case 2: (State.Controls["quad_left"] as ControlDPad).PendingDirection = EDPadDirection.East; break;
+                        case 3: (State.Controls["quad_left"] as ControlDPad).PendingDirection = EDPadDirection.SouthEast; break;
+                        case 4: (State.Controls["quad_left"] as ControlDPad).PendingDirection = EDPadDirection.South; break;
+                        case 5: (State.Controls["quad_left"] as ControlDPad).PendingDirection = EDPadDirection.SouthWest; break;
+                        case 6: (State.Controls["quad_left"] as ControlDPad).PendingDirection = EDPadDirection.West; break;
+                        case 7: (State.Controls["quad_left"] as ControlDPad).PendingDirection = EDPadDirection.NorthWest; break;
+                        default: (State.Controls["quad_left"] as ControlDPad).PendingDirection = EDPadDirection.None; break;
                     }
 
-                    (State.Controls["stick_right"] as ControlStick).Click = (reportData[baseOffset + 5] & 128) == 128;
-                    (State.Controls["stick_left"] as ControlStick).Click = (reportData[baseOffset + 5] & 64) == 64;
-                    (State.Controls["menu"] as ControlButtonPair).Right.Button0 = (reportData[baseOffset + 5] & 32) == 32;
-                    (State.Controls["menu"] as ControlButtonPair).Left.Button0 = (reportData[baseOffset + 5] & 16) == 16;
-                    (State.Controls["bumpers2"] as ControlButtonPair).Right.Button0 = (reportData[baseOffset + 5] & 8) == 8;
-                    (State.Controls["bumpers2"] as ControlButtonPair).Left.Button0 = (reportData[baseOffset + 5] & 4) == 4;
-                    (State.Controls["bumpers"] as ControlButtonPair).Right.Button0 = (reportData[baseOffset + 5] & 2) == 2;
-                    (State.Controls["bumpers"] as ControlButtonPair).Left.Button0 = (reportData[baseOffset + 5] & 1) == 1;
+                    (State.Controls["stick_right"] as ControlStick).PendingClick = (reportData[baseOffset + 5] & 128) == 128;
+                    (State.Controls["stick_left"] as ControlStick).PendingClick = (reportData[baseOffset + 5] & 64) == 64;
+                    (State.Controls["menu"] as ControlButtonPair).Right.PendingButton0 = (reportData[baseOffset + 5] & 32) == 32;
+                    (State.Controls["menu"] as ControlButtonPair).Left.PendingButton0 = (reportData[baseOffset + 5] & 16) == 16;
+                    (State.Controls["bumpers2"] as ControlButtonPair).Right.PendingButton0 = (reportData[baseOffset + 5] & 8) == 8;
+                    (State.Controls["bumpers2"] as ControlButtonPair).Left.PendingButton0 = (reportData[baseOffset + 5] & 4) == 4;
+                    (State.Controls["bumpers"] as ControlButtonPair).Right.PendingButton0 = (reportData[baseOffset + 5] & 2) == 2;
+                    (State.Controls["bumpers"] as ControlButtonPair).Left.PendingButton0 = (reportData[baseOffset + 5] & 1) == 1;
 
                     // counter
                     // bld.Append((reportData[baseOffset + 6] & 0xfc).ToString().PadLeft(3, '0'));
 
-                    (State.Controls["home"] as ControlButton).Button0 = (reportData[baseOffset + 6] & 0x1) == 0x1;
-                    (State.Controls["touch_center"] as ControlTouch).Click = (reportData[baseOffset + 6] & 0x2) == 0x2;
-                    (State.Controls["triggers"] as ControlTriggerPair).Left.Analog = (float)reportData[baseOffset + 7] / byte.MaxValue;
-                    (State.Controls["triggers"] as ControlTriggerPair).Right.Analog = (float)reportData[baseOffset + 8] / byte.MaxValue;
+                    (State.Controls["home"] as ControlButton).PendingButton0 = (reportData[baseOffset + 6] & 0x1) == 0x1;
+                    (State.Controls["touch_center"] as ControlTouch).PendingClick = (reportData[baseOffset + 6] & 0x2) == 0x2;
+                    (State.Controls["triggers"] as ControlTriggerPair).Left.PendingAnalog = (float)reportData[baseOffset + 7] / byte.MaxValue;
+                    (State.Controls["triggers"] as ControlTriggerPair).Right.PendingAnalog = (float)reportData[baseOffset + 8] / byte.MaxValue;
 
                     // GyroTimestamp
                     //bld.Append(BitConverter.ToUInt16(reportData, baseOffset + 9).ToString().PadLeft(5));
@@ -471,6 +471,11 @@ namespace ExtendInput.Controller
                     }
 
                     touch_last_frame = TouchDataCount > 0;
+
+                    foreach(string controlKey in State.Controls.Keys)
+                    {
+                        State.Controls[controlKey].ProcessPendingInputs();
+                    }
 
                     ControllerState NewState = GetState();
                     OnStateUpdated(NewState);

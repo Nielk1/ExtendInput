@@ -93,17 +93,17 @@ namespace ExtendInput.Controller
             if (0 == Interlocked.Exchange(ref reportUsageLock, 1))
             {
                 {
-                    (State.Controls["stick_left"] as ControlStick).X = BitConverter.ToInt16(reportData, 4) * 1.0f / Int16.MaxValue;
-                    (State.Controls["stick_left"] as ControlStick).Y = BitConverter.ToInt16(reportData, 6) * -1.0f / Int16.MaxValue;
-                    (State.Controls["stick_right"] as ControlStick).X = BitConverter.ToInt16(reportData, 8) * 1.0f / Int16.MaxValue;
-                    (State.Controls["stick_right"] as ControlStick).Y = BitConverter.ToInt16(reportData, 10) * -1.0f / Int16.MaxValue;
+                    (State.Controls["stick_left"] as ControlStick).PendingX = BitConverter.ToInt16(reportData, 4) * 1.0f / Int16.MaxValue;
+                    (State.Controls["stick_left"] as ControlStick).PendingY = BitConverter.ToInt16(reportData, 6) * -1.0f / Int16.MaxValue;
+                    (State.Controls["stick_right"] as ControlStick).PendingX = BitConverter.ToInt16(reportData, 8) * 1.0f / Int16.MaxValue;
+                    (State.Controls["stick_right"] as ControlStick).PendingY = BitConverter.ToInt16(reportData, 10) * -1.0f / Int16.MaxValue;
 
                     UInt16 buttons = BitConverter.ToUInt16(reportData, 0);
 
-                    (State.Controls["quad_right"] as ControlButtonQuad).ButtonN = (buttons & 0x8000) == 0x8000;
-                    (State.Controls["quad_right"] as ControlButtonQuad).ButtonE = (buttons & 0x2000) == 0x2000;
-                    (State.Controls["quad_right"] as ControlButtonQuad).ButtonS = (buttons & 0x1000) == 0x1000;
-                    (State.Controls["quad_right"] as ControlButtonQuad).ButtonW = (buttons & 0x4000) == 0x4000;
+                    (State.Controls["quad_right"] as ControlButtonQuad).PendingButtonN = (buttons & 0x8000) == 0x8000;
+                    (State.Controls["quad_right"] as ControlButtonQuad).PendingButtonE = (buttons & 0x2000) == 0x2000;
+                    (State.Controls["quad_right"] as ControlButtonQuad).PendingButtonS = (buttons & 0x1000) == 0x1000;
+                    (State.Controls["quad_right"] as ControlButtonQuad).PendingButtonW = (buttons & 0x4000) == 0x4000;
 
                     bool DPadUp = (buttons & 0x0001) == 0x0001;
                     bool DPadDown = (buttons & 0x0002) == 0x0002;
@@ -120,59 +120,64 @@ namespace ExtendInput.Controller
                     {
                         if (DPadRight)
                         {
-                            (State.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.NorthEast;
+                            (State.Controls["quad_left"] as ControlDPad).PendingDirection = EDPadDirection.NorthEast;
                         }
                         else if (DPadLeft)
                         {
-                            (State.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.NorthWest;
+                            (State.Controls["quad_left"] as ControlDPad).PendingDirection = EDPadDirection.NorthWest;
                         }
                         else
                         {
-                            (State.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.North;
+                            (State.Controls["quad_left"] as ControlDPad).PendingDirection = EDPadDirection.North;
                         }
                     }
                     else if (DPadDown)
                     {
                         if (DPadRight)
                         {
-                            (State.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.SouthEast;
+                            (State.Controls["quad_left"] as ControlDPad).PendingDirection = EDPadDirection.SouthEast;
                         }
                         else if (DPadLeft)
                         {
-                            (State.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.SouthWest;
+                            (State.Controls["quad_left"] as ControlDPad).PendingDirection = EDPadDirection.SouthWest;
                         }
                         else
                         {
-                            (State.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.South;
+                            (State.Controls["quad_left"] as ControlDPad).PendingDirection = EDPadDirection.South;
                         }
                     }
                     else
                     {
                         if (DPadRight)
                         {
-                            (State.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.East;
+                            (State.Controls["quad_left"] as ControlDPad).PendingDirection = EDPadDirection.East;
                         }
                         else if (DPadLeft)
                         {
-                            (State.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.West;
+                            (State.Controls["quad_left"] as ControlDPad).PendingDirection = EDPadDirection.West;
                         }
                         else
                         {
-                            (State.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.None;
+                            (State.Controls["quad_left"] as ControlDPad).PendingDirection = EDPadDirection.None;
                         }
                     }
 
 
-                    (State.Controls["stick_right"] as ControlStick).Click = (buttons & 0x0080) == 0x0080;
-                    (State.Controls["stick_left"] as ControlStick).Click = (buttons & 0x0040) == 0x0040;
-                    (State.Controls["menu"] as ControlButtonPair).Right.Button0 = (buttons & 0x0010) == 0x0010;
-                    (State.Controls["menu"] as ControlButtonPair).Left.Button0 = (buttons & 0x0020) == 0x0020;
-                    (State.Controls["bumpers"] as ControlButtonPair).Right.Button0 = (buttons & 0x0200) == 0x0200;
-                    (State.Controls["bumpers"] as ControlButtonPair).Left.Button0 = (buttons & 0x0100) == 0x0100;
+                    (State.Controls["stick_right"] as ControlStick).PendingClick = (buttons & 0x0080) == 0x0080;
+                    (State.Controls["stick_left"] as ControlStick).PendingClick = (buttons & 0x0040) == 0x0040;
+                    (State.Controls["menu"] as ControlButtonPair).Right.PendingButton0 = (buttons & 0x0010) == 0x0010;
+                    (State.Controls["menu"] as ControlButtonPair).Left.PendingButton0 = (buttons & 0x0020) == 0x0020;
+                    (State.Controls["bumpers"] as ControlButtonPair).Right.PendingButton0 = (buttons & 0x0200) == 0x0200;
+                    (State.Controls["bumpers"] as ControlButtonPair).Left.PendingButton0 = (buttons & 0x0100) == 0x0100;
 
                     //(State.Controls["home"] as ControlButton).Button0 = (buttons & 0x1) == 0x1;
-                    (State.Controls["triggers"] as ControlTriggerPair).Left.Analog = (float)reportData[2] / byte.MaxValue;
-                    (State.Controls["triggers"] as ControlTriggerPair).Right.Analog = (float)reportData[3] / byte.MaxValue;
+                    (State.Controls["triggers"] as ControlTriggerPair).Left.PendingAnalog = (float)reportData[2] / byte.MaxValue;
+                    (State.Controls["triggers"] as ControlTriggerPair).Right.PendingAnalog = (float)reportData[3] / byte.MaxValue;
+
+                    foreach (string controlKey in State.Controls.Keys)
+                    {
+                        State.Controls[controlKey].ProcessPendingInputs();
+                    }
 
                     ControllerState NewState = GetState();
                     //OnStateUpdated(NewState);
