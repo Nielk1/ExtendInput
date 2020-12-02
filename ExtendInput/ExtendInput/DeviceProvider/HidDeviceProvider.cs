@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
-namespace ExtendInput.Providers
+namespace ExtendInput.DeviceProvider
 {
     [CoreDeviceProvider(TypeString = "HID", SupportsAutomaticDetection = true, SupportsManualyQuery = true, RequiresManualConfiguration = false)]
     public class HidDeviceProvider : IDeviceProvider

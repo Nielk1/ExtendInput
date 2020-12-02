@@ -1,4 +1,4 @@
-﻿using ExtendInput.Providers;
+﻿using ExtendInput.DeviceProvider;
 using System.Linq;
 
 namespace ExtendInput.Controller

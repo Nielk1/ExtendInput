@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
-namespace ExtendInput.Providers
+namespace ExtendInput.DeviceProvider
 {
     [CoreDeviceProvider(TypeString = "Audio", SupportsAutomaticDetection = false, SupportsManualyQuery = true, RequiresManualConfiguration = true)]
     public class AudioDeviceProvider : IDeviceProvider

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ExtendInput.Providers
+namespace ExtendInput.DeviceProvider
 {
     public interface IDevice : IEquatable<IDevice>
     {

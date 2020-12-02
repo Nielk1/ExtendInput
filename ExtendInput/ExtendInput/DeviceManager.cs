@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using ExtendInput.Controller;
-using ExtendInput.Providers;
+using ExtendInput.DeviceProvider;
 
 namespace ExtendInput
 {

@@ -1,5 +1,5 @@
 ﻿using ExtendInput.Controls;
-using ExtendInput.Providers;
+using ExtendInput.DeviceProvider;
 using System;
 using System.Diagnostics;
 using System.Drawing;
