@@ -288,7 +288,7 @@ namespace ExtendInput.Controller
         {
             if (!SensorsEnabled)
             {
-                byte[] reportData = new byte[64];
+                byte[] reportData = new byte[65];
                 reportData[1] = 0x87; // 0x87 = register write command
                 reportData[2] = 0x03; // 0x03 = length of data to be written (data + 1 empty bit)
                 reportData[3] = 0x30; // 0x30 = register of Gyro data
@@ -306,7 +306,7 @@ namespace ExtendInput.Controller
         {
             if (SensorsEnabled)
             {
-                byte[] reportData = new byte[64];
+                byte[] reportData = new byte[65];
                 reportData[1] = 0x87; // 0x87 = register write command
                 reportData[2] = 0x03; // 0x03 = length of data to be written (data + 1 empty bit)
                 reportData[3] = 0x30; // 0x30 = register of Gyro data
@@ -350,7 +350,7 @@ namespace ExtendInput.Controller
             if (ConnectedTime.AddSeconds(10) > DateTime.UtcNow)
                 return false;
 
-            byte[] reportData = new byte[64];
+            byte[] reportData = new byte[65];
             reportData[1] = 0xAE; // 0xAE = get serial
             reportData[2] = 0x15; // 0x15 = length of data to be written
             reportData[3] = 0x01;
