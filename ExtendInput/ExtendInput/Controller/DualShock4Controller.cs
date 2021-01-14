@@ -42,33 +42,6 @@ namespace ExtendInput.Controller
             if (0 == Interlocked.Exchange(ref stateUsageLock, 1))
             {
                 ControllerState newState = (ControllerState)State.Clone();
-                /*
-                ControllerState newState = new ControllerState();
-                newState.ButtonsOld = (SteamControllerButtons)State.ButtonsOld.Clone();
-
-                newState.LeftTrigger = State.LeftTrigger;
-                newState.RightTrigger = State.RightTrigger;
-
-                newState.LeftStickX = State.LeftStickX;
-                newState.LeftStickY = State.LeftStickY;
-                newState.LeftPadX = State.LeftPadX;
-                newState.LeftPadY = State.LeftPadY;
-                newState.RightPadX = State.RightPadX;
-                newState.RightPadY = State.RightPadY;
-
-                newState.AccelerometerX = State.AccelerometerX;
-                newState.AccelerometerY = State.AccelerometerY;
-                newState.AccelerometerZ = State.AccelerometerZ;
-                newState.AngularVelocityX = State.AngularVelocityX;
-                newState.AngularVelocityY = State.AngularVelocityY;
-                newState.AngularVelocityZ = State.AngularVelocityZ;
-                newState.OrientationW = State.OrientationW;
-                newState.OrientationX = State.OrientationX;
-                newState.OrientationY = State.OrientationY;
-                newState.OrientationZ = State.OrientationZ;
-
-                //newState.DataStuck = State.DataStuck;
-                */
                 State = newState;
                 Interlocked.Exchange(ref stateUsageLock, 0);
             }
