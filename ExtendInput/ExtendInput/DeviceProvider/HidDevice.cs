@@ -111,7 +111,12 @@ namespace ExtendInput.DeviceProvider
 
         public string ReadSerialNumber()
         {
-            return internalDevice.GetSerialNumber();
+            try
+            {
+                return internalDevice.GetSerialNumber();
+            }
+            catch { }
+            return null;
         }
 
         bool reading = false;

@@ -14,6 +14,9 @@ namespace ExtendInput.Controller
         public const int ProductIdWired = 0x05C4; // and BT
         public const int ProductIdWiredV2 = 0x09CC; // and BT
 
+        public const int BrookMarsVendorId = 0x0C12;
+        public const int BrookMarsProductId = 0x0E20;
+
         private const byte _REPORT_STATE_1 = 0x11;
         private const byte _REPORT_STATE_2 = 0x12;
         private const byte _REPORT_STATE_3 = 0x13;
@@ -78,6 +81,7 @@ namespace ExtendInput.Controller
             State.Controls["home"] = new ControlButton();
             State.Controls["stick_left"] = new ControlStick(HasClick: true);
             State.Controls["stick_right"] = new ControlStick(HasClick: true);
+            //if (device.VendorId != BrookMarsVendorId || device.ProductId != BrookMarsProductId)
             State.Controls["touch_center"] = new ControlTouch(TouchCount: 2, HasClick: true);
             State.Controls["motion"] = new ControlMotion();
 
@@ -86,7 +90,7 @@ namespace ExtendInput.Controller
             _device = device;
 
             Initalized = 0;
-
+            
             _device.DeviceReport += OnReport;
         }
 
@@ -275,22 +279,22 @@ namespace ExtendInput.Controller
                 default:
                     {
                         string retVal = "Sony DUALSHOCK®4 Controller";
-
-                        switch (_device.ProductId)
-                        {
-                            case ProductIdWired:
-                                retVal = $"Sony DUALSHOCK®4 Controller V1";
-                                break;
-                            case ProductIdWiredV2:
-                                retVal = $"Sony DUALSHOCK®4 Controller V2";
-                                break;
-                        }
-
                         string Serial = null;
 
-                        if (_device.VendorId == VendorId
-                        && (_device.ProductId == ProductIdWired || _device.ProductId == ProductIdWiredV2 || _device.ProductId == ProductIdDongle))
+                        if (_device.VendorId == VendorId)
                         {
+                            retVal = "Sony DUALSHOCK®4 Controller";
+
+                            switch (_device.ProductId)
+                            {
+                                case ProductIdWired:
+                                    retVal = $"Sony DUALSHOCK®4 Controller V1";
+                                    break;
+                                case ProductIdWiredV2:
+                                    retVal = $"Sony DUALSHOCK®4 Controller V2";
+                                    break;
+                            }
+
                             try
                             {
                                 byte[] data;
@@ -299,6 +303,12 @@ namespace ExtendInput.Controller
                             }
                             catch { }
                         }
+
+                        if (_device.VendorId == BrookMarsVendorId && _device.ProductId == BrookMarsProductId)
+                        {
+                            return "Brook Mars Wired Controller";
+                        }
+
                         if (string.IsNullOrWhiteSpace(Serial))
                         {
                             string SerialNumber = _device.ReadSerialNumber(); // DUALSHOCK®4 USB Wireless Adaptor
@@ -310,7 +320,7 @@ namespace ExtendInput.Controller
                         if (string.IsNullOrWhiteSpace(Serial))
                             Serial = null;
 
-                        return retVal += $" [{Serial ?? "No ID"}]"; ;
+                        return retVal += $" [{Serial ?? "No ID"}]";
                     }
             }
         }
@@ -335,10 +345,25 @@ namespace ExtendInput.Controller
 
                 if (HasStateData)
                 {
-                    (State.Controls["stick_left"] as ControlStick).PendingX = (reportData[1 + baseOffset + 0] - 128) / 128f;
-                    (State.Controls["stick_left"] as ControlStick).PendingY = (reportData[1 + baseOffset + 1] - 128) / 128f;
-                    (State.Controls["stick_right"] as ControlStick).PendingX = (reportData[1 + baseOffset + 2] - 128) / 128f;
-                    (State.Controls["stick_right"] as ControlStick).PendingY = (reportData[1 + baseOffset + 3] - 128) / 128f;
+                    (State.Controls["stick_left"] as ControlStick).PendingX = ControllerMathTools.QuickStickToFloat(reportData[1 + baseOffset + 0]);
+                    (State.Controls["stick_left"] as ControlStick).PendingY = ControllerMathTools.QuickStickToFloat(reportData[1 + baseOffset + 1]);
+
+                    bool Finger1BrookMarsTest = (reportData[1 + baseOffset + 34] & 0x80) != 0x80;
+                    if(_device.VendorId == BrookMarsVendorId && _device.ProductId == BrookMarsProductId && Finger1BrookMarsTest)
+                    {
+                        int F1X = reportData[1 + baseOffset + 35]
+                              | ((reportData[1 + baseOffset + 36] & 0xF) << 8);
+                        int F1Y = ((reportData[1 + baseOffset + 36] & 0xF0) >> 4)
+                                 | (reportData[1 + baseOffset + 37] << 4);
+
+                        (State.Controls["stick_right"] as ControlStick).PendingX = ControllerMathTools.QuickStickToFloat((byte)((F1X - 192) / 6));
+                        (State.Controls["stick_right"] as ControlStick).PendingY = ControllerMathTools.QuickStickToFloat((byte)((F1Y - 86) / 3));
+                    }
+                    else
+                    {
+                        (State.Controls["stick_right"] as ControlStick).PendingX = ControllerMathTools.QuickStickToFloat(reportData[1 + baseOffset + 2]);
+                        (State.Controls["stick_right"] as ControlStick).PendingY = ControllerMathTools.QuickStickToFloat(reportData[1 + baseOffset + 3]);
+                    }
 
                     (State.Controls["quad_right"] as ControlButtonQuad).PendingButtonN = (reportData[1 + baseOffset + 4] & 128) == 128;
                     (State.Controls["quad_right"] as ControlButtonQuad).PendingButtonE = (reportData[1 + baseOffset + 4] & 64) == 64;
@@ -411,41 +436,49 @@ namespace ExtendInput.Controller
                         ControllerNameUpdated?.Invoke();
                     }
 
-                    int TouchDataCount = reportData[1 + baseOffset + 32];
-
-                    for (int FingerCounter = 0; FingerCounter < TouchDataCount; FingerCounter++)
+                    // Brook Mars has emulated touch with stick, we don't care about that since we'd do it in software
+                    if (_device.VendorId == BrookMarsVendorId && _device.ProductId == BrookMarsProductId)
                     {
-                        byte touch_timestamp = reportData[1 + baseOffset + 33 + (FingerCounter * 9)]; // Touch Pad Counter
-                                                                                                   //DateTime tmp_now = DateTime.Now;
 
-                        bool Finger1 = (reportData[1 + baseOffset + 34 + (FingerCounter * 9)] & 0x80) != 0x80;
-                        byte Finger1Index = (byte)(reportData[1 + baseOffset + 34 + (FingerCounter * 9)] & 0x7f);
-                        int F1X = reportData[1 + baseOffset + 35 + (FingerCounter * 9)]
-                                               | ((reportData[1 + baseOffset + 36 + (FingerCounter * 9)] & 0xF) << 8);
-                        int F1Y = ((reportData[1 + baseOffset + 36 + (FingerCounter * 9)] & 0xF0) >> 4)
-                                                | (reportData[1 + baseOffset + 37 + (FingerCounter * 9)] << 4);
+                    }
+                    else
+                    {
+                        int TouchDataCount = reportData[1 + baseOffset + 32];
 
-                        bool Finger2 = (reportData[1 + baseOffset + 38 + (FingerCounter * 9)] & 0x80) != 0x80;
-                        byte Finger2Index = (byte)(reportData[1 + baseOffset + 38 + (FingerCounter * 9)] & 0x7f);
-                        int F2X = reportData[1 + baseOffset + 39 + (FingerCounter * 9)]
-                                               | ((reportData[1 + baseOffset + 40 + (FingerCounter * 9)] & 0xF) << 8);
-                        int F2Y = ((reportData[1 + baseOffset + 40 + (FingerCounter * 9)] & 0xF0) >> 4)
-                                                | (reportData[1 + baseOffset + 41 + (FingerCounter * 9)] << 4);
+                        for (int FingerCounter = 0; FingerCounter < TouchDataCount; FingerCounter++)
+                        {
+                            byte touch_timestamp = reportData[1 + baseOffset + 33 + (FingerCounter * 9)]; // Touch Pad Counter
+                                                                                                          //DateTime tmp_now = DateTime.Now;
 
-                        byte TimeDelta = touch_last_frame ? GetOverflowedDelta(last_touch_timestamp, touch_timestamp) : (byte)0;
+                            bool Finger1 = (reportData[1 + baseOffset + 34 + (FingerCounter * 9)] & 0x80) != 0x80;
+                            byte Finger1Index = (byte)(reportData[1 + baseOffset + 34 + (FingerCounter * 9)] & 0x7f);
+                            int F1X = reportData[1 + baseOffset + 35 + (FingerCounter * 9)]
+                                  | ((reportData[1 + baseOffset + 36 + (FingerCounter * 9)] & 0xF) << 8);
+                            int F1Y = ((reportData[1 + baseOffset + 36 + (FingerCounter * 9)] & 0xF0) >> 4)
+                                     | (reportData[1 + baseOffset + 37 + (FingerCounter * 9)] << 4);
 
-                        //Console.WriteLine($"{TimeDelta} {(tmp_now - tmp).Milliseconds}");
+                            bool Finger2 = (reportData[1 + baseOffset + 38 + (FingerCounter * 9)] & 0x80) != 0x80;
+                            byte Finger2Index = (byte)(reportData[1 + baseOffset + 38 + (FingerCounter * 9)] & 0x7f);
+                            int F2X = reportData[1 + baseOffset + 39 + (FingerCounter * 9)]
+                                  | ((reportData[1 + baseOffset + 40 + (FingerCounter * 9)] & 0xF) << 8);
+                            int F2Y = ((reportData[1 + baseOffset + 40 + (FingerCounter * 9)] & 0xF0) >> 4)
+                                     | (reportData[1 + baseOffset + 41 + (FingerCounter * 9)] << 4);
 
-                        (State.Controls["touch_center"] as ControlTouch).AddTouch(0, Finger1, (F1X / 1919f) * 2f - 1f, (F1Y / 942f) * 2f - 1f, TimeDelta);
-                        (State.Controls["touch_center"] as ControlTouch).AddTouch(1, Finger2, (F2X / 1919f) * 2f - 1f, (F2Y / 942f) * 2f - 1f, TimeDelta);
+                            byte TimeDelta = touch_last_frame ? GetOverflowedDelta(last_touch_timestamp, touch_timestamp) : (byte)0;
 
-                        last_touch_timestamp = touch_timestamp;
-                        //tmp = tmp_now;
+                            //Console.WriteLine($"{TimeDelta} {(tmp_now - tmp).Milliseconds}");
+
+                            (State.Controls["touch_center"] as ControlTouch).AddTouch(0, Finger1, (F1X / 1919f) * 2f - 1f, (F1Y / 942f) * 2f - 1f, TimeDelta);
+                            (State.Controls["touch_center"] as ControlTouch).AddTouch(1, Finger2, (F2X / 1919f) * 2f - 1f, (F2Y / 942f) * 2f - 1f, TimeDelta);
+
+                            last_touch_timestamp = touch_timestamp;
+                            //tmp = tmp_now;
+                        }
+
+                        touch_last_frame = TouchDataCount > 0;
                     }
 
-                    touch_last_frame = TouchDataCount > 0;
-
-                    foreach(string controlKey in State.Controls.Keys)
+                    foreach (string controlKey in State.Controls.Keys)
                     {
                         State.Controls[controlKey].ProcessPendingInputs();
                     }
