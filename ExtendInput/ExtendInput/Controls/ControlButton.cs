@@ -8,8 +8,9 @@ namespace ExtendInput.Controls
         public bool? PendingButton0 { get; set; }
         public T Value<T>(string key)
         {
-            return (T)Convert.ChangeType(Button0, typeof(T));
-            //return default;
+            if (string.IsNullOrEmpty(key) || key == "click")
+                return (T)Convert.ChangeType(Button0, typeof(T));
+            return default;
         }
         public Type Type(string key)
         {

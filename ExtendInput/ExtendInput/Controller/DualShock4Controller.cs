@@ -81,8 +81,14 @@ namespace ExtendInput.Controller
             State.Controls["home"] = new ControlButton();
             State.Controls["stick_left"] = new ControlStick(HasClick: true);
             State.Controls["stick_right"] = new ControlStick(HasClick: true);
-            //if (device.VendorId != BrookMarsVendorId || device.ProductId != BrookMarsProductId)
-            State.Controls["touch_center"] = new ControlTouch(TouchCount: 2, HasClick: true);
+            if (device.VendorId == BrookMarsVendorId || device.ProductId == BrookMarsProductId)
+            {
+                State.Controls["touch_center"] = new ControlButton();
+            }
+            else
+            {
+                State.Controls["touch_center"] = new ControlTouch(TouchCount: 2, HasClick: true);
+            }
             State.Controls["motion"] = new ControlMotion();
 
             // According to this the normalized domain of the DS4 gyro is 1024 units per rad/s: https://gamedev.stackexchange.com/a/87178
@@ -396,7 +402,16 @@ namespace ExtendInput.Controller
                     // bld.Append((reportData[1 + baseOffset + 6] & 0xfc).ToString().PadLeft(3, '0'));
 
                     (State.Controls["home"] as ControlButton).PendingButton0 = (reportData[1 + baseOffset + 6] & 0x1) == 0x1;
-                    (State.Controls["touch_center"] as ControlTouch).PendingClick = (reportData[1 + baseOffset + 6] & 0x2) == 0x2;
+
+                    if (_device.VendorId == BrookMarsVendorId || _device.ProductId == BrookMarsProductId)
+                    {
+                        (State.Controls["touch_center"] as ControlButton).PendingButton0 = (reportData[1 + baseOffset + 6] & 0x2) == 0x2;
+                    }
+                    else
+                    {
+                        (State.Controls["touch_center"] as ControlTouch).PendingClick = (reportData[1 + baseOffset + 6] & 0x2) == 0x2;
+                    }
+
                     (State.Controls["triggers"] as ControlTriggerPair).Left.PendingAnalog = (float)reportData[1 + baseOffset + 7] / byte.MaxValue;
                     (State.Controls["triggers"] as ControlTriggerPair).Right.PendingAnalog = (float)reportData[1 + baseOffset + 8] / byte.MaxValue;
 
