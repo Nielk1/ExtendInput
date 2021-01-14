@@ -146,7 +146,7 @@ namespace ExtendInput.DeviceProvider
                                 byte[] data = _stream.Read();
 
                                 DeviceReportEvent threadSafeEvent = DeviceReport;
-                                threadSafeEvent?.Invoke(data.Skip(1).ToArray(), data[0]);
+                                threadSafeEvent?.Invoke(data);
                             }
                         }
                         catch
@@ -178,7 +178,7 @@ namespace ExtendInput.DeviceProvider
         public event DeviceReportEvent DeviceReport;
     }
 
-    public delegate void DeviceReportEvent(byte[] report, int reportID);
+    public delegate void DeviceReportEvent(byte[] report);
 
     public enum DeviceMode
     {

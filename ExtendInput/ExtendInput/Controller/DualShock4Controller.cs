@@ -343,7 +343,7 @@ namespace ExtendInput.Controller
         }
 
         bool DisconnectedBit = false;
-        private void OnReport(byte[] reportData, int reportID)
+        private void OnReport(byte[] reportData)
         {
             if (Initalized < 1) return;
 
@@ -357,22 +357,22 @@ namespace ExtendInput.Controller
                 if (ConnectionType == EConnectionType.Bluetooth)
                 {
                     baseOffset = 2;
-                    HasStateData = (reportData[1] & 0x80) == 0x80;
+                    HasStateData = (reportData[1 + 1] & 0x80) == 0x80;
                 }
 
                 if (HasStateData)
                 {
-                    (State.Controls["stick_left"] as ControlStick).PendingX = (reportData[baseOffset + 0] - 128) / 128f;
-                    (State.Controls["stick_left"] as ControlStick).PendingY = (reportData[baseOffset + 1] - 128) / 128f;
-                    (State.Controls["stick_right"] as ControlStick).PendingX = (reportData[baseOffset + 2] - 128) / 128f;
-                    (State.Controls["stick_right"] as ControlStick).PendingY = (reportData[baseOffset + 3] - 128) / 128f;
+                    (State.Controls["stick_left"] as ControlStick).PendingX = (reportData[1 + baseOffset + 0] - 128) / 128f;
+                    (State.Controls["stick_left"] as ControlStick).PendingY = (reportData[1 + baseOffset + 1] - 128) / 128f;
+                    (State.Controls["stick_right"] as ControlStick).PendingX = (reportData[1 + baseOffset + 2] - 128) / 128f;
+                    (State.Controls["stick_right"] as ControlStick).PendingY = (reportData[1 + baseOffset + 3] - 128) / 128f;
 
-                    (State.Controls["quad_right"] as ControlButtonQuad).PendingButtonN = (reportData[baseOffset + 4] & 128) == 128;
-                    (State.Controls["quad_right"] as ControlButtonQuad).PendingButtonE = (reportData[baseOffset + 4] & 64) == 64;
-                    (State.Controls["quad_right"] as ControlButtonQuad).PendingButtonS = (reportData[baseOffset + 4] & 32) == 32;
-                    (State.Controls["quad_right"] as ControlButtonQuad).PendingButtonW = (reportData[baseOffset + 4] & 16) == 16;
+                    (State.Controls["quad_right"] as ControlButtonQuad).PendingButtonN = (reportData[1 + baseOffset + 4] & 128) == 128;
+                    (State.Controls["quad_right"] as ControlButtonQuad).PendingButtonE = (reportData[1 + baseOffset + 4] & 64) == 64;
+                    (State.Controls["quad_right"] as ControlButtonQuad).PendingButtonS = (reportData[1 + baseOffset + 4] & 32) == 32;
+                    (State.Controls["quad_right"] as ControlButtonQuad).PendingButtonW = (reportData[1 + baseOffset + 4] & 16) == 16;
 
-                    switch ((reportData[baseOffset + 4] & 0x0f))
+                    switch ((reportData[1 + baseOffset + 4] & 0x0f))
                     {
                         case 0: (State.Controls["quad_left"] as ControlDPad).PendingDirection = EDPadDirection.North; break;
                         case 1: (State.Controls["quad_left"] as ControlDPad).PendingDirection = EDPadDirection.NorthEast; break;
@@ -385,79 +385,79 @@ namespace ExtendInput.Controller
                         default: (State.Controls["quad_left"] as ControlDPad).PendingDirection = EDPadDirection.None; break;
                     }
 
-                    (State.Controls["stick_right"] as ControlStick).PendingClick = (reportData[baseOffset + 5] & 128) == 128;
-                    (State.Controls["stick_left"] as ControlStick).PendingClick = (reportData[baseOffset + 5] & 64) == 64;
-                    (State.Controls["menu"] as ControlButtonPair).Right.PendingButton0 = (reportData[baseOffset + 5] & 32) == 32;
-                    (State.Controls["menu"] as ControlButtonPair).Left.PendingButton0 = (reportData[baseOffset + 5] & 16) == 16;
-                    (State.Controls["bumpers2"] as ControlButtonPair).Right.PendingButton0 = (reportData[baseOffset + 5] & 8) == 8;
-                    (State.Controls["bumpers2"] as ControlButtonPair).Left.PendingButton0 = (reportData[baseOffset + 5] & 4) == 4;
-                    (State.Controls["bumpers"] as ControlButtonPair).Right.PendingButton0 = (reportData[baseOffset + 5] & 2) == 2;
-                    (State.Controls["bumpers"] as ControlButtonPair).Left.PendingButton0 = (reportData[baseOffset + 5] & 1) == 1;
+                    (State.Controls["stick_right"] as ControlStick).PendingClick = (reportData[1 + baseOffset + 5] & 128) == 128;
+                    (State.Controls["stick_left"] as ControlStick).PendingClick = (reportData[1 + baseOffset + 5] & 64) == 64;
+                    (State.Controls["menu"] as ControlButtonPair).Right.PendingButton0 = (reportData[1 + baseOffset + 5] & 32) == 32;
+                    (State.Controls["menu"] as ControlButtonPair).Left.PendingButton0 = (reportData[1 + baseOffset + 5] & 16) == 16;
+                    (State.Controls["bumpers2"] as ControlButtonPair).Right.PendingButton0 = (reportData[1 + baseOffset + 5] & 8) == 8;
+                    (State.Controls["bumpers2"] as ControlButtonPair).Left.PendingButton0 = (reportData[1 + baseOffset + 5] & 4) == 4;
+                    (State.Controls["bumpers"] as ControlButtonPair).Right.PendingButton0 = (reportData[1 + baseOffset + 5] & 2) == 2;
+                    (State.Controls["bumpers"] as ControlButtonPair).Left.PendingButton0 = (reportData[1 + baseOffset + 5] & 1) == 1;
 
                     // counter
-                    // bld.Append((reportData[baseOffset + 6] & 0xfc).ToString().PadLeft(3, '0'));
+                    // bld.Append((reportData[1 + baseOffset + 6] & 0xfc).ToString().PadLeft(3, '0'));
 
-                    (State.Controls["home"] as ControlButton).PendingButton0 = (reportData[baseOffset + 6] & 0x1) == 0x1;
-                    (State.Controls["touch_center"] as ControlTouch).PendingClick = (reportData[baseOffset + 6] & 0x2) == 0x2;
-                    (State.Controls["triggers"] as ControlTriggerPair).Left.PendingAnalog = (float)reportData[baseOffset + 7] / byte.MaxValue;
-                    (State.Controls["triggers"] as ControlTriggerPair).Right.PendingAnalog = (float)reportData[baseOffset + 8] / byte.MaxValue;
+                    (State.Controls["home"] as ControlButton).PendingButton0 = (reportData[1 + baseOffset + 6] & 0x1) == 0x1;
+                    (State.Controls["touch_center"] as ControlTouch).PendingClick = (reportData[1 + baseOffset + 6] & 0x2) == 0x2;
+                    (State.Controls["triggers"] as ControlTriggerPair).Left.PendingAnalog = (float)reportData[1 + baseOffset + 7] / byte.MaxValue;
+                    (State.Controls["triggers"] as ControlTriggerPair).Right.PendingAnalog = (float)reportData[1 + baseOffset + 8] / byte.MaxValue;
 
                     // GyroTimestamp
-                    //bld.Append(BitConverter.ToUInt16(reportData, baseOffset + 9).ToString().PadLeft(5));
+                    //bld.Append(BitConverter.ToUInt16(reportData, 1 + baseOffset + 9).ToString().PadLeft(5));
                     // FIX: (timestamp * 16) / 3
 
                     // Battery Power Level
-                    //bld.Append(reportData[baseOffset + 11].ToString("X2") + "   ");
+                    //bld.Append(reportData[1 + baseOffset + 11].ToString("X2") + "   ");
 
-                    (State.Controls["motion"] as ControlMotion).AngularVelocityX = BitConverter.ToInt16(reportData, baseOffset + 12);
-                    (State.Controls["motion"] as ControlMotion).AngularVelocityZ = BitConverter.ToInt16(reportData, baseOffset + 14);
-                    (State.Controls["motion"] as ControlMotion).AngularVelocityY = BitConverter.ToInt16(reportData, baseOffset + 16);
-                    (State.Controls["motion"] as ControlMotion).AccelerometerX = BitConverter.ToInt16(reportData, baseOffset + 18);
-                    (State.Controls["motion"] as ControlMotion).AccelerometerY = BitConverter.ToInt16(reportData, baseOffset + 20);
-                    (State.Controls["motion"] as ControlMotion).AccelerometerZ = BitConverter.ToInt16(reportData, baseOffset + 22);
-
-                    // ??
-                    // bld.Append(reportData[baseOffset + 27].ToString("X2"));
-
-                    //State.Inputs.? = (reportData[baseOffset + 29] & 128) == 128;
-                    //State.Inputs.Mic = (reportData[baseOffset + 29] & 64) == 64;
-                    //State.Inputs.Headphone = (reportData[baseOffset + 29] & 32) == 32;
-                    //State.Inputs.PowerCable = (reportData[baseOffset + 29] * 16) == 16;
-
-                    //int bat = reportData[baseOffset + 29] & 0x0f;
-                    //bool plugged = (reportData[baseOffset + 29] & 0x10) == 0x10;
+                    (State.Controls["motion"] as ControlMotion).AngularVelocityX = BitConverter.ToInt16(reportData, 1 + baseOffset + 12);
+                    (State.Controls["motion"] as ControlMotion).AngularVelocityZ = BitConverter.ToInt16(reportData, 1 + baseOffset + 14);
+                    (State.Controls["motion"] as ControlMotion).AngularVelocityY = BitConverter.ToInt16(reportData, 1 + baseOffset + 16);
+                    (State.Controls["motion"] as ControlMotion).AccelerometerX = BitConverter.ToInt16(reportData, 1 + baseOffset + 18);
+                    (State.Controls["motion"] as ControlMotion).AccelerometerY = BitConverter.ToInt16(reportData, 1 + baseOffset + 20);
+                    (State.Controls["motion"] as ControlMotion).AccelerometerZ = BitConverter.ToInt16(reportData, 1 + baseOffset + 22);
 
                     // ??
-                    // bld.Append(reportData[baseOffset + 30].ToString("X2"));
-                    // bld.Append(reportData[baseOffset + 31].ToString("X2") + " ");
+                    // bld.Append(reportData[1 + baseOffset + 27].ToString("X2"));
 
-                    bool DisconnectedFlag = (reportData[baseOffset + 30] & 0x04) == 0x04;
+                    //State.Inputs.? = (reportData[1 + baseOffset + 29] & 128) == 128;
+                    //State.Inputs.Mic = (reportData[1 + baseOffset + 29] & 64) == 64;
+                    //State.Inputs.Headphone = (reportData[1 + baseOffset + 29] & 32) == 32;
+                    //State.Inputs.PowerCable = (reportData[1 + baseOffset + 29] * 16) == 16;
+
+                    //int bat = reportData[1 + baseOffset + 29] & 0x0f;
+                    //bool plugged = (reportData[1 + baseOffset + 29] & 0x10) == 0x10;
+
+                    // ??
+                    // bld.Append(reportData[1 + baseOffset + 30].ToString("X2"));
+                    // bld.Append(reportData[1 + baseOffset + 31].ToString("X2") + " ");
+
+                    bool DisconnectedFlag = (reportData[1 + baseOffset + 30] & 0x04) == 0x04;
                     if (DisconnectedFlag != DisconnectedBit)
                     {
                         DisconnectedBit = DisconnectedFlag;
                         ControllerNameUpdated?.Invoke();
                     }
 
-                    int TouchDataCount = reportData[baseOffset + 32];
+                    int TouchDataCount = reportData[1 + baseOffset + 32];
 
                     for (int FingerCounter = 0; FingerCounter < TouchDataCount; FingerCounter++)
                     {
-                        byte touch_timestamp = reportData[baseOffset + 33 + (FingerCounter * 9)]; // Touch Pad Counter
+                        byte touch_timestamp = reportData[1 + baseOffset + 33 + (FingerCounter * 9)]; // Touch Pad Counter
                                                                                                    //DateTime tmp_now = DateTime.Now;
 
-                        bool Finger1 = (reportData[baseOffset + 34 + (FingerCounter * 9)] & 0x80) != 0x80;
-                        byte Finger1Index = (byte)(reportData[baseOffset + 34 + (FingerCounter * 9)] & 0x7f);
-                        int F1X = reportData[baseOffset + 35 + (FingerCounter * 9)]
-                                               | ((reportData[baseOffset + 36 + (FingerCounter * 9)] & 0xF) << 8);
-                        int F1Y = ((reportData[baseOffset + 36 + (FingerCounter * 9)] & 0xF0) >> 4)
-                                                | (reportData[baseOffset + 37 + (FingerCounter * 9)] << 4);
+                        bool Finger1 = (reportData[1 + baseOffset + 34 + (FingerCounter * 9)] & 0x80) != 0x80;
+                        byte Finger1Index = (byte)(reportData[1 + baseOffset + 34 + (FingerCounter * 9)] & 0x7f);
+                        int F1X = reportData[1 + baseOffset + 35 + (FingerCounter * 9)]
+                                               | ((reportData[1 + baseOffset + 36 + (FingerCounter * 9)] & 0xF) << 8);
+                        int F1Y = ((reportData[1 + baseOffset + 36 + (FingerCounter * 9)] & 0xF0) >> 4)
+                                                | (reportData[1 + baseOffset + 37 + (FingerCounter * 9)] << 4);
 
-                        bool Finger2 = (reportData[baseOffset + 38 + (FingerCounter * 9)] & 0x80) != 0x80;
-                        byte Finger2Index = (byte)(reportData[baseOffset + 38 + (FingerCounter * 9)] & 0x7f);
-                        int F2X = reportData[baseOffset + 39 + (FingerCounter * 9)]
-                                               | ((reportData[baseOffset + 40 + (FingerCounter * 9)] & 0xF) << 8);
-                        int F2Y = ((reportData[baseOffset + 40 + (FingerCounter * 9)] & 0xF0) >> 4)
-                                                | (reportData[baseOffset + 41 + (FingerCounter * 9)] << 4);
+                        bool Finger2 = (reportData[1 + baseOffset + 38 + (FingerCounter * 9)] & 0x80) != 0x80;
+                        byte Finger2Index = (byte)(reportData[1 + baseOffset + 38 + (FingerCounter * 9)] & 0x7f);
+                        int F2X = reportData[1 + baseOffset + 39 + (FingerCounter * 9)]
+                                               | ((reportData[1 + baseOffset + 40 + (FingerCounter * 9)] & 0xF) << 8);
+                        int F2Y = ((reportData[1 + baseOffset + 40 + (FingerCounter * 9)] & 0xF0) >> 4)
+                                                | (reportData[1 + baseOffset + 41 + (FingerCounter * 9)] << 4);
 
                         byte TimeDelta = touch_last_frame ? GetOverflowedDelta(last_touch_timestamp, touch_timestamp) : (byte)0;
 

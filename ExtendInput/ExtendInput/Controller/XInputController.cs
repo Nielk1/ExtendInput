@@ -86,7 +86,7 @@ namespace ExtendInput.Controller
         }
         #endregion
 
-        private void OnReport(byte[] reportData, int reportID)
+        private void OnReport(byte[] reportData)
         {
             if (Initalized < 1) return;
 

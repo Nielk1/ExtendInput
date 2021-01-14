@@ -123,7 +123,7 @@ namespace ExtendInput.DeviceProvider
                             RawData[10] = (byte)State.Gamepad.RightThumbY;
                             RawData[11] = (byte)(State.Gamepad.RightThumbY >> 8);
 
-                            threadSafeEvent?.Invoke(RawData, 0);
+                            threadSafeEvent?.Invoke(RawData);
 
                             Thread.Sleep(1000 / 60);
                         }
