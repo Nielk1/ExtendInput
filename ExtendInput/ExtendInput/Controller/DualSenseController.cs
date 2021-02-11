@@ -373,8 +373,8 @@ namespace ExtendInput.Controller
 
                             byte TimeDelta = touch_last_frame ? GetOverflowedDelta(last_touch_timestamp, touch_timestamp) : (byte)0;
 
-                            (State.Controls["touch_center"] as ControlTouch).AddTouch(0, Finger1, (F1X / 1919f) * 2f - 1f, (F1Y / 942f) * 2f - 1f, TimeDelta);
-                            (State.Controls["touch_center"] as ControlTouch).AddTouch(1, Finger2, (F2X / 1919f) * 2f - 1f, (F2Y / 942f) * 2f - 1f, TimeDelta);
+                            (State.Controls["touch_center"] as ControlTouch).AddTouch(0, Finger1, (F1X / 1919f) * 2f - 1f, (F1Y / 1079f) * 2f - 1f, TimeDelta); // everything beyond 1073 is not reliably producible
+                            (State.Controls["touch_center"] as ControlTouch).AddTouch(1, Finger2, (F2X / 1919f) * 2f - 1f, (F2Y / 1079f) * 2f - 1f, TimeDelta); // everything beyond 1073 is not reliably producible
 
                             last_touch_timestamp = touch_timestamp;
                         }
