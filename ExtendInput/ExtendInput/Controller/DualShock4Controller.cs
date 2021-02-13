@@ -27,6 +27,11 @@ namespace ExtendInput.Controller
         private const byte _REPORT_STATE_8 = 0x18;
         private const byte _REPORT_STATE_9 = 0x19;
 
+        private const int _SLOW_POLL_MS = 1000;
+
+        public EConnectionType ConnectionType { get; private set; }
+        public EPollingState PollingState { get; private set; }
+
         public bool SensorsEnabled;
         private HidDevice _device;
         int stateUsageLock = 0, reportUsageLock = 0;
@@ -52,14 +57,12 @@ namespace ExtendInput.Controller
         }
         #endregion
 
-        public EConnectionType ConnectionType { get; private set; }
 
         public IDevice DeviceHackRef => _device;
 
         ControllerState State = new ControllerState();
         ControllerState OldState = new ControllerState();
 
-        int Initalized;
 
         public delegate void StateUpdatedEventHandler(object sender, ControllerState e);
         public event StateUpdatedEventHandler StateUpdated;
@@ -95,58 +98,50 @@ namespace ExtendInput.Controller
 
             _device = device;
 
-            Initalized = 0;
-            
+            touch_last_frame = false;
+            PollingState = EPollingState.Inactive;
+
+            // if we are a dongle we must slow poll instead of sit inactive
+            if (ConnectionType == EConnectionType.Dongle && PollingState != EPollingState.SlowPoll)
+            {
+                // open the device overlapped read so we don't get stuck waiting for a report when we write to it
+                //_device.OpenDevice(DeviceMode.Overlapped, DeviceMode.NonOverlapped, ShareMode.ShareRead | ShareMode.ShareWrite);
+                _device.OpenDevice(DeviceMode.Overlapped, DeviceMode.Overlapped, ShareMode.ShareRead | ShareMode.ShareWrite);
+
+                PollingState = EPollingState.SlowPoll;
+                _device.StartReading();
+            }
+
             _device.DeviceReport += OnReport;
         }
 
         public void Initalize()
         {
-            if (Initalized > 1) return;
+            if (PollingState == EPollingState.Active) return;
 
-            HalfInitalize();
-
-            Initalized = 2;
-            _device.StartReading();
-        }
-
-        public void HalfInitalize()
-        {
-            if (Initalized > 0) return;
-
-            // open the device overlapped read so we don't get stuck waiting for a report when we write to it
-            //_device.OpenDevice(DeviceMode.Overlapped, DeviceMode.NonOverlapped, ShareMode.ShareRead | ShareMode.ShareWrite);
-            _device.OpenDevice(DeviceMode.Overlapped, DeviceMode.Overlapped, ShareMode.ShareRead | ShareMode.ShareWrite);
-
-            //_device.Inserted += DeviceAttachedHandler;
-            //_device.Removed += DeviceRemovedHandler;
-
-            //_device.MonitorDeviceEvents = true;
-
-            Initalized = 1;
             touch_last_frame = false;
 
-            //_attached = _device.IsConnected;
-
-            if (ConnectionType == EConnectionType.Dongle)
-            {
-                _device.StartReading();
-            }
+            PollingState = EPollingState.Active;
+            _device.StartReading();
         }
 
         public void DeInitalize()
         {
-            if (Initalized == 0) return;
+            if (PollingState == EPollingState.Inactive) return;
+            if (PollingState == EPollingState.SlowPoll) return;
 
-            //_device.Inserted -= DeviceAttachedHandler;
-            //_device.Removed -= DeviceRemovedHandler;
+            // dongles switch back to slow poll instead of going inactive
+            if (ConnectionType == EConnectionType.Dongle)
+            {
+                PollingState = EPollingState.SlowPoll;
+            }
+            else
+            {
+                _device.StopReading();
 
-            //_device.MonitorDeviceEvents = false;
-
-            _device.StopReading();
-
-            Initalized = 0;
-            _device.CloseDevice();
+                PollingState = EPollingState.Inactive;
+                _device.CloseDevice();
+            }
         }
 
         public async void Identify()
@@ -334,7 +329,7 @@ namespace ExtendInput.Controller
         bool DisconnectedBit = false;
         private void OnReport(byte[] reportData)
         {
-            if (Initalized < 1) return;
+            if (PollingState == EPollingState.Inactive) return;
 
             if (0 == Interlocked.Exchange(ref reportUsageLock, 1))
             {
@@ -479,7 +474,7 @@ namespace ExtendInput.Controller
                             int F2Y = ((reportData[1 + baseOffset + 40 + (FingerCounter * 9)] & 0xF0) >> 4)
                                      | (reportData[1 + baseOffset + 41 + (FingerCounter * 9)] << 4);
 
-                            byte TimeDelta = touch_last_frame ? GetOverflowedDelta(last_touch_timestamp, touch_timestamp) : (byte)0;
+                            byte TimeDelta = touch_last_frame ? ControllerMathTools.GetOverflowedDelta(last_touch_timestamp, touch_timestamp) : (byte)0;
 
                             //Console.WriteLine($"{TimeDelta} {(tmp_now - tmp).Milliseconds}");
 
@@ -504,36 +499,8 @@ namespace ExtendInput.Controller
                 Interlocked.Exchange(ref reportUsageLock, 0);
 
                 if (ConnectionType == EConnectionType.Dongle && DisconnectedBit)
-                    Thread.Sleep(1000); // if we're a dongle and we're not connected we might only be partially initalized, so slow roll our read
+                    Thread.Sleep(_SLOW_POLL_MS); // if we're a dongle and we're not connected we might only be partially initalized, so slow roll our read
             }
         }
-
-        // Pure function
-        private byte GetOverflowedDelta(byte prev, byte cur, uint overflow = byte.MaxValue + 1)
-        {
-            uint _cur = cur;
-            while(_cur < prev)
-                _cur += overflow;
-            return (byte)(_cur - prev);
-        }
-
-        /*private void DeviceAttachedHandler()
-        {
-            lock (controllerStateLock)
-            {
-                _attached = true;
-                Console.WriteLine("VSC Address Attached");
-                _device.ReadReport(OnReport);
-            }
-        }
-
-        private void DeviceRemovedHandler()
-        {
-            lock (controllerStateLock)
-            {
-                _attached = false;
-                Console.WriteLine("VSC Address Removed");
-            }
-        }*/
     }
 }

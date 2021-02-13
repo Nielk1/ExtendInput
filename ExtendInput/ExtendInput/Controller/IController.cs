@@ -10,6 +10,47 @@ namespace ExtendInput.Controller
         Bluetooth,
         Dongle,
     }
+    public enum EPollingState
+    {
+        /// <summary>
+        /// Device is entirely inactive
+        /// </summary>
+        Inactive,
+
+        /// <summary>
+        /// Device must be polled to check if child is connected
+        /// </summary>
+        SlowPoll,
+
+        /// <summary>
+        /// Device is active and being polled constantly
+        /// </summary>
+        Active,
+
+        /// <summary>
+        /// Device sends events rather than polling
+        /// </summary>
+        Push,
+    }
+
+    public enum EInterfaceLevel
+    {
+        /// <summary>
+        /// Only read controller state, don't write anything
+        /// </summary>
+        ReadOnly,
+
+        /// <summary>
+        /// Only write safe things to the controller, such as transient states like rumble
+        /// </summary>
+        SafeWriteOnly,
+
+        /// <summary>
+        /// All writes are allowed, not just transient states, this may also trigger exclusive mode
+        /// </summary>
+        FullControl,
+    }
+
     public delegate void ControllerNameUpdateEvent();
     public interface IController
     {
@@ -39,6 +80,21 @@ namespace ExtendInput.Controller
             if (r < -1.0f)
                 return -1.0f;
             return r;
+        }
+
+        /// <summary>
+        /// Get delta between two values accounting for overflow
+        /// </summary>
+        /// <param name="prev">Previous Value</param>
+        /// <param name="cur">Current Value</param>
+        /// <param name="overflow">Value of overflow, defaults to max for type</param>
+        /// <returns></returns>
+        public static byte GetOverflowedDelta(byte prev, byte cur, uint overflow = byte.MaxValue + 1)
+        {
+            uint _cur = cur;
+            while (_cur < prev)
+                _cur += overflow;
+            return (byte)(_cur - prev);
         }
     }
 }

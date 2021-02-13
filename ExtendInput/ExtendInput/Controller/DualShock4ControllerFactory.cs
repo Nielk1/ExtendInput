@@ -28,7 +28,6 @@ namespace ExtendInput.Controller
                     if (_device.DevicePath.Contains(@"&col01"))
                     {
                         DualShock4Controller ctrl = new DualShock4Controller(_device, EConnectionType.USB);
-                        ctrl.HalfInitalize();
                         return ctrl;
                     }
                 }
@@ -64,7 +63,6 @@ namespace ExtendInput.Controller
 
             {
                 DualShock4Controller ctrl = new DualShock4Controller(_device, ConType);
-                ctrl.HalfInitalize();
                 return ctrl;
             }
         }
