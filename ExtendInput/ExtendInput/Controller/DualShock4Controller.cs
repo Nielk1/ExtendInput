@@ -32,6 +32,10 @@ namespace ExtendInput.Controller
         public EConnectionType ConnectionType { get; private set; }
         public EPollingState PollingState { get; private set; }
 
+        public string[] ConnectionTypeCode { get; private set; }
+        public string[] ControllerTypeCode { get; private set; }
+
+
         public bool SensorsEnabled;
         private HidDevice _device;
         int stateUsageLock = 0, reportUsageLock = 0;
@@ -74,6 +78,23 @@ namespace ExtendInput.Controller
         public DualShock4Controller(HidDevice device, EConnectionType ConnectionType = EConnectionType.Unknown)
         {
             this.ConnectionType = ConnectionType;
+
+            switch(ConnectionType)
+            {
+                case EConnectionType.USB:
+                    ConnectionTypeCode = new string[] { "USB_WIRE", "WIRE" };
+                    break;
+                case EConnectionType.Bluetooth:
+                    ConnectionTypeCode = new string[] { "BT" };
+                    break;
+                case EConnectionType.Dongle:
+                    ConnectionTypeCode = new string[] { "DS4_DONGLE", "DONGLE" };
+                    break;
+                default:
+                    ConnectionTypeCode = new string[] { "UNKNOWN" };
+                    break;
+            }
+            ControllerTypeCode = new string[] { "DS4", "GAMEPAD" };
 
             State.Controls["quad_left"] = new ControlDPad();
             State.Controls["quad_right"] = new ControlButtonQuad();

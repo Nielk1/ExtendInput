@@ -11,6 +11,11 @@ namespace ExtendInput.Controller
     {
         public EConnectionType ConnectionType => EConnectionType.Unknown;
 
+
+        public string[] ConnectionTypeCode { get; private set; }
+        public string[] ControllerTypeCode { get; private set; }
+
+
         public IDevice DeviceHackRef => _device;
         private XInputDevice _device;
         int stateUsageLock = 0, reportUsageLock = 0;
@@ -25,6 +30,9 @@ namespace ExtendInput.Controller
         int Initalized;
         public XInputController(XInputDevice device)
         {
+            ConnectionTypeCode = new string[] { "UNKNOWN" };
+            ControllerTypeCode = new string[] { "XBOX", "GAMEPAD" };
+
             State.Controls["quad_left"] = new ControlDPad();
             State.Controls["quad_right"] = new ControlButtonQuad();
             State.Controls["bumpers"] = new ControlButtonPair();

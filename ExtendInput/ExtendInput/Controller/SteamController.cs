@@ -25,6 +25,10 @@ namespace ExtendInput.Controller
         const float PadAngle = 0.261799f; // 15 deg in radians
 
 
+        public string[] ConnectionTypeCode { get; private set; }
+        public string[] ControllerTypeCode { get; private set; }
+
+
         public bool HasMotion => true;
 
         public bool SensorsEnabled;
@@ -197,6 +201,30 @@ namespace ExtendInput.Controller
             _device = device;
             ConnectionType = connection;
             ControllerType = type;
+
+            switch (ConnectionType)
+            {
+                case EConnectionType.USB:
+                    ConnectionTypeCode = new string[] { "USB_WIRE", "WIRE" };
+                    break;
+                case EConnectionType.Bluetooth:
+                    ConnectionTypeCode = new string[] { "BT" };
+                    break;
+                case EConnectionType.Dongle:
+                    ConnectionTypeCode = new string[] { "SC_DONGLE", "DONGLE" };
+                    break;
+                default:
+                    ConnectionTypeCode = new string[] { "UNKNOWN" };
+                    break;
+            }
+            if (type == EControllerType.Chell)
+            {
+                ControllerTypeCode = new string[] { "SC_CHELL", "GAMEPAD" };
+            }
+            else
+            {
+                ControllerTypeCode = new string[] { "SC", "GAMEPAD" };
+            }
 
             Initalized = 0;
 

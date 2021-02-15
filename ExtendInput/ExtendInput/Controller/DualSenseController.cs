@@ -49,6 +49,10 @@ namespace ExtendInput.Controller
 
         public EConnectionType ConnectionType { get; private set; }
 
+        public string[] ConnectionTypeCode { get; private set; }
+        public string[] ControllerTypeCode { get; private set; }
+
+
         public IDevice DeviceHackRef => _device;
 
         ControllerState State = new ControllerState();

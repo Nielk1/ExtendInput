@@ -57,6 +57,9 @@ namespace ExtendInput.Controller
         event ControllerNameUpdateEvent ControllerNameUpdated;
 
         EConnectionType ConnectionType { get; }
+        string[] ConnectionTypeCode { get; }
+        string[] ControllerTypeCode { get; }
+
         IDevice DeviceHackRef { get; }
         bool HasMotion { get; }
 
