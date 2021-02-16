@@ -11,6 +11,7 @@ namespace ExtendInput.Controller
     {
         public const int VendorId = 0x054C;
         public const int ProductIdDongle = 0x0BA0;
+        public const int ProductIdDongleBroken = 0x0BA1; // wierd broken state, being flashed?
         public const int ProductIdWired = 0x05C4; // and BT
         public const int ProductIdWiredV2 = 0x09CC; // and BT
 
@@ -29,12 +30,24 @@ namespace ExtendInput.Controller
 
         private const int _SLOW_POLL_MS = 1000;
 
+        private readonly string[] _CONNECTION_WIRE = new string[] { "USB_WIRE", "WIRE" };
+        private readonly string[] _CONNECTION_BT = new string[] { "BT" };
+        private readonly string[] _CONNECTION_DONGLE = new string[] { "DS4_DONGLE", "DONGLE" };
+        private readonly string[] _CONNECTION_UNKKNOWN = new string[] { "UNKNOWN" };
+
+        private readonly string[] _CONTROLLER_DS4V1 = new string[] { "DS4V1", "DS4", "GAMEPAD" };
+        private readonly string[] _CONTROLLER_DS4V2 = new string[] { "DS4V2", "DS4", "GAMEPAD" };
+        private readonly string[] _CONTROLLER_MARS = new string[] { "BROOKMARS", "MARS", "DS4", "GAMEPAD" };
+        private readonly string[] _CONTROLLER_UNKKNOWN = new string[] { "UNKNOWN" };
+
         public EConnectionType ConnectionType { get; private set; }
         public EPollingState PollingState { get; private set; }
 
         public string[] ConnectionTypeCode { get; private set; }
         public string[] ControllerTypeCode { get; private set; }
 
+
+        private bool HaveSeenNonZeroRawTemp;
 
         public bool SensorsEnabled;
         private HidDevice _device;
@@ -77,24 +90,26 @@ namespace ExtendInput.Controller
 
         public DualShock4Controller(HidDevice device, EConnectionType ConnectionType = EConnectionType.Unknown)
         {
+            HaveSeenNonZeroRawTemp = false;
+
             this.ConnectionType = ConnectionType;
 
             switch(ConnectionType)
             {
                 case EConnectionType.USB:
-                    ConnectionTypeCode = new string[] { "USB_WIRE", "WIRE" };
+                    ConnectionTypeCode = _CONNECTION_WIRE;
                     break;
                 case EConnectionType.Bluetooth:
-                    ConnectionTypeCode = new string[] { "BT" };
+                    ConnectionTypeCode = _CONNECTION_BT;
                     break;
                 case EConnectionType.Dongle:
-                    ConnectionTypeCode = new string[] { "DS4_DONGLE", "DONGLE" };
+                    ConnectionTypeCode = _CONNECTION_DONGLE;
                     break;
                 default:
-                    ConnectionTypeCode = new string[] { "UNKNOWN" };
+                    ConnectionTypeCode = _CONNECTION_UNKKNOWN;
                     break;
             }
-            ControllerTypeCode = new string[] { "DS4", "GAMEPAD" };
+            ControllerTypeCode = GetControllerTypeCode((UInt16)device.VendorId, (UInt16)device.ProductId);
 
             State.Controls["quad_left"] = new ControlDPad();
             State.Controls["quad_right"] = new ControlButtonQuad();
@@ -229,121 +244,179 @@ namespace ExtendInput.Controller
             );
         }
 
-        public string GetName()
+        private string[] GetControllerTypeCode(UInt16 VID, UInt16 PID)
         {
-            switch (ConnectionType)
+            if (_device != null && VID == VendorId && PID == ProductIdDongle) // we are an offical dongle
             {
-                case EConnectionType.Dongle:
+                byte[] FeatureBuffer;
+                _device.ReadFeatureData(out FeatureBuffer, 0xE3);
+                VID = BitConverter.ToUInt16(FeatureBuffer, 1);
+                PID = BitConverter.ToUInt16(FeatureBuffer, 3);
+            }
+
+            switch (VID)
+            {
+                case VendorId:
+                    switch (PID)
                     {
-                        bool hasDevice = true;
-                        byte[] data;
-                        _device.ReadFeatureData(out data, 0xE3);
-                        UInt16 local_VID = BitConverter.ToUInt16(data, 1);
-                        UInt16 local_PID = BitConverter.ToUInt16(data, 3);
-                        string retVal = $"Sony Device <{local_PID:X4}>";//"DUALSHOCK®4 USB Wireless Adaptor";
-                        switch (local_VID)
-                        {
-                            case 0:
-                                retVal = "DUALSHOCK®4 USB Wireless Adaptor";
-                                hasDevice = false;
-                                break;
-                            case VendorId:
-                                switch (local_PID)
-                                {
-                                    case ProductIdWired:
-                                        retVal = $"Sony DUALSHOCK®4 Controller V1";
-                                        break;
-                                    case ProductIdWiredV2:
-                                        retVal = $"Sony DUALSHOCK®4 Controller V2";
-                                        break;
-                                        //default:
-                                        //    retVal = 
-                                        //    break;
-                                }
-                                break;
-                            default:
-                                retVal = $"Unknown <{local_VID:X4},{local_PID:X4}>";
-                                break;
-                        }
+                        case ProductIdWired:
+                            return _CONTROLLER_DS4V1;
+                        case ProductIdWiredV2:
+                            return _CONTROLLER_DS4V2;
+                    }
+                    break;
+                case BrookMarsVendorId:
+                    switch (PID)
+                    {
+                        case BrookMarsProductId:
+                            return _CONTROLLER_MARS;
+                    }
+                    break;
+            }
+            return _CONTROLLER_UNKKNOWN;
+        }
 
-                        if(!hasDevice)
-                        {
-                            return retVal;
-                        }
-
-                        string Serial = null;
-
-                        if (_device.VendorId == VendorId
-                        && (_device.ProductId == ProductIdWired || _device.ProductId == ProductIdWiredV2 || _device.ProductId == ProductIdDongle))
-                        {
-                            try
-                            {
-                                _device.ReadFeatureData(out data, 0x12);
-                                Serial = string.Join(":", data.Skip(1).Take(6).Reverse().Select(dr => $"{dr:X2}").ToArray());
-                                if (Serial == "00:00:00:00:00:00")
-                                    Serial = null;
-                            }
-                            catch { }
-                        }
-                        if (string.IsNullOrWhiteSpace(Serial))
-                        {
-                            string SerialNumber = _device.ReadSerialNumber(); // DUALSHOCK®4 USB Wireless Adaptor
-                            if (!string.IsNullOrWhiteSpace(SerialNumber))
-                            {
-                                Serial = SerialNumber;
-                            }
-                        }
-                        if (string.IsNullOrWhiteSpace(Serial))
-                            Serial = null;
-
-                        return retVal += $" [{Serial ?? "No ID"}]";
+        private string GetDeviceName(UInt16 VID, UInt16 PID, out bool CanGetSN)
+        {
+            switch (VID)
+            {
+                case VendorId:
+                    switch (PID)
+                    {
+                        case ProductIdDongle:
+                            CanGetSN = false;
+                            return "DUALSHOCK®4 USB Wireless Adaptor";
+                        case ProductIdDongleBroken:
+                            CanGetSN = false;
+                            return "DUALSHOCK®4 USB Wireless Adaptor in DFU mode!!!";
+                        case ProductIdWired:
+                            CanGetSN = true;
+                            if (!HaveSeenNonZeroRawTemp)
+                                return $"Sony DUALSHOCK®4 Controller V1 (Possible Unoffical)";
+                            return $"Sony DUALSHOCK®4 Controller V1";
+                        case ProductIdWiredV2:
+                            CanGetSN = true;
+                            if (!HaveSeenNonZeroRawTemp)
+                                return $"Sony DUALSHOCK®4 Controller V2 (Possible Unoffical)";
+                            return $"Sony DUALSHOCK®4 Controller V2";
+                        default:
+                            CanGetSN = false;
+                            return $"Sony Device <{PID:X4}>";
+                    }
+                case BrookMarsVendorId:
+                    switch (PID)
+                    {
+                        case BrookMarsProductId:
+                            CanGetSN = false;
+                            return "Brook Mars Wired Controller";
+                        default:
+                            CanGetSN = false;
+                            return $"Brook Device <{PID:X4}>";
                     }
                 default:
+                    CanGetSN = false;
+                    return $"Unknown Device <{VID:X4},{PID:X4}>";
+            }
+        }
+
+        private void GetHidSerialNumberIfNull(ref string Serial)
+        {
+            if (string.IsNullOrWhiteSpace(Serial))
+            {
+                string SerialNumber = _device.ReadSerialNumber();
+                if (!string.IsNullOrWhiteSpace(SerialNumber))
+                {
+                    Serial = SerialNumber;
+                }
+            }
+
+            if (string.IsNullOrWhiteSpace(Serial))
+                Serial = null;
+        }
+
+        public string GetName()
+        {
+            string DeviceName = null;
+            bool CanGetSN = false;
+            if (_device.VendorId == VendorId)
+            {
+                if (ConnectionType == EConnectionType.Dongle)
+                {
+                    if (_device.ProductId == ProductIdDongle) // we are an offical dongle
                     {
-                        string retVal = "Sony DUALSHOCK®4 Controller";
+                        byte[] FeatureBuffer;
+                        _device.ReadFeatureData(out FeatureBuffer, 0xE3);
+                        UInt16 local_VID = BitConverter.ToUInt16(FeatureBuffer, 1);
+                        UInt16 local_PID = BitConverter.ToUInt16(FeatureBuffer, 3);
+
+                        if (local_VID == 0)
+                        {
+                            DeviceName = GetDeviceName(VendorId, ProductIdDongle, out CanGetSN);
+                        }
+                        else
+                        {
+                            DeviceName = GetDeviceName(local_VID, local_PID, out CanGetSN);
+                        }
+
+                        if (!CanGetSN)
+                            return DeviceName;
+
                         string Serial = null;
-
-                        if (_device.VendorId == VendorId)
+                        try
                         {
-                            retVal = "Sony DUALSHOCK®4 Controller";
-
-                            switch (_device.ProductId)
-                            {
-                                case ProductIdWired:
-                                    retVal = $"Sony DUALSHOCK®4 Controller V1";
-                                    break;
-                                case ProductIdWiredV2:
-                                    retVal = $"Sony DUALSHOCK®4 Controller V2";
-                                    break;
-                            }
-
-                            try
-                            {
-                                byte[] data;
-                                _device.ReadFeatureData(out data, 0x12);
-                                Serial = string.Join(":", data.Skip(1).Take(6).Reverse().Select(dr => $"{dr:X2}").ToArray());
-                            }
-                            catch { }
+                            // get MAC of controller via Dongle
+                            _device.ReadFeatureData(out FeatureBuffer, 0x12);
+                            Serial = string.Join(":", FeatureBuffer.Skip(1).Take(6).Reverse().Select(dr => $"{dr:X2}").ToArray());
+                            if (Serial == "00:00:00:00:00:00")
+                                Serial = null;
                         }
+                        catch { }
 
-                        if (_device.VendorId == BrookMarsVendorId && _device.ProductId == BrookMarsProductId)
-                        {
-                            return "Brook Mars Wired Controller";
-                        }
+                        GetHidSerialNumberIfNull(ref Serial);
 
-                        if (string.IsNullOrWhiteSpace(Serial))
-                        {
-                            string SerialNumber = _device.ReadSerialNumber(); // DUALSHOCK®4 USB Wireless Adaptor
-                            if (!string.IsNullOrWhiteSpace(SerialNumber))
-                            {
-                                Serial = SerialNumber;
-                            }
-                        }
-                        if (string.IsNullOrWhiteSpace(Serial))
-                            Serial = null;
-
-                        return retVal += $" [{Serial ?? "No ID"}]";
+                        return DeviceName += $" [{Serial ?? "No ID"}]";
                     }
+                    else // unknown dongle so we don't know what to do, currently can't happen
+                    {
+                        DeviceName = GetDeviceName((UInt16)_device.VendorId, (UInt16)_device.ProductId, out _);
+                        return DeviceName;
+                    }
+                }
+                else // not a dongle
+                {
+                    DeviceName = GetDeviceName((UInt16)_device.VendorId, (UInt16)_device.ProductId, out CanGetSN);
+
+                    if (!CanGetSN)
+                        return DeviceName;
+
+                    // for right now we can only get here here V1 and V2 controllers, so we can safely call the GetMac report
+                    string Serial = null;
+                    try
+                    {
+                        byte[] data;
+                        _device.ReadFeatureData(out data, 0x12);
+                        Serial = string.Join(":", data.Skip(1).Take(6).Reverse().Select(dr => $"{dr:X2}").ToArray());
+                        if (Serial == "00:00:00:00:00:00")
+                            Serial = null;
+                    }
+                    catch { }
+
+                    GetHidSerialNumberIfNull(ref Serial);
+
+                    return DeviceName += $" [{Serial ?? "No ID"}]";
+                }
+            }
+            else // not a Sony device
+            {
+                DeviceName = GetDeviceName((UInt16)_device.VendorId, (UInt16)_device.ProductId, out CanGetSN);
+
+                if (!CanGetSN)
+                    return DeviceName;
+
+                string Serial = null;
+                GetHidSerialNumberIfNull(ref Serial);
+
+                return DeviceName += $" [{Serial ?? "No ID"}]";
             }
         }
 
@@ -435,8 +508,16 @@ namespace ExtendInput.Controller
                     //bld.Append(BitConverter.ToUInt16(reportData, 1 + baseOffset + 9).ToString().PadLeft(5));
                     // FIX: (timestamp * 16) / 3
 
-                    // Battery Power Level
-                    //bld.Append(reportData[1 + baseOffset + 11].ToString("X2") + "   ");
+                    // Battery Temperture
+                    if (!HaveSeenNonZeroRawTemp)
+                    {
+                        if (reportData[1 + baseOffset + 11] != 0)
+                        {
+                            HaveSeenNonZeroRawTemp = true;
+                            //ControllerTypeCode = GetControllerTypeCode((UInt16)device.VendorId, (UInt16)device.ProductId);
+                            ControllerNameUpdated?.Invoke();
+                        }
+                    }
 
                     (State.Controls["motion"] as ControlMotion).AngularVelocityX = BitConverter.ToInt16(reportData, 1 + baseOffset + 12);
                     (State.Controls["motion"] as ControlMotion).AngularVelocityZ = BitConverter.ToInt16(reportData, 1 + baseOffset + 14);
@@ -464,6 +545,7 @@ namespace ExtendInput.Controller
                     if (DisconnectedFlag != DisconnectedBit)
                     {
                         DisconnectedBit = DisconnectedFlag;
+                        ControllerTypeCode = GetControllerTypeCode((UInt16)_device.VendorId, (UInt16)_device.ProductId);
                         ControllerNameUpdated?.Invoke();
                     }
 
@@ -495,14 +577,27 @@ namespace ExtendInput.Controller
                             int F2Y = ((reportData[1 + baseOffset + 40 + (FingerCounter * 9)] & 0xF0) >> 4)
                                      | (reportData[1 + baseOffset + 41 + (FingerCounter * 9)] << 4);
 
-                            byte TimeDelta = touch_last_frame ? ControllerMathTools.GetOverflowedDelta(last_touch_timestamp, touch_timestamp) : (byte)0;
+                            bool Finger1Valid = true;
+                            bool Finger2Valid = true;
 
-                            //Console.WriteLine($"{TimeDelta} {(tmp_now - tmp).Milliseconds}");
+                            if (!HaveSeenNonZeroRawTemp) // Battery temp is 0x00, which suggests it's a 3rd party controller
+                            {
+                                if (Finger1 && (F1X > 1919f || F1Y > 942f))
+                                    Finger1Valid = false;
+                                if (Finger2 && (F2X > 1919f || F2Y > 942f))
+                                    Finger2Valid = false;
+                                //Console.WriteLine($"TS:{touch_timestamp}\t{Finger1}\t{Finger1Index}\t{F1X}\t{F1Y}\t{Finger2}\t{Finger2Index}\t{F2X}\t{F2Y}");
+                            }
+                            if (Finger1Valid || Finger2Valid)
+                            {
+                                byte TimeDelta = touch_last_frame ? ControllerMathTools.GetOverflowedDelta(last_touch_timestamp, touch_timestamp) : (byte)0;
 
-                            (State.Controls["touch_center"] as ControlTouch).AddTouch(0, Finger1, (F1X / 1919f) * 2f - 1f, (F1Y / 942f) * 2f - 1f, TimeDelta);
-                            (State.Controls["touch_center"] as ControlTouch).AddTouch(1, Finger2, (F2X / 1919f) * 2f - 1f, (F2Y / 942f) * 2f - 1f, TimeDelta);
+                                //Console.WriteLine($"{TimeDelta} {(tmp_now - tmp).Milliseconds}");
+                                (State.Controls["touch_center"] as ControlTouch).AddTouch(0, Finger1Valid && Finger1, (F1X / 1919f) * 2f - 1f, (F1Y / 942f) * 2f - 1f, TimeDelta);
+                                (State.Controls["touch_center"] as ControlTouch).AddTouch(1, Finger2Valid && Finger2, (F2X / 1919f) * 2f - 1f, (F2Y / 942f) * 2f - 1f, TimeDelta);
 
-                            last_touch_timestamp = touch_timestamp;
+                                last_touch_timestamp = touch_timestamp;
+                            }
                             //tmp = tmp_now;
                         }
 
