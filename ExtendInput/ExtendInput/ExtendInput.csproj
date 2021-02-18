@@ -35,6 +35,13 @@
     <Reference Include="HidSharp, Version=2.1.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\..\..\..\packages\HidSharp.2.1.0\lib\net35\HidSharp.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.Win32.Registry, Version=4.1.3.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\..\..\packages\Microsoft.Win32.Registry.4.7.0\lib\net461\Microsoft.Win32.Registry.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="NAudio, Version=1.10.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\..\..\packages\NAudio.1.10.0\lib\net35\NAudio.dll</HintPath>
+    </Reference>
     <Reference Include="SharpDX, Version=4.2.0.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
       <HintPath>..\..\..\..\packages\SharpDX.4.2.0\lib\net45\SharpDX.dll</HintPath>
     </Reference>
@@ -43,6 +50,15 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Security.AccessControl, Version=4.1.3.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\..\..\packages\System.Security.AccessControl.4.7.0\lib\net461\System.Security.AccessControl.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Security.Principal.Windows, Version=4.1.3.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\..\..\packages\System.Security.Principal.Windows.4.7.0\lib\net461\System.Security.Principal.Windows.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -54,6 +70,8 @@
     <Compile Include="Controller\DualSenseController.cs" />
     <Compile Include="Controller\DualSenseControllerFactory.cs" />
     <Compile Include="Controller\IControllerFactory.cs" />
+    <Compile Include="Controller\SixtyBeatGamepadControllerFactory.cs" />
+    <Compile Include="Controller\SixtyBeatGamepadController.cs" />
     <Compile Include="Controls\ControlButton.cs" />
     <Compile Include="Controls\ControlButtonGrid.cs" />
     <Compile Include="Controls\ControlButtonPair.cs" />
@@ -77,13 +95,15 @@
     <Compile Include="Controls\IControl.cs" />
     <Compile Include="Controls\IControlPair.cs" />
     <Compile Include="DeviceManager.cs" />
+    <Compile Include="DeviceProvider\SixtyBeatAudioDevice.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="DeviceProvider\AudioDeviceProvider.cs" />
+    <Compile Include="DeviceProvider\SixtyBeatAudioDeviceProvider.cs" />
     <Compile Include="DeviceProvider\HidDeviceProvider.cs" />
     <Compile Include="DeviceProvider\HidDevice.cs" />
     <Compile Include="DeviceProvider\IDevice.cs" />
     <Compile Include="DeviceProvider\XInputDeviceProvider.cs" />
     <Compile Include="DeviceProvider\XInputDevice.cs" />
+    <Compile Include="RingBuffer.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

@@ -89,7 +89,7 @@ namespace ExtendInput.DeviceProvider
         {
             lock (readingLock)
             {
-                if (ControllerNameUpdated == null)
+                if (DeviceReport == null)
                     reading = false;
 
                 if (reading)
@@ -101,7 +101,7 @@ namespace ExtendInput.DeviceProvider
                 {
                     while (reading)
                     {
-                        if (ControllerNameUpdated == null)
+                        if (DeviceReport == null)
                         {
                             break;
                         }
@@ -110,7 +110,7 @@ namespace ExtendInput.DeviceProvider
                         {
                             var State = internalDevice.GetState();
 
-                            DeviceReportEvent threadSafeEvent = ControllerNameUpdated;
+                            DeviceReportEvent threadSafeEvent = DeviceReport;
 
                             byte[] RawData = new byte[12];
                             RawData[0] = (byte)(ushort)State.Gamepad.Buttons;
@@ -156,6 +156,6 @@ namespace ExtendInput.DeviceProvider
             return this.UniqueKey == other.UniqueKey;
         }
 
-        public event DeviceReportEvent ControllerNameUpdated;
+        public event DeviceReportEvent DeviceReport;
     }
 }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ExtendInput.Controller;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -6,7 +7,7 @@ using System.Linq;
 
 namespace ExtendInput.DeviceProvider
 {
-    [CoreDeviceProvider(TypeString = "XInput", SupportsAutomaticDetection = true, SupportsManualyQuery = true, RequiresManualConfiguration = false)]
+    [DeviceProvider(TypeString = "XInput", SupportsAutomaticDetection = true, SupportsManualyQuery = true, RequiresManualConfiguration = false)]
     public class XInputDeviceProvider : IDeviceProvider
     {
         private const int MAX_SLOT = 4;
@@ -52,6 +53,10 @@ namespace ExtendInput.DeviceProvider
                 }
                 catch { }
             }
+        }
+
+        public void ManualTrigger()
+        {
         }
     }
 }

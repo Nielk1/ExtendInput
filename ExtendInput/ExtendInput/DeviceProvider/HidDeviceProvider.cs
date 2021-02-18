@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ExtendInput.Controller;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -6,7 +7,7 @@ using System.Linq;
 
 namespace ExtendInput.DeviceProvider
 {
-    [CoreDeviceProvider(TypeString = "HID", SupportsAutomaticDetection = true, SupportsManualyQuery = true, RequiresManualConfiguration = false)]
+    [DeviceProvider(TypeString = "HID", SupportsAutomaticDetection = true, SupportsManualyQuery = true, RequiresManualConfiguration = false)]
     public class HidDeviceProvider : IDeviceProvider
     {
         public event DeviceChangeEventHandler DeviceAdded;
@@ -85,6 +86,9 @@ namespace ExtendInput.DeviceProvider
             HidSharp.DeviceList.Local.Changed
         }*/
 
+        public void ManualTrigger()
+        {
+        }
 
     }
 
@@ -95,8 +99,9 @@ namespace ExtendInput.DeviceProvider
         event DeviceChangeEventHandler DeviceRemoved;
 
         void ScanNow();
+        void ManualTrigger();
     }
-    public class CoreDeviceProviderAttribute : Attribute
+    public class DeviceProviderAttribute : Attribute
     {
         public string TypeString { get; set; }
         public bool SupportsAutomaticDetection { get; set; }

@@ -45,7 +45,7 @@ namespace ExtendInput.Controller
             _device = device;
             Initalized = 0;
 
-            _device.ControllerNameUpdated += OnReport;
+            _device.DeviceReport += OnReport;
         }
 
         public string GetName()

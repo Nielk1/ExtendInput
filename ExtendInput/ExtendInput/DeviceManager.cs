@@ -10,16 +10,16 @@ namespace ExtendInput
 {
     public class DeviceManager
     {
-        List<IDeviceProvider> CoreDeviceProviders;
-        List<IControllerFactory> DeviceProviders;
+        List<IDeviceProvider> DeviceProviders;
+        List<IControllerFactory> ControllerFactories;
 
         public event ControllerChangeEventHandler ControllerAdded;
         public event DeviceChangeEventHandler ControllerRemoved;
 
         public DeviceManager()
         {
-            CoreDeviceProviders = new List<IDeviceProvider>();
-            DeviceProviders = new List<IControllerFactory>();
+            DeviceProviders = new List<IDeviceProvider>();
+            ControllerFactories = new List<IControllerFactory>();
 
             foreach (Type item in typeof(IDeviceProvider).GetTypeInfo().Assembly.GetTypes())
             {
@@ -40,7 +40,7 @@ namespace ExtendInput
                             //}
 
                             IDeviceProvider plugin = (IDeviceProvider)Activator.CreateInstance(item, paramList);
-                            CoreDeviceProviders.Add(plugin);
+                            DeviceProviders.Add(plugin);
 
                             break;
                         }
@@ -67,7 +67,7 @@ namespace ExtendInput
                             //}
 
                             IControllerFactory plugin = (IControllerFactory)Activator.CreateInstance(item, paramList);
-                            DeviceProviders.Add(plugin);
+                            ControllerFactories.Add(plugin);
 
                             break;
                         }
@@ -76,7 +76,7 @@ namespace ExtendInput
                 }
             }
 
-            foreach (IDeviceProvider deviceProvider in CoreDeviceProviders)
+            foreach (IDeviceProvider deviceProvider in DeviceProviders)
             {
                 deviceProvider.DeviceAdded += DeviceAdded;
                 deviceProvider.DeviceRemoved += DeviceRemoved;
@@ -85,7 +85,7 @@ namespace ExtendInput
 
         private void DeviceAdded(object sender, IDevice e)
         {
-            foreach (IControllerFactory factory in DeviceProviders)
+            foreach (IControllerFactory factory in ControllerFactories)
             {
                 IController d = factory.NewDevice(e);
                 if (d != null)
@@ -106,10 +106,15 @@ namespace ExtendInput
 
         public void ScanNow()
         {
-            foreach (IDeviceProvider provider in CoreDeviceProviders)
+            foreach (IDeviceProvider provider in DeviceProviders)
             {
                 provider.ScanNow();
             }
+        }
+
+        public List<IDeviceProvider> GetManualDeviceProviders()
+        {
+            return DeviceProviders.Where(dr => (Attribute.GetCustomAttribute(dr.GetType(), typeof(DeviceProviderAttribute)) as DeviceProviderAttribute)?.RequiresManualConfiguration ?? false).ToList();
         }
     }
 
