@@ -4,8 +4,7 @@ namespace ExtendInput.Controls
 {
     public class ControlButtonGrid : IControl
     {
-        public bool[,] Button { get; private set; }
-        public bool?[,] PendingButton { get; private set; }
+        public bool[,] Button { get; set; }
         private int Width;
         private int Height;
 
@@ -14,7 +13,6 @@ namespace ExtendInput.Controls
             Width = width;
             Height = height;
             Button = new bool[Width, Height];
-            PendingButton = new bool?[Width, Height];
         }
 
         public T Value<T>(string key)
@@ -51,16 +49,6 @@ namespace ExtendInput.Controls
                     newData.Button[w, h] = this.Button[w, h];
 
             return newData;
-        }
-
-        public void ProcessPendingInputs()
-        {
-            for (int w = 0; w < Width; w++)
-                for (int h = 0; h < Height; h++)
-                {
-                    Button[w, h] = PendingButton[w, h] ?? Button[w, h];
-                    PendingButton[w, h] = null;
-                }
         }
     }
 }

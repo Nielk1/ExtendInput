@@ -4,8 +4,7 @@ namespace ExtendInput.Controls
 {
     public class ControlButton : IControl
     {
-        public bool Button0 { get; private set; }
-        public bool? PendingButton0 { get; set; }
+        public bool Button0 { get; set; }
         public T Value<T>(string key)
         {
             if (string.IsNullOrEmpty(key) || key == "click")
@@ -24,12 +23,6 @@ namespace ExtendInput.Controls
             newData.Button0 = this.Button0;
 
             return newData;
-        }
-
-        public void ProcessPendingInputs()
-        {
-            Button0 = PendingButton0 ?? Button0;
-            PendingButton0 = null;
         }
     }
 }

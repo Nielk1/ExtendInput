@@ -98,13 +98,6 @@ namespace ExtendInput.Controller
         };
         public ControllerState GetState()
         {
-            if (0 == Interlocked.Exchange(ref stateUsageLock, 1))
-            {
-                ControllerState newState = (ControllerState)State.Clone();
-
-                State = newState;
-                Interlocked.Exchange(ref stateUsageLock, 0);
-            }
             return State;
         }
         #endregion
@@ -172,10 +165,6 @@ namespace ExtendInput.Controller
 
         public delegate void StateUpdatedEventHandler(object sender, ControllerState e);
         public event StateUpdatedEventHandler StateUpdated;
-        protected virtual void OnStateUpdated(ControllerState e)
-        {
-            StateUpdated?.Invoke(this, e);
-        }
 
         // TODO for now it is safe to assume the startup connection type is correct, however, in the future we will need to have connection events trigger a recheck of the type or something once the V2 controller is out (if ever)
         public SteamController(HidDevice device, EConnectionType connection = EConnectionType.Unknown, EControllerType type = EControllerType.Unknown)
@@ -484,334 +473,346 @@ namespace ExtendInput.Controller
 
             if (0 == Interlocked.Exchange(ref reportUsageLock, 1))
             {
-                //OldState = State; // shouldn't this be a clone?
-                                    //if (_attached == false) { return; }
-
-                switch (ConnectionType)
+                try
                 {
-                    // report ID here is 3, do check what it is for the other connection types
-                    case EConnectionType.Bluetooth:
-                        {
-                            //Console.WriteLine($"Unknown Packet {reportData.Length}\t{BitConverter.ToString(reportData)}");
+                    // Clone the current state before altering it since the OldState is likely a shared reference
+                    ControllerState StateInFlight = (ControllerState)State.Clone();
 
-                            byte ucHeader = reportData[1 + 0];
-                            if ((ucHeader & k_nSegmentHasDataFlag) != k_nSegmentHasDataFlag)
-                                return; // steam itself actually asserts in this case
+                    //OldState = State; // shouldn't this be a clone?
+                    //if (_attached == false) { return; }
 
-                            if(!IsSegmentNumberValid(ucHeader))
+                    switch (ConnectionType)
+                    {
+                        // report ID here is 3, do check what it is for the other connection types
+                        case EConnectionType.Bluetooth:
                             {
-                                // This likely means that we missed a packet.
-                                //m_InputReportState.Reset();
-                                ResetSegment();
+                                //Console.WriteLine($"Unknown Packet {reportData.Length}\t{BitConverter.ToString(reportData)}");
 
-                                // If the sequence number is zero then we can use it, otherwise we need to flush
-                                // the remainder of the partial message.
-                                if ((ucHeader & k_nSegmentNumberMask) > 0)
-                                    return;
-                            }
+                                byte ucHeader = reportData[1 + 0];
+                                if ((ucHeader & k_nSegmentHasDataFlag) != k_nSegmentHasDataFlag)
+                                    return; // steam itself actually asserts in this case
 
-                            {
-                                int nLength = k_nMaxSegmentSize - 1;
-                                Array.Copy(reportData, 1 + 1, m_rgubBuffer, m_unCurrentMsgIndex, nLength);
-                                m_unCurrentMsgIndex += nLength;
-                                ++m_unNextSegmentNumber;
-                            }
-
-                            if ((ucHeader & k_nLastSegmentFlag) == k_nLastSegmentFlag)
-                            {
-                                // Last packet
-
-                                EBLEPacketReportNums reportType = (EBLEPacketReportNums)(m_rgubBuffer[0] & 0x0f);
-                                switch(reportType)
+                                if (!IsSegmentNumberValid(ucHeader))
                                 {
-                                    case EBLEPacketReportNums.BLEReportState:
-                                        {
-                                            EBLEOptionDataChunksBitmask ucOptionDataMask = (EBLEOptionDataChunksBitmask)(BitConverter.ToUInt16(m_rgubBuffer, 0) & 0xfff0);
-                                            int pBuf = 2;
+                                    // This likely means that we missed a packet.
+                                    //m_InputReportState.Reset();
+                                    ResetSegment();
 
-                                            try
-                                            {
-                                                if (ucOptionDataMask.HasFlag(EBLEOptionDataChunksBitmask.BLEButtonChunk1))
-                                                {
-                                                    bool LeftTouchOld = (RawState.ulButtons[2] & 8) == 8;
-                                                    bool RightTouchOld = (RawState.ulButtons[2] & 16) == 16;
-
-                                                    Array.Copy(m_rgubBuffer, pBuf, RawState.ulButtons, 0, 3);
-
-                                                    if (LeftTouchOld != ((RawState.ulButtons[2] & 8) == 8))
-                                                        RawState.LeftTouchChange = true;
-
-                                                    //if (RightTouchOld != ((RawState.ulButtons[2] & 16) == 16))
-                                                    //    RawState.RightTouchChange = true;
-
-                                                    //Console.WriteLine($"{Convert.ToString(RawState.ulButtons[0], 2).PadLeft(8, '0')} {Convert.ToString(RawState.ulButtons[1], 2).PadLeft(8, '0')} {Convert.ToString(RawState.ulButtons[2], 2).PadLeft(8, '0')}");
-
-                                                    pBuf += 3;
-                                                }
-                                                if (ucOptionDataMask.HasFlag(EBLEOptionDataChunksBitmask.BLEButtonChunk2))
-                                                {
-                                                    RawState.sTriggerL = m_rgubBuffer[pBuf + 0];
-                                                    RawState.sTriggerR = m_rgubBuffer[pBuf + 1];
-
-                                                    pBuf += 2;
-                                                }
-                                                if (ucOptionDataMask.HasFlag(EBLEOptionDataChunksBitmask.BLEButtonChunk3))
-                                                {
-                                                    Array.Copy(m_rgubBuffer, pBuf, RawState.ulButtons5, 0, 3);
-
-                                                    Console.WriteLine($"{Convert.ToString(RawState.ulButtons5[0], 2).PadLeft(8, '0')} {Convert.ToString(RawState.ulButtons5[1], 2).PadLeft(8, '0')} {Convert.ToString(RawState.ulButtons5[2], 2).PadLeft(8, '0')}");
-
-                                                    pBuf++;
-                                                    pBuf++;
-                                                    pBuf++;
-                                                }
-                                                if (ucOptionDataMask.HasFlag(EBLEOptionDataChunksBitmask.BLELeftJoystickChunk))
-                                                {
-                                                    RawState.sLeftStickX = BitConverter.ToInt16(m_rgubBuffer, pBuf);
-                                                    RawState.sLeftStickY = BitConverter.ToInt16(m_rgubBuffer, pBuf + sizeof(Int16));
-
-                                                    pBuf += sizeof(Int16) + sizeof(Int16);
-                                                }
-                                                if (ucOptionDataMask.HasFlag(EBLEOptionDataChunksBitmask.BLELeftTrackpadChunk))
-                                                {
-                                                    //if ((RawState.ulButtons[2] & 8) == 8) // let's only set the X/Y with a touch to avoid jumps to 0
-                                                    {
-                                                        int X = BitConverter.ToInt16(m_rgubBuffer, pBuf);
-                                                        int Y = BitConverter.ToInt16(m_rgubBuffer, pBuf + sizeof(Int16));
-
-                                                        RotateXY(-PadAngle, ref X, ref Y);
-
-                                                        RawState.sLeftPadX = (short)Math.Min(Math.Max(X, Int16.MinValue), Int16.MaxValue);
-                                                        RawState.sLeftPadY = (short)Math.Min(Math.Max(Y, Int16.MinValue), Int16.MaxValue);
-
-                                                        RawState.LeftTouchChange = true;
-                                                    }
-
-                                                    pBuf += sizeof(Int16) + sizeof(Int16);
-                                                }
-                                                if (ucOptionDataMask.HasFlag(EBLEOptionDataChunksBitmask.BLERightTrackpadChunk))
-                                                {
-                                                    //if ((RawState.ulButtons[2] & 16) == 16) // let's only set the X/Y with a touch to avoid jumps to 0
-                                                    {
-                                                        int X = BitConverter.ToInt16(m_rgubBuffer, pBuf);
-                                                        int Y = BitConverter.ToInt16(m_rgubBuffer, pBuf + sizeof(Int16));
-
-                                                        RotateXY(PadAngle, ref X, ref Y);
-
-                                                        RawState.sRightPadX = (short)Math.Min(Math.Max(X, Int16.MinValue), Int16.MaxValue);
-                                                        RawState.sRightPadY = (short)Math.Min(Math.Max(Y, Int16.MinValue), Int16.MaxValue);
-
-                                                        //RawState.RightTouchChange = true;
-                                                    }
-
-                                                    pBuf += sizeof(Int16) + sizeof(Int16);
-                                                }
-                                                if (ucOptionDataMask.HasFlag(EBLEOptionDataChunksBitmask.BLEIMUAccelChunk))
-                                                {
-                                                    RawState.sAccelX = BitConverter.ToInt16(m_rgubBuffer, pBuf);
-                                                    RawState.sAccelY = BitConverter.ToInt16(m_rgubBuffer, pBuf + sizeof(Int16));
-                                                    RawState.sAccelZ = BitConverter.ToInt16(m_rgubBuffer, pBuf + sizeof(Int16) + sizeof(Int16));
-
-                                                    pBuf += sizeof(Int16) + sizeof(Int16) + sizeof(Int16);
-                                                }
-                                                if (ucOptionDataMask.HasFlag(EBLEOptionDataChunksBitmask.BLEIMUGyroChunk))
-                                                {
-                                                    RawState.sGyroX = BitConverter.ToInt16(m_rgubBuffer, pBuf);
-                                                    RawState.sGyroY = BitConverter.ToInt16(m_rgubBuffer, pBuf + sizeof(Int16));
-                                                    RawState.sGyroZ = BitConverter.ToInt16(m_rgubBuffer, pBuf + sizeof(Int16) + sizeof(Int16));
-
-                                                    pBuf += sizeof(Int16) + sizeof(Int16) + sizeof(Int16);
-                                                }
-                                                if (ucOptionDataMask.HasFlag(EBLEOptionDataChunksBitmask.BLEIMUQuatChunk))
-                                                {
-                                                    RawState.sGyroQuatW = BitConverter.ToInt16(m_rgubBuffer, pBuf);
-                                                    RawState.sGyroQuatX = BitConverter.ToInt16(m_rgubBuffer, pBuf + sizeof(Int16));
-                                                    RawState.sGyroQuatY = BitConverter.ToInt16(m_rgubBuffer, pBuf + sizeof(Int16) + sizeof(Int16));
-                                                    RawState.sGyroQuatZ = BitConverter.ToInt16(m_rgubBuffer, pBuf + sizeof(Int16) + sizeof(Int16) + sizeof(Int16));
-
-                                                    pBuf += sizeof(Int16) + sizeof(Int16) + sizeof(Int16) + sizeof(Int16);
-                                                }
-
-                                                //Console.WriteLine($"Good Packet {reportID}\t{BitConverter.ToString(m_rgubBuffer)}");
-                                            }
-                                            catch
-                                            {
-                                                //Console.WriteLine($"Error Packet {reportID}\t{BitConverter.ToString(m_rgubBuffer)}");
-                                            }
-
-                                            ProcessStateBytes();
-                                        }
-                                        break;
-                                    case EBLEPacketReportNums.BLEReportStatus:
-                                        break;
-                                    default:
-                                        Console.WriteLine($"Unknown Packet {reportID}\t{BitConverter.ToString(m_rgubBuffer)}");
-                                        break;
+                                    // If the sequence number is zero then we can use it, otherwise we need to flush
+                                    // the remainder of the partial message.
+                                    if ((ucHeader & k_nSegmentNumberMask) > 0)
+                                        return;
                                 }
 
-                                ResetSegment();
-                            }
-                        }
-                        break;
-                    default:
-                        {
-                            byte Unknown1 = reportData[1 + 0]; // always 0x01?
-                            byte Unknown2 = reportData[1 + 1]; // always 0x00?
-                            VSCEventType EventType = (VSCEventType)reportData[1 + 2];
-                            //reportData[1 + 3] // length
+                                {
+                                    int nLength = k_nMaxSegmentSize - 1;
+                                    Array.Copy(reportData, 1 + 1, m_rgubBuffer, m_unCurrentMsgIndex, nLength);
+                                    m_unCurrentMsgIndex += nLength;
+                                    ++m_unNextSegmentNumber;
+                                }
 
-                            switch (EventType)
-                            {
-                                case 0: // not sure what this is but wired controllers do it
-                                    break;
-                                case VSCEventType.CONTROL_UPDATE:
+                                if ((ucHeader & k_nLastSegmentFlag) == k_nLastSegmentFlag)
+                                {
+                                    // Last packet
+
+                                    EBLEPacketReportNums reportType = (EBLEPacketReportNums)(m_rgubBuffer[0] & 0x0f);
+                                    switch (reportType)
                                     {
-
-                                        UInt32 PacketIndex = BitConverter.ToUInt32(reportData, 1 + 4);
-
-                                        Array.Copy(reportData, 1 + 8 + 0, RawState.ulButtons, 0, 3);
-
-                                        bool LeftAnalogMultiplexMode = (RawState.ulButtons[2] & 128) == 128;
-                                        bool LeftStickClick = (RawState.ulButtons[2] & 64) == 64;
-                                        (State.Controls["stick_left"] as ControlStick).PendingClick = LeftStickClick;
-                                        bool Unknown = (RawState.ulButtons[2] & 32) == 32; // what is this?
-                                        bool RightPadTouch = (RawState.ulButtons[2] & 16) == 16;
-                                        bool LeftPadTouch = (RawState.ulButtons[2] & 8) == 8;
-                                        (State.Controls["touch_right"] as ControlTouch).PendingClick = (RawState.ulButtons[2] & 4) == 4;
-                                        bool ThumbOrLeftPadPress = (RawState.ulButtons[2] & 2) == 2; // what is this even for?
-                                        (State.Controls["grip"] as ControlButtonPair).Right.PendingButton0 = (RawState.ulButtons[2] & 1) == 1;
-
-                                        RawState.sTriggerL = reportData[1 + 8 + 3];
-                                        RawState.sTriggerR = reportData[1 + 8 + 4];
-
-                                        if (LeftAnalogMultiplexMode)
-                                        {
-                                            if (LeftPadTouch)
+                                        case EBLEPacketReportNums.BLEReportState:
                                             {
-                                                int X = BitConverter.ToInt16(reportData, 1 + 8 + 8);
-                                                int Y = BitConverter.ToInt16(reportData, 1 + 8 + 10);
+                                                EBLEOptionDataChunksBitmask ucOptionDataMask = (EBLEOptionDataChunksBitmask)(BitConverter.ToUInt16(m_rgubBuffer, 0) & 0xfff0);
+                                                int pBuf = 2;
 
-                                                RotateXY(-PadAngle, ref X, ref Y);
+                                                try
+                                                {
+                                                    if (ucOptionDataMask.HasFlag(EBLEOptionDataChunksBitmask.BLEButtonChunk1))
+                                                    {
+                                                        bool LeftTouchOld = (RawState.ulButtons[2] & 8) == 8;
+                                                        bool RightTouchOld = (RawState.ulButtons[2] & 16) == 16;
 
-                                                RawState.sLeftPadX = (short)Math.Min(Math.Max(X, Int16.MinValue), Int16.MaxValue);
-                                                RawState.sLeftPadY = (short)Math.Min(Math.Max(Y, Int16.MinValue), Int16.MaxValue);
+                                                        Array.Copy(m_rgubBuffer, pBuf, RawState.ulButtons, 0, 3);
+
+                                                        if (LeftTouchOld != ((RawState.ulButtons[2] & 8) == 8))
+                                                            RawState.LeftTouchChange = true;
+
+                                                        //if (RightTouchOld != ((RawState.ulButtons[2] & 16) == 16))
+                                                        //    RawState.RightTouchChange = true;
+
+                                                        //Console.WriteLine($"{Convert.ToString(RawState.ulButtons[0], 2).PadLeft(8, '0')} {Convert.ToString(RawState.ulButtons[1], 2).PadLeft(8, '0')} {Convert.ToString(RawState.ulButtons[2], 2).PadLeft(8, '0')}");
+
+                                                        pBuf += 3;
+                                                    }
+                                                    if (ucOptionDataMask.HasFlag(EBLEOptionDataChunksBitmask.BLEButtonChunk2))
+                                                    {
+                                                        RawState.sTriggerL = m_rgubBuffer[pBuf + 0];
+                                                        RawState.sTriggerR = m_rgubBuffer[pBuf + 1];
+
+                                                        pBuf += 2;
+                                                    }
+                                                    if (ucOptionDataMask.HasFlag(EBLEOptionDataChunksBitmask.BLEButtonChunk3))
+                                                    {
+                                                        Array.Copy(m_rgubBuffer, pBuf, RawState.ulButtons5, 0, 3);
+
+                                                        Console.WriteLine($"{Convert.ToString(RawState.ulButtons5[0], 2).PadLeft(8, '0')} {Convert.ToString(RawState.ulButtons5[1], 2).PadLeft(8, '0')} {Convert.ToString(RawState.ulButtons5[2], 2).PadLeft(8, '0')}");
+
+                                                        pBuf++;
+                                                        pBuf++;
+                                                        pBuf++;
+                                                    }
+                                                    if (ucOptionDataMask.HasFlag(EBLEOptionDataChunksBitmask.BLELeftJoystickChunk))
+                                                    {
+                                                        RawState.sLeftStickX = BitConverter.ToInt16(m_rgubBuffer, pBuf);
+                                                        RawState.sLeftStickY = BitConverter.ToInt16(m_rgubBuffer, pBuf + sizeof(Int16));
+
+                                                        pBuf += sizeof(Int16) + sizeof(Int16);
+                                                    }
+                                                    if (ucOptionDataMask.HasFlag(EBLEOptionDataChunksBitmask.BLELeftTrackpadChunk))
+                                                    {
+                                                        //if ((RawState.ulButtons[2] & 8) == 8) // let's only set the X/Y with a touch to avoid jumps to 0
+                                                        {
+                                                            int X = BitConverter.ToInt16(m_rgubBuffer, pBuf);
+                                                            int Y = BitConverter.ToInt16(m_rgubBuffer, pBuf + sizeof(Int16));
+
+                                                            RotateXY(-PadAngle, ref X, ref Y);
+
+                                                            RawState.sLeftPadX = (short)Math.Min(Math.Max(X, Int16.MinValue), Int16.MaxValue);
+                                                            RawState.sLeftPadY = (short)Math.Min(Math.Max(Y, Int16.MinValue), Int16.MaxValue);
+
+                                                            RawState.LeftTouchChange = true;
+                                                        }
+
+                                                        pBuf += sizeof(Int16) + sizeof(Int16);
+                                                    }
+                                                    if (ucOptionDataMask.HasFlag(EBLEOptionDataChunksBitmask.BLERightTrackpadChunk))
+                                                    {
+                                                        //if ((RawState.ulButtons[2] & 16) == 16) // let's only set the X/Y with a touch to avoid jumps to 0
+                                                        {
+                                                            int X = BitConverter.ToInt16(m_rgubBuffer, pBuf);
+                                                            int Y = BitConverter.ToInt16(m_rgubBuffer, pBuf + sizeof(Int16));
+
+                                                            RotateXY(PadAngle, ref X, ref Y);
+
+                                                            RawState.sRightPadX = (short)Math.Min(Math.Max(X, Int16.MinValue), Int16.MaxValue);
+                                                            RawState.sRightPadY = (short)Math.Min(Math.Max(Y, Int16.MinValue), Int16.MaxValue);
+
+                                                            //RawState.RightTouchChange = true;
+                                                        }
+
+                                                        pBuf += sizeof(Int16) + sizeof(Int16);
+                                                    }
+                                                    if (ucOptionDataMask.HasFlag(EBLEOptionDataChunksBitmask.BLEIMUAccelChunk))
+                                                    {
+                                                        RawState.sAccelX = BitConverter.ToInt16(m_rgubBuffer, pBuf);
+                                                        RawState.sAccelY = BitConverter.ToInt16(m_rgubBuffer, pBuf + sizeof(Int16));
+                                                        RawState.sAccelZ = BitConverter.ToInt16(m_rgubBuffer, pBuf + sizeof(Int16) + sizeof(Int16));
+
+                                                        pBuf += sizeof(Int16) + sizeof(Int16) + sizeof(Int16);
+                                                    }
+                                                    if (ucOptionDataMask.HasFlag(EBLEOptionDataChunksBitmask.BLEIMUGyroChunk))
+                                                    {
+                                                        RawState.sGyroX = BitConverter.ToInt16(m_rgubBuffer, pBuf);
+                                                        RawState.sGyroY = BitConverter.ToInt16(m_rgubBuffer, pBuf + sizeof(Int16));
+                                                        RawState.sGyroZ = BitConverter.ToInt16(m_rgubBuffer, pBuf + sizeof(Int16) + sizeof(Int16));
+
+                                                        pBuf += sizeof(Int16) + sizeof(Int16) + sizeof(Int16);
+                                                    }
+                                                    if (ucOptionDataMask.HasFlag(EBLEOptionDataChunksBitmask.BLEIMUQuatChunk))
+                                                    {
+                                                        RawState.sGyroQuatW = BitConverter.ToInt16(m_rgubBuffer, pBuf);
+                                                        RawState.sGyroQuatX = BitConverter.ToInt16(m_rgubBuffer, pBuf + sizeof(Int16));
+                                                        RawState.sGyroQuatY = BitConverter.ToInt16(m_rgubBuffer, pBuf + sizeof(Int16) + sizeof(Int16));
+                                                        RawState.sGyroQuatZ = BitConverter.ToInt16(m_rgubBuffer, pBuf + sizeof(Int16) + sizeof(Int16) + sizeof(Int16));
+
+                                                        pBuf += sizeof(Int16) + sizeof(Int16) + sizeof(Int16) + sizeof(Int16);
+                                                    }
+
+                                                    //Console.WriteLine($"Good Packet {reportID}\t{BitConverter.ToString(m_rgubBuffer)}");
+                                                }
+                                                catch
+                                                {
+                                                    //Console.WriteLine($"Error Packet {reportID}\t{BitConverter.ToString(m_rgubBuffer)}");
+                                                }
+
+                                                ProcessStateBytes();
+                                            }
+                                            break;
+                                        case EBLEPacketReportNums.BLEReportStatus:
+                                            break;
+                                        default:
+                                            Console.WriteLine($"Unknown Packet {reportID}\t{BitConverter.ToString(m_rgubBuffer)}");
+                                            break;
+                                    }
+
+                                    ResetSegment();
+                                }
+                            }
+                            break;
+                        default:
+                            {
+                                byte Unknown1 = reportData[1 + 0]; // always 0x01?
+                                byte Unknown2 = reportData[1 + 1]; // always 0x00?
+                                VSCEventType EventType = (VSCEventType)reportData[1 + 2];
+                                //reportData[1 + 3] // length
+
+                                switch (EventType)
+                                {
+                                    case 0: // not sure what this is but wired controllers do it
+                                        break;
+                                    case VSCEventType.CONTROL_UPDATE:
+                                        {
+
+                                            UInt32 PacketIndex = BitConverter.ToUInt32(reportData, 1 + 4);
+
+                                            Array.Copy(reportData, 1 + 8 + 0, RawState.ulButtons, 0, 3);
+
+                                            bool LeftAnalogMultiplexMode = (RawState.ulButtons[2] & 128) == 128;
+                                            bool LeftStickClick = (RawState.ulButtons[2] & 64) == 64;
+                                            (StateInFlight.Controls["stick_left"] as ControlStick).Click = LeftStickClick;
+                                            bool Unknown = (RawState.ulButtons[2] & 32) == 32; // what is this?
+                                            bool RightPadTouch = (RawState.ulButtons[2] & 16) == 16;
+                                            bool LeftPadTouch = (RawState.ulButtons[2] & 8) == 8;
+                                            (StateInFlight.Controls["touch_right"] as ControlTouch).Click = (RawState.ulButtons[2] & 4) == 4;
+                                            bool ThumbOrLeftPadPress = (RawState.ulButtons[2] & 2) == 2; // what is this even for?
+                                            (StateInFlight.Controls["grip"] as ControlButtonPair).Right.Button0 = (RawState.ulButtons[2] & 1) == 1;
+
+                                            RawState.sTriggerL = reportData[1 + 8 + 3];
+                                            RawState.sTriggerR = reportData[1 + 8 + 4];
+
+                                            if (LeftAnalogMultiplexMode)
+                                            {
+                                                if (LeftPadTouch)
+                                                {
+                                                    int X = BitConverter.ToInt16(reportData, 1 + 8 + 8);
+                                                    int Y = BitConverter.ToInt16(reportData, 1 + 8 + 10);
+
+                                                    RotateXY(-PadAngle, ref X, ref Y);
+
+                                                    RawState.sLeftPadX = (short)Math.Min(Math.Max(X, Int16.MinValue), Int16.MaxValue);
+                                                    RawState.sLeftPadY = (short)Math.Min(Math.Max(Y, Int16.MinValue), Int16.MaxValue);
+
+                                                    RawState.LeftTouchChange = true;
+                                                }
+                                                else
+                                                {
+                                                    RawState.sLeftStickX = BitConverter.ToInt16(reportData, 1 + 8 + 8);
+                                                    RawState.sLeftStickY = BitConverter.ToInt16(reportData, 1 + 8 + 10);
+                                                }
+                                            }
+                                            else
+                                            {
+                                                if (LeftPadTouch)
+                                                {
+                                                    int X = BitConverter.ToInt16(reportData, 1 + 8 + 8);
+                                                    int Y = BitConverter.ToInt16(reportData, 1 + 8 + 10);
+
+                                                    RotateXY(-PadAngle, ref X, ref Y);
+
+                                                    RawState.sLeftPadX = (short)Math.Min(Math.Max(X, Int16.MinValue), Int16.MaxValue);
+                                                    RawState.sLeftPadY = (short)Math.Min(Math.Max(Y, Int16.MinValue), Int16.MaxValue);
+                                                }
+                                                else
+                                                {
+                                                    // // we're trying to fix the pad jumping to center by not sending new coords if the pad is not touched
+                                                    RawState.sLeftPadX = 0;
+                                                    RawState.sLeftPadY = 0;
+
+                                                    RawState.sLeftStickX = BitConverter.ToInt16(reportData, 1 + 8 + 8);
+                                                    RawState.sLeftStickY = BitConverter.ToInt16(reportData, 1 + 8 + 10);
+                                                }
 
                                                 RawState.LeftTouchChange = true;
+
+                                                //(State.Controls["touch_left"] as ControlTouch).Click = ThumbOrLeftPadPress && !LeftStickClick;
                                             }
-                                            else
+
+                                            //if (RightPadTouch) // we're trying to fix the pad jumping to center by not sending new coords if the pad is not touched
                                             {
-                                                RawState.sLeftStickX = BitConverter.ToInt16(reportData, 1 + 8 + 8);
-                                                RawState.sLeftStickY = BitConverter.ToInt16(reportData, 1 + 8 + 10);
+                                                int X = BitConverter.ToInt16(reportData, 1 + 8 + 12);
+                                                int Y = BitConverter.ToInt16(reportData, 1 + 8 + 14);
+
+                                                RotateXY(PadAngle, ref X, ref Y);
+
+                                                RawState.sRightPadX = (short)Math.Min(Math.Max(X, Int16.MinValue), Int16.MaxValue);
+                                                RawState.sRightPadY = (short)Math.Min(Math.Max(Y, Int16.MinValue), Int16.MaxValue);
                                             }
+
+                                            //RawState.RightTouchChange = true;
+
+                                            RawState.sAccelX = BitConverter.ToInt16(reportData, 1 + 8 + 20);
+                                            RawState.sAccelY = BitConverter.ToInt16(reportData, 1 + 8 + 22);
+                                            RawState.sAccelZ = BitConverter.ToInt16(reportData, 1 + 8 + 24);
+                                            RawState.sGyroX = BitConverter.ToInt16(reportData, 1 + 8 + 26);
+                                            RawState.sGyroY = BitConverter.ToInt16(reportData, 1 + 8 + 28);
+                                            RawState.sGyroZ = BitConverter.ToInt16(reportData, 1 + 8 + 30);
+                                            RawState.sGyroQuatW = BitConverter.ToInt16(reportData, 1 + 8 + 32);
+                                            RawState.sGyroQuatX = BitConverter.ToInt16(reportData, 1 + 8 + 34);
+                                            RawState.sGyroQuatY = BitConverter.ToInt16(reportData, 1 + 8 + 36);
+                                            RawState.sGyroQuatZ = BitConverter.ToInt16(reportData, 1 + 8 + 38);
+
+                                            ProcessStateBytes();
+
+                                            ConState = InternalConState.Connected;
+                                            ConnectedTime = DateTime.UtcNow;
+                                            ControllerNameUpdated?.Invoke();
                                         }
-                                        else
+                                        break;
+
+                                    case VSCEventType.CONNECTION_DETAIL:
                                         {
-                                            if (LeftPadTouch)
+                                            //reportData[1 + 3] // 0x01?
+
+                                            // Connection detail. 0x01 for disconnect, 0x02 for connect, 0x03 for pairing request.
+                                            ConnectionState ConnectionStateV = (ConnectionState)reportData[1 + 4];
+
+                                            switch (ConnectionStateV)
                                             {
-                                                int X = BitConverter.ToInt16(reportData, 1 + 8 + 8);
-                                                int Y = BitConverter.ToInt16(reportData, 1 + 8 + 10);
-
-                                                RotateXY(-PadAngle, ref X, ref Y);
-
-                                                RawState.sLeftPadX = (short)Math.Min(Math.Max(X, Int16.MinValue), Int16.MaxValue);
-                                                RawState.sLeftPadY = (short)Math.Min(Math.Max(Y, Int16.MinValue), Int16.MaxValue);
+                                                case ConnectionState.CONNECT:
+                                                    ConState = InternalConState.Connected;
+                                                    ConnectedTime = DateTime.UtcNow;
+                                                    ControllerNameUpdated?.Invoke();
+                                                    break;
+                                                case ConnectionState.DISCONNECT:
+                                                    ConState = InternalConState.Disconnected;
+                                                    ControllerNameUpdated?.Invoke();
+                                                    break;
                                             }
-                                            else
-                                            {
-                                                // // we're trying to fix the pad jumping to center by not sending new coords if the pad is not touched
-                                                RawState.sLeftPadX = 0;
-                                                RawState.sLeftPadY = 0;
-
-                                                RawState.sLeftStickX = BitConverter.ToInt16(reportData, 1 + 8 + 8);
-                                                RawState.sLeftStickY = BitConverter.ToInt16(reportData, 1 + 8 + 10);
-                                            }
-
-                                            RawState.LeftTouchChange = true;
-
-                                            //(State.Controls["touch_left"] as ControlTouch).Click = ThumbOrLeftPadPress && !LeftStickClick;
                                         }
+                                        break;
 
-                                        //if (RightPadTouch) // we're trying to fix the pad jumping to center by not sending new coords if the pad is not touched
+                                    case VSCEventType.BATTERY_UPDATE:
                                         {
-                                            int X = BitConverter.ToInt16(reportData, 1 + 8 + 12);
-                                            int Y = BitConverter.ToInt16(reportData, 1 + 8 + 14);
+                                            //reportData[1 + 3] // 0x0B?
 
-                                            RotateXY(PadAngle, ref X, ref Y);
+                                            UInt32 PacketIndex = BitConverter.ToUInt32(reportData, 1 + 4);
 
-                                            RawState.sRightPadX = (short)Math.Min(Math.Max(X, Int16.MinValue), Int16.MaxValue);
-                                            RawState.sRightPadY = (short)Math.Min(Math.Max(Y, Int16.MinValue), Int16.MaxValue);
+                                            // only works if controller is configured to send this data
+
+                                            // millivolts
+                                            UInt16 BatteryVoltage = BitConverter.ToUInt16(reportData, 1 + 8);
+                                            //BitConverter.ToUInt16(reportData, 1 + 10); // UNKNOWN, stuck at 100
                                         }
+                                        break;
 
-                                        //RawState.RightTouchChange = true;
-
-                                        RawState.sAccelX = BitConverter.ToInt16(reportData, 1 + 8 + 20);
-                                        RawState.sAccelY = BitConverter.ToInt16(reportData, 1 + 8 + 22);
-                                        RawState.sAccelZ = BitConverter.ToInt16(reportData, 1 + 8 + 24);
-                                        RawState.sGyroX = BitConverter.ToInt16(reportData, 1 + 8 + 26);
-                                        RawState.sGyroY = BitConverter.ToInt16(reportData, 1 + 8 + 28);
-                                        RawState.sGyroZ = BitConverter.ToInt16(reportData, 1 + 8 + 30);
-                                        RawState.sGyroQuatW = BitConverter.ToInt16(reportData, 1 + 8 + 32);
-                                        RawState.sGyroQuatX = BitConverter.ToInt16(reportData, 1 + 8 + 34);
-                                        RawState.sGyroQuatY = BitConverter.ToInt16(reportData, 1 + 8 + 36);
-                                        RawState.sGyroQuatZ = BitConverter.ToInt16(reportData, 1 + 8 + 38);
-
-                                        ProcessStateBytes();
-
-                                        ConState = InternalConState.Connected;
-                                        ConnectedTime = DateTime.UtcNow;
-                                        ControllerNameUpdated?.Invoke();
-                                    }
-                                    break;
-
-                                case VSCEventType.CONNECTION_DETAIL:
-                                    {
-                                        //reportData[1 + 3] // 0x01?
-
-                                        // Connection detail. 0x01 for disconnect, 0x02 for connect, 0x03 for pairing request.
-                                        ConnectionState ConnectionStateV = (ConnectionState)reportData[1 + 4];
-
-                                        switch(ConnectionStateV)
+                                    default:
                                         {
-                                            case ConnectionState.CONNECT:
-                                                ConState = InternalConState.Connected;
-                                                ConnectedTime = DateTime.UtcNow;
-                                                ControllerNameUpdated?.Invoke();
-                                                break;
-                                            case ConnectionState.DISCONNECT:
-                                                ConState = InternalConState.Disconnected;
-                                                ControllerNameUpdated?.Invoke();
-                                                break;
+                                            Console.WriteLine($"Unknown Packet Type {(int)EventType:D3} of length {reportData.Length}\t{BitConverter.ToString(reportData)}");
                                         }
-                                    }
-                                    break;
-
-                                case VSCEventType.BATTERY_UPDATE:
-                                    {
-                                        //reportData[1 + 3] // 0x0B?
-
-                                        UInt32 PacketIndex = BitConverter.ToUInt32(reportData, 1 + 4);
-
-                                        // only works if controller is configured to send this data
-
-                                        // millivolts
-                                        UInt16 BatteryVoltage = BitConverter.ToUInt16(reportData, 1 + 8);
-                                        //BitConverter.ToUInt16(reportData, 1 + 10); // UNKNOWN, stuck at 100
-                                    }
-                                    break;
-
-                                default:
-                                    {
-                                        Console.WriteLine($"Unknown Packet Type {(int)EventType:D3} of length {reportData.Length}\t{BitConverter.ToString(reportData)}");
-                                    }
-                                    break;
+                                        break;
+                                }
                             }
-                        }
-                        break; ;
-                }
+                            break; ;
+                    }
 
-                ControllerState NewState = GetState();
-                OnStateUpdated(NewState);
-                Interlocked.Exchange(ref reportUsageLock, 0);
+                    // bring OldState in line with new State
+                    OldState = State;
+                    State = StateInFlight;
+
+                    StateUpdated?.Invoke(this, State);
+                }
+                finally
+                {
+                    Interlocked.Exchange(ref reportUsageLock, 0);
+                }
             }
         }
 
@@ -848,104 +849,99 @@ namespace ExtendInput.Controller
         private void ProcessStateBytes()
         {
             //OldState = State; // shouldn't this be a clone?
-            OldState = (ControllerState)State.Clone(); // shouldn't this be a clone?
+            ControllerState StateInFlight = (ControllerState)State.Clone(); // shouldn't this be a clone?
 
-            (State.Controls["quad_right"] as ControlButtonQuad).PendingButtonS = (RawState.ulButtons[0] & 128) == 128; // A - S SE
-            (State.Controls["quad_right"] as ControlButtonQuad).PendingButtonW = (RawState.ulButtons[0] & 64) == 64;   // X - W SW
-            (State.Controls["quad_right"] as ControlButtonQuad).PendingButtonE = (RawState.ulButtons[0] & 32) == 32;   // B - E NE
-            (State.Controls["quad_right"] as ControlButtonQuad).PendingButtonN = (RawState.ulButtons[0] & 16) == 16;   // Y - N NW
-            (State.Controls["bumpers"] as ControlButtonPair).Left.PendingButton0 = (RawState.ulButtons[0] & 8) == 8;
-            (State.Controls["bumpers"] as ControlButtonPair).Right.PendingButton0 = (RawState.ulButtons[0] & 4) == 4;
-            (State.Controls["triggers"] as ControlTriggerPair).Left.PendingStage2 = (RawState.ulButtons[0] & 2) == 2;
-            (State.Controls["triggers"] as ControlTriggerPair).Right.PendingStage2 = (RawState.ulButtons[0] & 1) == 1;
+            (StateInFlight.Controls["quad_right"] as ControlButtonQuad).ButtonS = (RawState.ulButtons[0] & 128) == 128; // A - S SE
+            (StateInFlight.Controls["quad_right"] as ControlButtonQuad).ButtonW = (RawState.ulButtons[0] & 64) == 64;   // X - W SW
+            (StateInFlight.Controls["quad_right"] as ControlButtonQuad).ButtonE = (RawState.ulButtons[0] & 32) == 32;   // B - E NE
+            (StateInFlight.Controls["quad_right"] as ControlButtonQuad).ButtonN = (RawState.ulButtons[0] & 16) == 16;   // Y - N NW
+            (StateInFlight.Controls["bumpers"] as ControlButtonPair).Left.Button0 = (RawState.ulButtons[0] & 8) == 8;
+            (StateInFlight.Controls["bumpers"] as ControlButtonPair).Right.Button0 = (RawState.ulButtons[0] & 4) == 4;
+            (StateInFlight.Controls["triggers"] as ControlTriggerPair).Left.Stage2 = (RawState.ulButtons[0] & 2) == 2;
+            (StateInFlight.Controls["triggers"] as ControlTriggerPair).Right.Stage2 = (RawState.ulButtons[0] & 1) == 1;
 
-            (State.Controls["grip"] as ControlButtonPair).Left.PendingButton0 = (RawState.ulButtons[1] & 128) == 128;
-            (State.Controls["menu"] as ControlButtonPair).Right.PendingButton0 = (RawState.ulButtons[1] & 64) == 64;
-            (State.Controls["home"] as ControlButton).PendingButton0 = (RawState.ulButtons[1] & 32) == 32;
-            (State.Controls["menu"] as ControlButtonPair).Left.PendingButton0 = (RawState.ulButtons[1] & 16) == 16;
+            (StateInFlight.Controls["grip"] as ControlButtonPair).Left.Button0 = (RawState.ulButtons[1] & 128) == 128;
+            (StateInFlight.Controls["menu"] as ControlButtonPair).Right.Button0 = (RawState.ulButtons[1] & 64) == 64;
+            (StateInFlight.Controls["home"] as ControlButton).Button0 = (RawState.ulButtons[1] & 32) == 32;
+            (StateInFlight.Controls["menu"] as ControlButtonPair).Left.Button0 = (RawState.ulButtons[1] & 16) == 16;
 
             if (ControllerType == EControllerType.Chell)
             {
                 // for the Chell controller, these are the 4 face buttons
-                (State.Controls["grid_center"] as ControlButtonGrid).PendingButton[0, 0] = (RawState.ulButtons[1] & 0x01) == 0x01; // State.ButtonsOld.Touch0 = (RawState.ulButtons[1] & 0x01) == 0x01; // NW
-                (State.Controls["grid_center"] as ControlButtonGrid).PendingButton[1, 0] = (RawState.ulButtons[1] & 0x02) == 0x02; // State.ButtonsOld.Touch1 = (RawState.ulButtons[1] & 0x02) == 0x02; // NE
-                (State.Controls["grid_center"] as ControlButtonGrid).PendingButton[0, 1] = (RawState.ulButtons[1] & 0x04) == 0x04; // State.ButtonsOld.Touch2 = (RawState.ulButtons[1] & 0x04) == 0x04; // SW
-                (State.Controls["grid_center"] as ControlButtonGrid).PendingButton[1, 1] = (RawState.ulButtons[1] & 0x08) == 0x08; // State.ButtonsOld.Touch3 = (RawState.ulButtons[1] & 0x08) == 0x08; // SE
+                (StateInFlight.Controls["grid_center"] as ControlButtonGrid).Button[0, 0] = (RawState.ulButtons[1] & 0x01) == 0x01; // State.ButtonsOld.Touch0 = (RawState.ulButtons[1] & 0x01) == 0x01; // NW
+                (StateInFlight.Controls["grid_center"] as ControlButtonGrid).Button[1, 0] = (RawState.ulButtons[1] & 0x02) == 0x02; // State.ButtonsOld.Touch1 = (RawState.ulButtons[1] & 0x02) == 0x02; // NE
+                (StateInFlight.Controls["grid_center"] as ControlButtonGrid).Button[0, 1] = (RawState.ulButtons[1] & 0x04) == 0x04; // State.ButtonsOld.Touch2 = (RawState.ulButtons[1] & 0x04) == 0x04; // SW
+                (StateInFlight.Controls["grid_center"] as ControlButtonGrid).Button[1, 1] = (RawState.ulButtons[1] & 0x08) == 0x08; // State.ButtonsOld.Touch3 = (RawState.ulButtons[1] & 0x08) == 0x08; // SE
             }
             else
             {
                 // these are mutually exclusive in the raw data, so let's act like they are in the code too, even though they use 4 bits
                 if ((RawState.ulButtons[1] & 1) == 1)
                 {
-                    (State.Controls["quad_left"] as ControlDPad).PendingDirection = EDPadDirection.North;
+                    (StateInFlight.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.North;
                 }
                 else if ((RawState.ulButtons[1] & 2) == 2)
                 {
-                    (State.Controls["quad_left"] as ControlDPad).PendingDirection = EDPadDirection.East;
+                    (StateInFlight.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.East;
                 }
                 else if ((RawState.ulButtons[1] & 8) == 8)
                 {
-                    (State.Controls["quad_left"] as ControlDPad).PendingDirection = EDPadDirection.South;
+                    (StateInFlight.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.South;
                 }
                 else if ((RawState.ulButtons[1] & 4) == 4)
                 {
-                    (State.Controls["quad_left"] as ControlDPad).PendingDirection = EDPadDirection.West;
+                    (StateInFlight.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.West;
                 }
                 else
                 {
-                    (State.Controls["quad_left"] as ControlDPad).PendingDirection = EDPadDirection.None;
+                    (StateInFlight.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.None;
                 }
             }
             //bool LeftAnalogMultiplexMode = (RawState.ulButtons[2] & 128) == 128;
             bool LeftStickClick = (RawState.ulButtons[2] & 64) == 64;
-            (State.Controls["stick_left"] as ControlStick).PendingClick = LeftStickClick;
+            (StateInFlight.Controls["stick_left"] as ControlStick).Click = LeftStickClick;
             //bool Unknown = (RawState.ulButtons[2] & 32) == 32; // what is this?
             bool RightPadTouch = (RawState.ulButtons[2] & 16) == 16;
             bool LeftPadTouch = (RawState.ulButtons[2] & 8) == 8;
-            (State.Controls["touch_right"] as ControlTouch).PendingClick = (RawState.ulButtons[2] & 4) == 4;
+            (StateInFlight.Controls["touch_right"] as ControlTouch).Click = (RawState.ulButtons[2] & 4) == 4;
             bool ThumbOrLeftPadPress = (RawState.ulButtons[2] & 2) == 2; // what is this even for?
-            (State.Controls["grip"] as ControlButtonPair).Right.PendingButton0 = (RawState.ulButtons[2] & 1) == 1;
+            (StateInFlight.Controls["grip"] as ControlButtonPair).Right.Button0 = (RawState.ulButtons[2] & 1) == 1;
 
-            (State.Controls["triggers"] as ControlTriggerPair).Left.PendingAnalog = (float)RawState.sTriggerL / byte.MaxValue;
-            (State.Controls["triggers"] as ControlTriggerPair).Right.PendingAnalog = (float)RawState.sTriggerR / byte.MaxValue;
+            (StateInFlight.Controls["triggers"] as ControlTriggerPair).Left.Analog = (float)RawState.sTriggerL / byte.MaxValue;
+            (StateInFlight.Controls["triggers"] as ControlTriggerPair).Right.Analog = (float)RawState.sTriggerR / byte.MaxValue;
 
-            (State.Controls["stick_left"] as ControlStick).PendingX = (float)RawState.sLeftStickX / Int16.MaxValue;
-            (State.Controls["stick_left"] as ControlStick).PendingY = (float)-RawState.sLeftStickY / Int16.MaxValue;
+            (StateInFlight.Controls["stick_left"] as ControlStick).X = (float)RawState.sLeftStickX / Int16.MaxValue;
+            (StateInFlight.Controls["stick_left"] as ControlStick).Y = (float)-RawState.sLeftStickY / Int16.MaxValue;
             if (RawState.LeftTouchChange)
             {
                 float LeftPadX = LeftPadTouch ? (float)RawState.sLeftPadX / Int16.MaxValue : 0f;
                 float LeftPadY = LeftPadTouch ? (float)-RawState.sLeftPadY / Int16.MaxValue : 0f;
-                (State.Controls["touch_left"] as ControlTouch).AddTouch(0, LeftPadTouch, LeftPadX, LeftPadY, 0);
+                (StateInFlight.Controls["touch_left"] as ControlTouch).AddTouch(0, LeftPadTouch, LeftPadX, LeftPadY, 0);
             }
 
             float RightPadX = (float)RawState.sRightPadX / Int16.MaxValue;
             float RightPadY = (float)-RawState.sRightPadY / Int16.MaxValue;
 
-            (State.Controls["touch_right"] as ControlTouch).AddTouch(0, RightPadTouch, RightPadX, RightPadY, 0);
-            (State.Controls["touch_left"] as ControlTouch).PendingClick = ThumbOrLeftPadPress && !LeftStickClick;
+            (StateInFlight.Controls["touch_right"] as ControlTouch).AddTouch(0, RightPadTouch, RightPadX, RightPadY, 0);
+            (StateInFlight.Controls["touch_left"] as ControlTouch).Click = ThumbOrLeftPadPress && !LeftStickClick;
 
             /*
             State.DataStuck = CheckSensorDataStuck();
             if (!SensorsEnabled || DataStuck) { EnableGyroSensors(); }
             */
 
-            (State.Controls["motion"] as ControlMotion).AccelerometerX = RawState.sAccelX;
-            (State.Controls["motion"] as ControlMotion).AccelerometerY = RawState.sAccelY;
-            (State.Controls["motion"] as ControlMotion).AccelerometerZ = RawState.sAccelZ;
-            (State.Controls["motion"] as ControlMotion).AngularVelocityX = RawState.sGyroX;
-            (State.Controls["motion"] as ControlMotion).AngularVelocityY = RawState.sGyroY;
-            (State.Controls["motion"] as ControlMotion).AngularVelocityZ = RawState.sGyroZ;
-            (State.Controls["motion"] as ControlMotion).OrientationW = RawState.sGyroQuatW;
-            (State.Controls["motion"] as ControlMotion).OrientationX = RawState.sGyroQuatX;
-            (State.Controls["motion"] as ControlMotion).OrientationY = RawState.sGyroQuatY;
-            (State.Controls["motion"] as ControlMotion).OrientationZ = RawState.sGyroQuatZ;
+            (StateInFlight.Controls["motion"] as ControlMotion).AccelerometerX = RawState.sAccelX;
+            (StateInFlight.Controls["motion"] as ControlMotion).AccelerometerY = RawState.sAccelY;
+            (StateInFlight.Controls["motion"] as ControlMotion).AccelerometerZ = RawState.sAccelZ;
+            (StateInFlight.Controls["motion"] as ControlMotion).AngularVelocityX = RawState.sGyroX;
+            (StateInFlight.Controls["motion"] as ControlMotion).AngularVelocityY = RawState.sGyroY;
+            (StateInFlight.Controls["motion"] as ControlMotion).AngularVelocityZ = RawState.sGyroZ;
+            (StateInFlight.Controls["motion"] as ControlMotion).OrientationW = RawState.sGyroQuatW;
+            (StateInFlight.Controls["motion"] as ControlMotion).OrientationX = RawState.sGyroQuatX;
+            (StateInFlight.Controls["motion"] as ControlMotion).OrientationY = RawState.sGyroQuatY;
+            (StateInFlight.Controls["motion"] as ControlMotion).OrientationZ = RawState.sGyroQuatZ;
 
             RawState.LeftTouchChange = false;
-
-            foreach (string controlKey in State.Controls.Keys)
-            {
-                State.Controls[controlKey].ProcessPendingInputs();
-            }
         }
 
         /*private void DeviceAttachedHandler()

@@ -9,8 +9,7 @@ namespace ExtendInput.Controls
         public float[] X { get; private set; }
         public float[] Y { get; private set; }
         public bool[] Touch { get; private set; }
-        public bool Click { get; private set; }
-        public bool? PendingClick { get; set; }
+        public bool Click { get; set; }
 
         public ControlTouch(int TouchCount, bool HasClick)
         {
@@ -86,12 +85,6 @@ namespace ExtendInput.Controls
             Touch[idx] = touch;
             X[idx] = x;
             Y[idx] = y;
-        }
-
-        public void ProcessPendingInputs()
-        {
-            Click = PendingClick ?? Click;
-            PendingClick = null;
         }
     }
 }

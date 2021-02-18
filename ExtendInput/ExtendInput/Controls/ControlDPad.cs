@@ -5,8 +5,7 @@ namespace ExtendInput.Controls
     public class ControlDPad : IControl
     {
         //public int StateCount { get; private set; }
-        public EDPadDirection Direction { get; private set; }
-        public EDPadDirection? PendingDirection { get; set; }
+        public EDPadDirection Direction { get; set; }
         public ControlDPad(/*int StateCount*/)
         {
             //this.StateCount = StateCount;
@@ -52,12 +51,6 @@ namespace ExtendInput.Controls
             newData.Direction = this.Direction;
 
             return newData;
-        }
-
-        public void ProcessPendingInputs()
-        {
-            Direction = PendingDirection ?? Direction;
-            PendingDirection = null;
         }
     }
 }

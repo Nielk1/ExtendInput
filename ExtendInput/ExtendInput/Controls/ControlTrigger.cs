@@ -4,11 +4,9 @@ namespace ExtendInput.Controls
 {
     public class ControlTrigger : IControl
     {
-        public bool HasStage2 { get; private set; }
-        public float Analog { get; private set; }
-        public bool Stage2 { get; private set; }
-        public float? PendingAnalog { get; set; }
-        public bool? PendingStage2 { get; set; }
+        public bool HasStage2 { get; set; }
+        public float Analog { get; set; }
+        public bool Stage2 { get; set; }
 
         public ControlTrigger(bool HasStage2)
         {
@@ -47,14 +45,6 @@ namespace ExtendInput.Controls
             newData.Stage2 = this.Stage2;
 
             return newData;
-        }
-
-        public void ProcessPendingInputs()
-        {
-            Analog = PendingAnalog ?? Analog;
-            Stage2 = PendingStage2 ?? Stage2;
-            PendingAnalog = null;
-            PendingStage2 = null;
         }
     }
 }

@@ -39,11 +39,5 @@ namespace ExtendInput.Controls
 
             return newData;
         }
-
-        public void ProcessPendingInputs()
-        {
-            Left.ProcessPendingInputs();
-            Right.ProcessPendingInputs();
-        }
     }
 }

@@ -87,9 +87,5 @@ namespace ExtendInput.Controls
 
             return newData;
         }
-
-        public void ProcessPendingInputs()
-        {
-        }
     }
 }

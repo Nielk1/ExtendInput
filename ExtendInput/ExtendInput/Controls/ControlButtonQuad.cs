@@ -4,15 +4,10 @@ namespace ExtendInput.Controls
 {
     public class ControlButtonQuad : IControl
     {
-        public bool ButtonN { get; private set; }
-        public bool ButtonE { get; private set; }
-        public bool ButtonS { get; private set; }
-        public bool ButtonW { get; private set; }
-
-        public bool? PendingButtonN { get; set; }
-        public bool? PendingButtonE { get; set; }
-        public bool? PendingButtonS { get; set; }
-        public bool? PendingButtonW { get; set; }
+        public bool ButtonN { get; set; }
+        public bool ButtonE { get; set; }
+        public bool ButtonS { get; set; }
+        public bool ButtonW { get; set; }
 
         public ControlButtonQuad()
         {
@@ -49,19 +44,6 @@ namespace ExtendInput.Controls
             newData.ButtonW = this.ButtonW;
 
             return newData;
-        }
-
-        public void ProcessPendingInputs()
-        {
-            ButtonN = PendingButtonN ?? ButtonN;
-            ButtonE = PendingButtonE ?? ButtonE;
-            ButtonS = PendingButtonS ?? ButtonS;
-            ButtonW = PendingButtonW ?? ButtonW;
-
-            PendingButtonN = null;
-            PendingButtonE = null;
-            PendingButtonS = null;
-            PendingButtonW = null;
         }
     }
 }

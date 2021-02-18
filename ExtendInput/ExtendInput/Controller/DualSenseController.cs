@@ -33,19 +33,10 @@ namespace ExtendInput.Controller
 
         public bool HasMotion => true;
 
-        #region DATA STRUCTS
-
         public ControllerState GetState()
         {
-            if (0 == Interlocked.Exchange(ref stateUsageLock, 1))
-            {
-                ControllerState newState = (ControllerState)State.Clone();
-                State = newState;
-                Interlocked.Exchange(ref stateUsageLock, 0);
-            }
             return State;
         }
-        #endregion
 
         public EConnectionType ConnectionType { get; private set; }
 
@@ -56,16 +47,12 @@ namespace ExtendInput.Controller
         public IDevice DeviceHackRef => _device;
 
         ControllerState State = new ControllerState();
-        ControllerState OldState = new ControllerState();
+        ControllerState OldState = null;
 
         int Initalized;
 
         public delegate void StateUpdatedEventHandler(object sender, ControllerState e);
         public event StateUpdatedEventHandler StateUpdated;
-        protected virtual void OnStateUpdated(ControllerState e)
-        {
-            StateUpdated?.Invoke(this, e);
-        }
 
         public DualSenseController(HidDevice device, EConnectionType ConnectionType = EConnectionType.Unknown)
         {
@@ -237,167 +224,170 @@ namespace ExtendInput.Controller
             return retVal += $" [{Serial ?? "No ID"}]"; ;
         }
 
-        bool DisconnectedBit = false;
         private void OnReport(byte[] reportData)
         {
             if (Initalized < 1) return;
 
             if (0 == Interlocked.Exchange(ref reportUsageLock, 1))
             {
-                OldState = State; // shouldn't this be a clone?
-                //if (_attached == false) { return; }
-
-                int baseOffset = 0;
-                bool HasStateData = true;
-                if (ConnectionType == EConnectionType.Bluetooth && reportData[0] == 0x01)
+                try
                 {
-                    (State.Controls["stick_left"] as ControlStick).PendingX = (reportData[1 + baseOffset + 0] - 128) / 128f;
-                    (State.Controls["stick_left"] as ControlStick).PendingY = (reportData[1 + baseOffset + 1] - 128) / 128f;
-                    (State.Controls["stick_right"] as ControlStick).PendingX = (reportData[1 + baseOffset + 2] - 128) / 128f;
-                    (State.Controls["stick_right"] as ControlStick).PendingY = (reportData[1 + baseOffset + 3] - 128) / 128f;
+                    // Clone the current state before altering it since the OldState is likely a shared reference
+                    ControllerState StateInFlight = (ControllerState)State.Clone();
 
-                    (State.Controls["quad_right"] as ControlButtonQuad).PendingButtonN = (reportData[1 + baseOffset + 4] & 128) == 128;
-                    (State.Controls["quad_right"] as ControlButtonQuad).PendingButtonE = (reportData[1 + baseOffset + 4] & 64) == 64;
-                    (State.Controls["quad_right"] as ControlButtonQuad).PendingButtonS = (reportData[1 + baseOffset + 4] & 32) == 32;
-                    (State.Controls["quad_right"] as ControlButtonQuad).PendingButtonW = (reportData[1 + baseOffset + 4] & 16) == 16;
+                    //OldState = State; // shouldn't this be a clone?
+                    //if (_attached == false) { return; }
 
-                    switch ((reportData[1 + baseOffset + 4] & 0x0f))
+                    int baseOffset = 0;
+                    bool HasStateData = true;
+                    if (ConnectionType == EConnectionType.Bluetooth && reportData[0] == 0x01)
                     {
-                        case 0: (State.Controls["quad_left"] as ControlDPad).PendingDirection = EDPadDirection.North; break;
-                        case 1: (State.Controls["quad_left"] as ControlDPad).PendingDirection = EDPadDirection.NorthEast; break;
-                        case 2: (State.Controls["quad_left"] as ControlDPad).PendingDirection = EDPadDirection.East; break;
-                        case 3: (State.Controls["quad_left"] as ControlDPad).PendingDirection = EDPadDirection.SouthEast; break;
-                        case 4: (State.Controls["quad_left"] as ControlDPad).PendingDirection = EDPadDirection.South; break;
-                        case 5: (State.Controls["quad_left"] as ControlDPad).PendingDirection = EDPadDirection.SouthWest; break;
-                        case 6: (State.Controls["quad_left"] as ControlDPad).PendingDirection = EDPadDirection.West; break;
-                        case 7: (State.Controls["quad_left"] as ControlDPad).PendingDirection = EDPadDirection.NorthWest; break;
-                        default: (State.Controls["quad_left"] as ControlDPad).PendingDirection = EDPadDirection.None; break;
+                        (StateInFlight.Controls["stick_left"] as ControlStick).X = (reportData[1 + baseOffset + 0] - 128) / 128f;
+                        (StateInFlight.Controls["stick_left"] as ControlStick).Y = (reportData[1 + baseOffset + 1] - 128) / 128f;
+                        (StateInFlight.Controls["stick_right"] as ControlStick).X = (reportData[1 + baseOffset + 2] - 128) / 128f;
+                        (StateInFlight.Controls["stick_right"] as ControlStick).Y = (reportData[1 + baseOffset + 3] - 128) / 128f;
+
+                        (StateInFlight.Controls["quad_right"] as ControlButtonQuad).ButtonN = (reportData[1 + baseOffset + 4] & 128) == 128;
+                        (StateInFlight.Controls["quad_right"] as ControlButtonQuad).ButtonE = (reportData[1 + baseOffset + 4] & 64) == 64;
+                        (StateInFlight.Controls["quad_right"] as ControlButtonQuad).ButtonS = (reportData[1 + baseOffset + 4] & 32) == 32;
+                        (StateInFlight.Controls["quad_right"] as ControlButtonQuad).ButtonW = (reportData[1 + baseOffset + 4] & 16) == 16;
+
+                        switch ((reportData[1 + baseOffset + 4] & 0x0f))
+                        {
+                            case 0: (StateInFlight.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.North; break;
+                            case 1: (StateInFlight.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.NorthEast; break;
+                            case 2: (StateInFlight.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.East; break;
+                            case 3: (StateInFlight.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.SouthEast; break;
+                            case 4: (StateInFlight.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.South; break;
+                            case 5: (StateInFlight.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.SouthWest; break;
+                            case 6: (StateInFlight.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.West; break;
+                            case 7: (StateInFlight.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.NorthWest; break;
+                            default: (StateInFlight.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.None; break;
+                        }
+
+                        (StateInFlight.Controls["stick_right"] as ControlStick).Click = (reportData[1 + baseOffset + 5] & 128) == 128;
+                        (StateInFlight.Controls["stick_left"] as ControlStick).Click = (reportData[1 + baseOffset + 5] & 64) == 64;
+                        (StateInFlight.Controls["menu"] as ControlButtonPair).Right.Button0 = (reportData[1 + baseOffset + 5] & 32) == 32;
+                        (StateInFlight.Controls["menu"] as ControlButtonPair).Left.Button0 = (reportData[1 + baseOffset + 5] & 16) == 16;
+                        (StateInFlight.Controls["bumpers2"] as ControlButtonPair).Right.Button0 = (reportData[1 + baseOffset + 5] & 8) == 8;
+                        (StateInFlight.Controls["bumpers2"] as ControlButtonPair).Left.Button0 = (reportData[1 + baseOffset + 5] & 4) == 4;
+                        (StateInFlight.Controls["bumpers"] as ControlButtonPair).Right.Button0 = (reportData[1 + baseOffset + 5] & 2) == 2;
+                        (StateInFlight.Controls["bumpers"] as ControlButtonPair).Left.Button0 = (reportData[1 + baseOffset + 5] & 1) == 1;
+
+                        // counter
+                        // bld.Append((reportData[1 + baseOffset + 6] & 0xfc).ToString().PadLeft(3, '0'));
+
+                        (StateInFlight.Controls["home"] as ControlButton).Button0 = (reportData[1 + baseOffset + 6] & 0x1) == 0x1;
+                        (StateInFlight.Controls["touch_center"] as ControlTouch).Click = (reportData[1 + baseOffset + 6] & 0x2) == 0x2;
+                        (StateInFlight.Controls["triggers"] as ControlTriggerPair).Left.Analog = (float)reportData[1 + baseOffset + 7] / byte.MaxValue;
+                        (StateInFlight.Controls["triggers"] as ControlTriggerPair).Right.Analog = (float)reportData[1 + baseOffset + 8] / byte.MaxValue;
                     }
+                    else
+                    {
+                        if (ConnectionType == EConnectionType.Bluetooth)
+                        {
+                            baseOffset = 1;
+                            HasStateData = (reportData[1 + 1] & 0x01) == 0x01;
+                        }
 
-                    (State.Controls["stick_right"] as ControlStick).PendingClick = (reportData[1 + baseOffset + 5] & 128) == 128;
-                    (State.Controls["stick_left"] as ControlStick).PendingClick = (reportData[1 + baseOffset + 5] & 64) == 64;
-                    (State.Controls["menu"] as ControlButtonPair).Right.PendingButton0 = (reportData[1 + baseOffset + 5] & 32) == 32;
-                    (State.Controls["menu"] as ControlButtonPair).Left.PendingButton0 = (reportData[1 + baseOffset + 5] & 16) == 16;
-                    (State.Controls["bumpers2"] as ControlButtonPair).Right.PendingButton0 = (reportData[1 + baseOffset + 5] & 8) == 8;
-                    (State.Controls["bumpers2"] as ControlButtonPair).Left.PendingButton0 = (reportData[1 + baseOffset + 5] & 4) == 4;
-                    (State.Controls["bumpers"] as ControlButtonPair).Right.PendingButton0 = (reportData[1 + baseOffset + 5] & 2) == 2;
-                    (State.Controls["bumpers"] as ControlButtonPair).Left.PendingButton0 = (reportData[1 + baseOffset + 5] & 1) == 1;
+                        if (HasStateData)
+                        {
+                            (StateInFlight.Controls["stick_left"] as ControlStick).X = (reportData[1 + baseOffset + 0] - 128) / 128f;
+                            (StateInFlight.Controls["stick_left"] as ControlStick).Y = (reportData[1 + baseOffset + 1] - 128) / 128f;
+                            (StateInFlight.Controls["stick_right"] as ControlStick).X = (reportData[1 + baseOffset + 2] - 128) / 128f;
+                            (StateInFlight.Controls["stick_right"] as ControlStick).Y = (reportData[1 + baseOffset + 3] - 128) / 128f;
 
-                    // counter
-                    // bld.Append((reportData[1 + baseOffset + 6] & 0xfc).ToString().PadLeft(3, '0'));
+                            (StateInFlight.Controls["quad_right"] as ControlButtonQuad).ButtonN = (reportData[1 + baseOffset + 7] & 128) == 128;
+                            (StateInFlight.Controls["quad_right"] as ControlButtonQuad).ButtonE = (reportData[1 + baseOffset + 7] & 64) == 64;
+                            (StateInFlight.Controls["quad_right"] as ControlButtonQuad).ButtonS = (reportData[1 + baseOffset + 7] & 32) == 32;
+                            (StateInFlight.Controls["quad_right"] as ControlButtonQuad).ButtonW = (reportData[1 + baseOffset + 7] & 16) == 16;
 
-                    (State.Controls["home"] as ControlButton).PendingButton0 = (reportData[1 + baseOffset + 6] & 0x1) == 0x1;
-                    (State.Controls["touch_center"] as ControlTouch).PendingClick = (reportData[1 + baseOffset + 6] & 0x2) == 0x2;
-                    (State.Controls["triggers"] as ControlTriggerPair).Left.PendingAnalog = (float)reportData[1 + baseOffset + 7] / byte.MaxValue;
-                    (State.Controls["triggers"] as ControlTriggerPair).Right.PendingAnalog = (float)reportData[1 + baseOffset + 8] / byte.MaxValue;
+                            switch ((reportData[1 + baseOffset + 7] & 0x0f))
+                            {
+                                case 0: (StateInFlight.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.North; break;
+                                case 1: (StateInFlight.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.NorthEast; break;
+                                case 2: (StateInFlight.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.East; break;
+                                case 3: (StateInFlight.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.SouthEast; break;
+                                case 4: (StateInFlight.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.South; break;
+                                case 5: (StateInFlight.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.SouthWest; break;
+                                case 6: (StateInFlight.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.West; break;
+                                case 7: (StateInFlight.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.NorthWest; break;
+                                default: (StateInFlight.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.None; break;
+                            }
+
+                            (StateInFlight.Controls["stick_right"] as ControlStick).Click = (reportData[1 + baseOffset + 8] & 128) == 128;
+                            (StateInFlight.Controls["stick_left"] as ControlStick).Click = (reportData[1 + baseOffset + 8] & 64) == 64;
+                            (StateInFlight.Controls["menu"] as ControlButtonPair).Right.Button0 = (reportData[1 + baseOffset + 8] & 32) == 32;
+                            (StateInFlight.Controls["menu"] as ControlButtonPair).Left.Button0 = (reportData[1 + baseOffset + 8] & 16) == 16;
+                            (StateInFlight.Controls["bumpers2"] as ControlButtonPair).Right.Button0 = (reportData[1 + baseOffset + 8] & 8) == 8;
+                            (StateInFlight.Controls["bumpers2"] as ControlButtonPair).Left.Button0 = (reportData[1 + baseOffset + 8] & 4) == 4;
+                            (StateInFlight.Controls["bumpers"] as ControlButtonPair).Right.Button0 = (reportData[1 + baseOffset + 8] & 2) == 2;
+                            (StateInFlight.Controls["bumpers"] as ControlButtonPair).Left.Button0 = (reportData[1 + baseOffset + 8] & 1) == 1;
+
+                            (StateInFlight.Controls["home"] as ControlButton).Button0 = (reportData[1 + baseOffset + 9] & 0x1) == 0x1;
+                            (StateInFlight.Controls["touch_center"] as ControlTouch).Click = (reportData[1 + baseOffset + 9] & 0x2) == 0x2;
+                            (StateInFlight.Controls["mute"] as ControlButton).Button0 = (reportData[1 + baseOffset + 9] & 0x4) == 0x4;
+                            (StateInFlight.Controls["triggers"] as ControlTriggerPair).Left.Analog = (float)reportData[1 + baseOffset + 4] / byte.MaxValue;
+                            (StateInFlight.Controls["triggers"] as ControlTriggerPair).Right.Analog = (float)reportData[1 + baseOffset + 5] / byte.MaxValue;
+
+                            (StateInFlight.Controls["motion"] as ControlMotion).AngularVelocityX = BitConverter.ToInt16(reportData, 1 + baseOffset + 15);
+                            (StateInFlight.Controls["motion"] as ControlMotion).AngularVelocityZ = BitConverter.ToInt16(reportData, 1 + baseOffset + 17);
+                            (StateInFlight.Controls["motion"] as ControlMotion).AngularVelocityY = BitConverter.ToInt16(reportData, 1 + baseOffset + 19);
+                            (StateInFlight.Controls["motion"] as ControlMotion).AccelerometerX = BitConverter.ToInt16(reportData, 1 + baseOffset + 21);
+                            (StateInFlight.Controls["motion"] as ControlMotion).AccelerometerY = BitConverter.ToInt16(reportData, 1 + baseOffset + 23);
+                            (StateInFlight.Controls["motion"] as ControlMotion).AccelerometerZ = BitConverter.ToInt16(reportData, 1 + baseOffset + 25);
+
+                            //bool DisconnectedFlag = (reportData[1 + baseOffset + 30] & 0x04) == 0x04;
+                            //if (DisconnectedFlag != DisconnectedBit)
+                            //{
+                            //    DisconnectedBit = DisconnectedFlag;
+                            //    ControllerNameUpdated?.Invoke();
+                            //}
+
+                            //int TouchDataCount = reportData[1 + baseOffset + 32];
+                            int TouchDataCount = 1;
+
+                            for (int FingerCounter = 0; FingerCounter < TouchDataCount; FingerCounter++)
+                            {
+                                bool Finger1 = (reportData[1 + baseOffset + 32 + (FingerCounter * 9)] & 0x80) != 0x80;
+                                byte Finger1Index = (byte)(reportData[1 + baseOffset + 32 + (FingerCounter * 9)] & 0x7f);
+                                int F1X = reportData[1 + baseOffset + 33 + (FingerCounter * 9)]
+                                                       | ((reportData[1 + baseOffset + 34 + (FingerCounter * 9)] & 0xF) << 8);
+                                int F1Y = ((reportData[1 + baseOffset + 34 + (FingerCounter * 9)] & 0xF0) >> 4)
+                                                        | (reportData[1 + baseOffset + 35 + (FingerCounter * 9)] << 4);
+
+                                bool Finger2 = (reportData[1 + baseOffset + 36 + (FingerCounter * 9)] & 0x80) != 0x80;
+                                byte Finger2Index = (byte)(reportData[1 + baseOffset + 36 + (FingerCounter * 9)] & 0x7f);
+                                int F2X = reportData[1 + baseOffset + 37 + (FingerCounter * 9)]
+                                                       | ((reportData[1 + baseOffset + 38 + (FingerCounter * 9)] & 0xF) << 8);
+                                int F2Y = ((reportData[1 + baseOffset + 38 + (FingerCounter * 9)] & 0xF0) >> 4)
+                                                        | (reportData[1 + baseOffset + 39 + (FingerCounter * 9)] << 4);
+
+                                byte touch_timestamp = reportData[1 + baseOffset + 41 + (FingerCounter * 9)]; // Touch Pad Counter
+                                                                                                              //DateTime tmp_now = DateTime.Now;
+
+                                byte TimeDelta = touch_last_frame ? GetOverflowedDelta(last_touch_timestamp, touch_timestamp) : (byte)0;
+
+                                (StateInFlight.Controls["touch_center"] as ControlTouch).AddTouch(0, Finger1, (F1X / 1919f) * 2f - 1f, (F1Y / 1079f) * 2f - 1f, TimeDelta); // everything beyond 1073 is not reliably producible
+                                (StateInFlight.Controls["touch_center"] as ControlTouch).AddTouch(1, Finger2, (F2X / 1919f) * 2f - 1f, (F2Y / 1079f) * 2f - 1f, TimeDelta); // everything beyond 1073 is not reliably producible
+
+                                last_touch_timestamp = touch_timestamp;
+                            }
+
+                            touch_last_frame = TouchDataCount > 0;
+
+                            // bring OldState in line with new State
+                            OldState = State;
+                            State = StateInFlight;
+
+                            StateUpdated?.Invoke(this, State);
+                        }
+                    }
                 }
-                else
+                finally
                 {
-                    if (ConnectionType == EConnectionType.Bluetooth)
-                    {
-                        baseOffset = 1;
-                        HasStateData = (reportData[1 + 1] & 0x01) == 0x01;
-                    }
-
-                    if (HasStateData)
-                    {
-                        (State.Controls["stick_left"] as ControlStick).PendingX = (reportData[1 + baseOffset + 0] - 128) / 128f;
-                        (State.Controls["stick_left"] as ControlStick).PendingY = (reportData[1 + baseOffset + 1] - 128) / 128f;
-                        (State.Controls["stick_right"] as ControlStick).PendingX = (reportData[1 + baseOffset + 2] - 128) / 128f;
-                        (State.Controls["stick_right"] as ControlStick).PendingY = (reportData[1 + baseOffset + 3] - 128) / 128f;
-
-                        (State.Controls["quad_right"] as ControlButtonQuad).PendingButtonN = (reportData[1 + baseOffset + 7] & 128) == 128;
-                        (State.Controls["quad_right"] as ControlButtonQuad).PendingButtonE = (reportData[1 + baseOffset + 7] & 64) == 64;
-                        (State.Controls["quad_right"] as ControlButtonQuad).PendingButtonS = (reportData[1 + baseOffset + 7] & 32) == 32;
-                        (State.Controls["quad_right"] as ControlButtonQuad).PendingButtonW = (reportData[1 + baseOffset + 7] & 16) == 16;
-
-                        switch ((reportData[1 + baseOffset + 7] & 0x0f))
-                        {
-                            case 0: (State.Controls["quad_left"] as ControlDPad).PendingDirection = EDPadDirection.North; break;
-                            case 1: (State.Controls["quad_left"] as ControlDPad).PendingDirection = EDPadDirection.NorthEast; break;
-                            case 2: (State.Controls["quad_left"] as ControlDPad).PendingDirection = EDPadDirection.East; break;
-                            case 3: (State.Controls["quad_left"] as ControlDPad).PendingDirection = EDPadDirection.SouthEast; break;
-                            case 4: (State.Controls["quad_left"] as ControlDPad).PendingDirection = EDPadDirection.South; break;
-                            case 5: (State.Controls["quad_left"] as ControlDPad).PendingDirection = EDPadDirection.SouthWest; break;
-                            case 6: (State.Controls["quad_left"] as ControlDPad).PendingDirection = EDPadDirection.West; break;
-                            case 7: (State.Controls["quad_left"] as ControlDPad).PendingDirection = EDPadDirection.NorthWest; break;
-                            default: (State.Controls["quad_left"] as ControlDPad).PendingDirection = EDPadDirection.None; break;
-                        }
-
-                        (State.Controls["stick_right"] as ControlStick).PendingClick = (reportData[1 + baseOffset + 8] & 128) == 128;
-                        (State.Controls["stick_left"] as ControlStick).PendingClick = (reportData[1 + baseOffset + 8] & 64) == 64;
-                        (State.Controls["menu"] as ControlButtonPair).Right.PendingButton0 = (reportData[1 + baseOffset + 8] & 32) == 32;
-                        (State.Controls["menu"] as ControlButtonPair).Left.PendingButton0 = (reportData[1 + baseOffset + 8] & 16) == 16;
-                        (State.Controls["bumpers2"] as ControlButtonPair).Right.PendingButton0 = (reportData[1 + baseOffset + 8] & 8) == 8;
-                        (State.Controls["bumpers2"] as ControlButtonPair).Left.PendingButton0 = (reportData[1 + baseOffset + 8] & 4) == 4;
-                        (State.Controls["bumpers"] as ControlButtonPair).Right.PendingButton0 = (reportData[1 + baseOffset + 8] & 2) == 2;
-                        (State.Controls["bumpers"] as ControlButtonPair).Left.PendingButton0 = (reportData[1 + baseOffset + 8] & 1) == 1;
-
-                        (State.Controls["home"] as ControlButton).PendingButton0 = (reportData[1 + baseOffset + 9] & 0x1) == 0x1;
-                        (State.Controls["touch_center"] as ControlTouch).PendingClick = (reportData[1 + baseOffset + 9] & 0x2) == 0x2;
-                        (State.Controls["mute"] as ControlButton).PendingButton0 = (reportData[1 + baseOffset + 9] & 0x4) == 0x4;
-                        (State.Controls["triggers"] as ControlTriggerPair).Left.PendingAnalog = (float)reportData[1 + baseOffset + 4] / byte.MaxValue;
-                        (State.Controls["triggers"] as ControlTriggerPair).Right.PendingAnalog = (float)reportData[1 + baseOffset + 5] / byte.MaxValue;
-
-                        (State.Controls["motion"] as ControlMotion).AngularVelocityX = BitConverter.ToInt16(reportData, 1 + baseOffset + 15);
-                        (State.Controls["motion"] as ControlMotion).AngularVelocityZ = BitConverter.ToInt16(reportData, 1 + baseOffset + 17);
-                        (State.Controls["motion"] as ControlMotion).AngularVelocityY = BitConverter.ToInt16(reportData, 1 + baseOffset + 19);
-                        (State.Controls["motion"] as ControlMotion).AccelerometerX = BitConverter.ToInt16(reportData, 1 + baseOffset + 21);
-                        (State.Controls["motion"] as ControlMotion).AccelerometerY = BitConverter.ToInt16(reportData, 1 + baseOffset + 23);
-                        (State.Controls["motion"] as ControlMotion).AccelerometerZ = BitConverter.ToInt16(reportData, 1 + baseOffset + 25);
-
-                        //bool DisconnectedFlag = (reportData[1 + baseOffset + 30] & 0x04) == 0x04;
-                        //if (DisconnectedFlag != DisconnectedBit)
-                        //{
-                        //    DisconnectedBit = DisconnectedFlag;
-                        //    ControllerNameUpdated?.Invoke();
-                        //}
-
-                        //int TouchDataCount = reportData[1 + baseOffset + 32];
-                        int TouchDataCount = 1;
-
-                        for (int FingerCounter = 0; FingerCounter < TouchDataCount; FingerCounter++)
-                        {
-                            bool Finger1 = (reportData[1 + baseOffset + 32 + (FingerCounter * 9)] & 0x80) != 0x80;
-                            byte Finger1Index = (byte)(reportData[1 + baseOffset + 32 + (FingerCounter * 9)] & 0x7f);
-                            int F1X = reportData[1 + baseOffset + 33 + (FingerCounter * 9)]
-                                                   | ((reportData[1 + baseOffset + 34 + (FingerCounter * 9)] & 0xF) << 8);
-                            int F1Y = ((reportData[1 + baseOffset + 34 + (FingerCounter * 9)] & 0xF0) >> 4)
-                                                    | (reportData[1 + baseOffset + 35 + (FingerCounter * 9)] << 4);
-
-                            bool Finger2 = (reportData[1 + baseOffset + 36 + (FingerCounter * 9)] & 0x80) != 0x80;
-                            byte Finger2Index = (byte)(reportData[1 + baseOffset + 36 + (FingerCounter * 9)] & 0x7f);
-                            int F2X = reportData[1 + baseOffset + 37 + (FingerCounter * 9)]
-                                                   | ((reportData[1 + baseOffset + 38 + (FingerCounter * 9)] & 0xF) << 8);
-                            int F2Y = ((reportData[1 + baseOffset + 38 + (FingerCounter * 9)] & 0xF0) >> 4)
-                                                    | (reportData[1 + baseOffset + 39 + (FingerCounter * 9)] << 4);
-
-                            byte touch_timestamp = reportData[1 + baseOffset + 41 + (FingerCounter * 9)]; // Touch Pad Counter
-                                                                                                          //DateTime tmp_now = DateTime.Now;
-
-                            byte TimeDelta = touch_last_frame ? GetOverflowedDelta(last_touch_timestamp, touch_timestamp) : (byte)0;
-
-                            (State.Controls["touch_center"] as ControlTouch).AddTouch(0, Finger1, (F1X / 1919f) * 2f - 1f, (F1Y / 1079f) * 2f - 1f, TimeDelta); // everything beyond 1073 is not reliably producible
-                            (State.Controls["touch_center"] as ControlTouch).AddTouch(1, Finger2, (F2X / 1919f) * 2f - 1f, (F2Y / 1079f) * 2f - 1f, TimeDelta); // everything beyond 1073 is not reliably producible
-
-                            last_touch_timestamp = touch_timestamp;
-                        }
-
-                        touch_last_frame = TouchDataCount > 0;
-
-                        foreach (string controlKey in State.Controls.Keys)
-                        {
-                            State.Controls[controlKey].ProcessPendingInputs();
-                        }
-
-                        ControllerState NewState = GetState();
-                        OnStateUpdated(NewState);
-                    }
+                    Interlocked.Exchange(ref reportUsageLock, 0);
                 }
-                Interlocked.Exchange(ref reportUsageLock, 0);
-
-                if (ConnectionType == EConnectionType.Dongle && DisconnectedBit)
-                    Thread.Sleep(1000); // if we're a dongle and we're not connected we might only be partially initalized, so slow roll our read
             }
         }
 
