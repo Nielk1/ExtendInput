@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using ExtendInput.Controller;
 using ExtendInput.DeviceProvider;
+using System.Diagnostics;
 
 namespace ExtendInput
 {
@@ -91,6 +92,8 @@ namespace ExtendInput
                 {
                     ControllerChangeEventHandler threadSafeEventHandler = ControllerAdded;
                     threadSafeEventHandler?.Invoke(this, d);
+
+                    Debug.WriteLine($"New Device<{e.GetType()}>({e.UniqueKey}) with Properties:{string.Join(string.Empty, e.Properties?.Select(dr => $"\r\n[{dr.Key}]={dr.Value}"))}\r\n");
                 }
             }
         }

@@ -13,7 +13,7 @@ namespace ExtendInput.DeviceProvider
         public int ProductId { get { return internalDevice.ProductID; } }
         public int VendorId { get { return internalDevice.VendorID; } }
 
-
+        public Dictionary<string, dynamic> Properties { get; private set; }
 
 
         private HidSharp.HidDevice internalDevice;
@@ -22,6 +22,12 @@ namespace ExtendInput.DeviceProvider
 
         public HidDevice(HidSharp.HidDevice internalDevice)
         {
+            Properties = new Dictionary<string, dynamic>();
+
+            Properties["MaxFeatureReportLength"] = internalDevice.GetMaxFeatureReportLength();
+            Properties["MaxInputReportLength"] = internalDevice.GetMaxInputReportLength();
+            Properties["MaxOutputReportLength"] = internalDevice.GetMaxOutputReportLength();
+
             this.internalDevice = internalDevice;
         }
         private HidSharp.HidStream GetStream()

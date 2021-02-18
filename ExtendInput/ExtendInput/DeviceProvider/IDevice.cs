@@ -12,5 +12,7 @@ namespace ExtendInput.DeviceProvider
         int ProductId { get; }
         int VendorId { get; }
         string UniqueKey { get; }
+
+        Dictionary<string, dynamic> Properties { get; }
     }
 }

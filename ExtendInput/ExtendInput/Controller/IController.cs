@@ -92,11 +92,11 @@ namespace ExtendInput.Controller
         /// <param name="cur">Current Value</param>
         /// <param name="overflow">Value of overflow, defaults to max for type</param>
         /// <returns></returns>
-        public static byte GetOverflowedDelta(byte prev, byte cur, uint overflow = byte.MaxValue + 1)
+        public static byte GetOverflowedDelta(byte prev, byte cur, byte overflow = byte.MaxValue)
         {
             uint _cur = cur;
             while (_cur < prev)
-                _cur += overflow;
+                _cur += (uint)overflow + 1;
             return (byte)(_cur - prev);
         }
     }

@@ -14,6 +14,7 @@ namespace ExtendInput.DeviceProvider
         public int ProductId { get { return 0; } }//internalDevice.ProductID; } }
         public int VendorId { get { return 0; } }//internalDevice.VendorID; } }
 
+        public Dictionary<string, dynamic> Properties { get; private set; }
 
 
         private SharpDX.XInput.Controller internalDevice;
@@ -21,6 +22,8 @@ namespace ExtendInput.DeviceProvider
 
         public XInputDevice(SharpDX.XInput.Controller internalDevice)
         {
+            Properties = new Dictionary<string, dynamic>();
+
             this.internalDevice = internalDevice;
         }
 
