@@ -24,7 +24,7 @@ namespace ExtendInput.Controller
 
         public bool SensorsEnabled;
         private HidDevice _device;
-        int stateUsageLock = 0, reportUsageLock = 0;
+        int reportUsageLock = 0;
         private byte last_touch_timestamp;
         private bool touch_last_frame;
         //private DateTime tmp = DateTime.Now;

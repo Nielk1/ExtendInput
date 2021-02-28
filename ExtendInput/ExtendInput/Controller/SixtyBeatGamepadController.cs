@@ -18,7 +18,7 @@ namespace ExtendInput.Controller
 
         public IDevice DeviceHackRef => _device;
         private SixtyBeatAudioDevice _device;
-        int stateUsageLock = 0, reportUsageLock = 0;
+        int reportUsageLock = 0;
 
         public event ControllerNameUpdateEvent ControllerNameUpdated;
 

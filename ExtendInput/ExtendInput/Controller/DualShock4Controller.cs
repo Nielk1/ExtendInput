@@ -3,6 +3,7 @@ using ExtendInput.DeviceProvider;
 using System;
 using System.Drawing;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 
 namespace ExtendInput.Controller
@@ -51,7 +52,7 @@ namespace ExtendInput.Controller
 
         public bool SensorsEnabled;
         private HidDevice _device;
-        int stateUsageLock = 0, reportUsageLock = 0;
+        int reportUsageLock = 0;
         private byte last_touch_timestamp;
         private bool touch_last_frame;
         //private DateTime tmp = DateTime.Now;
@@ -306,6 +307,7 @@ namespace ExtendInput.Controller
             }
         }
 
+        Regex MacAsSerialNumber = new Regex("^[0-9a-fA-F]{12}$");
         private void GetHidSerialNumberIfNull(ref string Serial)
         {
             if (string.IsNullOrWhiteSpace(Serial))
@@ -313,6 +315,9 @@ namespace ExtendInput.Controller
                 string SerialNumber = _device.ReadSerialNumber();
                 if (!string.IsNullOrWhiteSpace(SerialNumber))
                 {
+                    // TODO confirm this is in the right order and we don't need to reverse it
+                    if (MacAsSerialNumber.IsMatch(SerialNumber))
+                        SerialNumber = $"{SerialNumber.Substring(0, 2)}:{SerialNumber.Substring(2, 2)}:{SerialNumber.Substring(4, 2)}:{SerialNumber.Substring(6, 2)}:{SerialNumber.Substring(8, 2)}:{SerialNumber.Substring(10, 2)}".ToUpperInvariant();
                     Serial = SerialNumber;
                 }
             }

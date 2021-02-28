@@ -33,7 +33,7 @@ namespace ExtendInput.Controller
 
         public bool SensorsEnabled;
         private HidDevice _device;
-        int stateUsageLock = 0, reportUsageLock = 0;
+        int reportUsageLock = 0;
 
         #region DATA STRUCTS
         public enum VSCEventType
