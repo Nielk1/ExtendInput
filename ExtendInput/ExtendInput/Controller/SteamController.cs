@@ -27,7 +27,31 @@ namespace ExtendInput.Controller
 
         public string[] ConnectionTypeCode { get; private set; }
         public string[] ControllerTypeCode { get; private set; }
-
+        public string Name
+        {
+            get
+            {
+                string retVal = "Valve Steam Controller";
+                switch (ControllerType)
+                {
+                    case EControllerType.ReleaseV1: retVal += " 1001"; break;
+                    case EControllerType.ReleaseV2: retVal += " V2"; break;
+                    case EControllerType.Chell: retVal += " Chell"; break;
+                }
+                if (ConState == InternalConState.Disconnected)
+                {
+                    retVal += $" <{ConState}>";
+                }
+                else
+                {
+                    retVal += $" <{ConState}>";
+#if Serial
+                retVal += $" [{Serial ?? "No ID"}]";
+#endif
+                }
+                return retVal;
+            }
+        }
 
         public bool HasMotion => true;
 
@@ -439,29 +463,6 @@ namespace ExtendInput.Controller
                 (State.Controls["motion"] as ControlMotion).AngularVelocityY == (OldState.Controls["motion"] as ControlMotion).AngularVelocityY &&
                 (State.Controls["motion"] as ControlMotion).AngularVelocityZ == (OldState.Controls["motion"] as ControlMotion).AngularVelocityZ
             );
-        }
-
-        public string GetName()
-        {
-            string retVal = "Valve Steam Controller";
-            switch(ControllerType)
-            {
-                case EControllerType.ReleaseV1: retVal += " 1001"; break;
-                case EControllerType.ReleaseV2: retVal += " V2"; break;
-                case EControllerType.Chell: retVal += " Chell"; break;
-            }
-            if (ConState == InternalConState.Disconnected)
-            {
-                retVal += $" <{ConState}>";
-            }
-            else
-            {
-                retVal += $" <{ConState}>";
-#if Serial
-                retVal += $" [{Serial ?? "No ID"}]";
-#endif
-            }
-            return retVal;
         }
 
         private void OnReport(byte[] reportData)

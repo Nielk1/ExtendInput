@@ -42,7 +42,39 @@ namespace ExtendInput.Controller
 
         public string[] ConnectionTypeCode { get; private set; }
         public string[] ControllerTypeCode { get; private set; }
+        public string Name
+        {
+            get
+            {
+                string retVal = "Sony DUALSENSE Controller";
 
+                string Serial = null;
+
+                if (_device.VendorId == VendorId
+                && (_device.ProductId == ProductId))
+                {
+                    try
+                    {
+                        byte[] data;
+                        _device.ReadFeatureData(out data, 0x09);
+                        Serial = string.Join(":", data.Skip(1).Take(6).Reverse().Select(dr => $"{dr:X2}").ToArray());
+                    }
+                    catch { }
+                }
+                if (string.IsNullOrWhiteSpace(Serial))
+                {
+                    string SerialNumber = _device.ReadSerialNumber();
+                    if (!string.IsNullOrWhiteSpace(SerialNumber))
+                    {
+                        Serial = SerialNumber;
+                    }
+                }
+                if (string.IsNullOrWhiteSpace(Serial))
+                    Serial = null;
+
+                return retVal += $" [{Serial ?? "No ID"}]"; ;
+            }
+        }
 
         public IDevice DeviceHackRef => _device;
 
@@ -194,37 +226,6 @@ namespace ExtendInput.Controller
                 (State.Controls["motion"] as ControlMotion).AngularVelocityY == (OldState.Controls["motion"] as ControlMotion).AngularVelocityY &&
                 (State.Controls["motion"] as ControlMotion).AngularVelocityZ == (OldState.Controls["motion"] as ControlMotion).AngularVelocityZ
             );
-        }
-
-        public string GetName()
-        {
-            string retVal = "Sony DUALSENSE Controller";
-
-            string Serial = null;
-
-            if (_device.VendorId == VendorId
-            && (_device.ProductId == ProductId))
-            {
-                try
-                {
-                    byte[] data;
-                    _device.ReadFeatureData(out data, 0x09);
-                    Serial = string.Join(":", data.Skip(1).Take(6).Reverse().Select(dr => $"{dr:X2}").ToArray());
-                }
-                catch { }
-            }
-            if (string.IsNullOrWhiteSpace(Serial))
-            {
-                string SerialNumber = _device.ReadSerialNumber();
-                if (!string.IsNullOrWhiteSpace(SerialNumber))
-                {
-                    Serial = SerialNumber;
-                }
-            }
-            if (string.IsNullOrWhiteSpace(Serial))
-                Serial = null;
-
-            return retVal += $" [{Serial ?? "No ID"}]"; ;
         }
 
         private void OnReport(byte[] reportData)

@@ -60,6 +60,7 @@ namespace ExtendInput.Controller
         EConnectionType ConnectionType { get; }
         string[] ConnectionTypeCode { get; }
         string[] ControllerTypeCode { get; }
+        string Name { get; }
 
         IDevice DeviceHackRef { get; }
         bool HasMotion { get; }
@@ -68,7 +69,6 @@ namespace ExtendInput.Controller
         ControllerState GetState();
         void Initalize();
         void Identify();
-        string GetName();
     }
 
     public static class ControllerMathTools

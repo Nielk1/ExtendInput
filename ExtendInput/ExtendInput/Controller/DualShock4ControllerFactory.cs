@@ -12,18 +12,18 @@ namespace ExtendInput.Controller
             if (_device == null)
                 return null;
 
-            if (_device.VendorId == DualShock4Controller.VendorId)
+            if (_device.VendorId == DualShock4Controller.VENDOR_SONY)
             {
                 if (!new int[] {
-                    DualShock4Controller.ProductIdDongle,
-                    DualShock4Controller.ProductIdWired,
-                    DualShock4Controller.ProductIdWiredV2,
+                    DualShock4Controller.PRODUCT_SONY_DONGLE,
+                    DualShock4Controller.PRODUCT_SONY_DS4V1,
+                    DualShock4Controller.PRODUCT_SONY_DS4V2,
                 }.Contains(_device.ProductId))
                     return null;
             }
-            else if (_device.VendorId == DualShock4Controller.BrookMarsVendorId)
+            else if (_device.VendorId == DualShock4Controller.VENDOR_BROOK)
             {
-                if (_device.ProductId == DualShock4Controller.BrookMarsProductId)
+                if (_device.ProductId == DualShock4Controller.PRODUCT_BROOK_MARS)
                 {
                     if (_device.DevicePath.Contains(@"&col01"))
                     {
@@ -45,8 +45,8 @@ namespace ExtendInput.Controller
             EConnectionType ConType = EConnectionType.Unknown;
             switch (_device.ProductId)
             {
-                case DualShock4Controller.ProductIdWired:
-                case DualShock4Controller.ProductIdWiredV2:
+                case DualShock4Controller.PRODUCT_SONY_DS4V1:
+                case DualShock4Controller.PRODUCT_SONY_DS4V2:
                     if (devicePath.Contains(bt_hid_id))
                     {
                         ConType = EConnectionType.Bluetooth;
@@ -56,7 +56,7 @@ namespace ExtendInput.Controller
                         ConType = EConnectionType.USB;
                     }
                     break;
-                case DualShock4Controller.ProductIdDongle:
+                case DualShock4Controller.PRODUCT_SONY_DONGLE:
                     ConType = EConnectionType.Dongle;
                     break;
             }

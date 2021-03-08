@@ -14,7 +14,13 @@ namespace ExtendInput.Controller
 
         public string[] ConnectionTypeCode { get; private set; }
         public string[] ControllerTypeCode { get; private set; }
-
+        public string Name
+        {
+            get
+            {
+                return _device.DevicePath;
+            }
+        }
 
         public IDevice DeviceHackRef => _device;
         private XInputDevice _device;
@@ -52,11 +58,6 @@ namespace ExtendInput.Controller
         }
         public void Dispose()
         {
-        }
-
-        public string GetName()
-        {
-            return _device.DevicePath;
         }
 
         public ControllerState GetState()
