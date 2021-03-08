@@ -221,6 +221,9 @@ namespace ExtendInput.Controller
 
             _device.DeviceReport += OnReport;
         }
+        public void Dispose()
+        {
+        }
 
         public void Initalize()
         {
@@ -263,7 +266,7 @@ namespace ExtendInput.Controller
 #endif
         }
 
-        public event ControllerNameUpdateEvent ControllerNameUpdated;
+        public event ControllerNameUpdateEvent ControllerMetadataUpdate;
 
         public void DeInitalize()
         {
@@ -753,7 +756,7 @@ namespace ExtendInput.Controller
 
                                             ConState = InternalConState.Connected;
                                             ConnectedTime = DateTime.UtcNow;
-                                            ControllerNameUpdated?.Invoke();
+                                            ControllerMetadataUpdate?.Invoke();
                                         }
                                         break;
 
@@ -769,11 +772,11 @@ namespace ExtendInput.Controller
                                                 case ConnectionState.CONNECT:
                                                     ConState = InternalConState.Connected;
                                                     ConnectedTime = DateTime.UtcNow;
-                                                    ControllerNameUpdated?.Invoke();
+                                                    ControllerMetadataUpdate?.Invoke();
                                                     break;
                                                 case ConnectionState.DISCONNECT:
                                                     ConState = InternalConState.Disconnected;
-                                                    ControllerNameUpdated?.Invoke();
+                                                    ControllerMetadataUpdate?.Invoke();
                                                     break;
                                             }
                                         }

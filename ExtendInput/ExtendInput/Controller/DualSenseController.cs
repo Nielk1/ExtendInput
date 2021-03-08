@@ -29,7 +29,7 @@ namespace ExtendInput.Controller
         private bool touch_last_frame;
         //private DateTime tmp = DateTime.Now;
 
-        public event ControllerNameUpdateEvent ControllerNameUpdated;
+        public event ControllerNameUpdateEvent ControllerMetadataUpdate;
 
         public bool HasMotion => true;
 
@@ -78,6 +78,9 @@ namespace ExtendInput.Controller
             Initalized = 0;
 
             _device.DeviceReport += OnReport;
+        }
+        public void Dispose()
+        {
         }
 
         public void Initalize()

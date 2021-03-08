@@ -20,7 +20,7 @@ namespace ExtendInput.Controller
         private SixtyBeatAudioDevice _device;
         int reportUsageLock = 0;
 
-        public event ControllerNameUpdateEvent ControllerNameUpdated;
+        public event ControllerNameUpdateEvent ControllerMetadataUpdate;
 
         ControllerState State = new ControllerState();
 
@@ -49,6 +49,9 @@ namespace ExtendInput.Controller
             Initalized = 0;
 
             _device.DeviceReport += OnReport;
+        }
+        public void Dispose()
+        {
         }
 
         public string GetName()

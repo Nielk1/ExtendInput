@@ -1,5 +1,6 @@
 ﻿using ExtendInput.Controls;
 using ExtendInput.DeviceProvider;
+using System;
 
 namespace ExtendInput.Controller
 {
@@ -52,9 +53,9 @@ namespace ExtendInput.Controller
     }
 
     public delegate void ControllerNameUpdateEvent();
-    public interface IController
+    public interface IController : IDisposable
     {
-        event ControllerNameUpdateEvent ControllerNameUpdated;
+        event ControllerNameUpdateEvent ControllerMetadataUpdate;
 
         EConnectionType ConnectionType { get; }
         string[] ConnectionTypeCode { get; }

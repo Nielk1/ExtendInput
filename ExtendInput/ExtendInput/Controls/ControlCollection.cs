@@ -38,7 +38,7 @@ namespace ExtendInput.Controls
 
             foreach (var key in Data.Keys)
             {
-                newData[key] = (IControl)Data[key].Clone();
+                newData[key] = (IControl)Data[key]?.Clone();
             }
 
             return newData;
