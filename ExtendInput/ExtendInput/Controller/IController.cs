@@ -60,7 +60,7 @@ namespace ExtendInput.Controller
         EConnectionType ConnectionType { get; }
         string[] ConnectionTypeCode { get; }
         string[] ControllerTypeCode { get; }
-        string Name { get; }
+        string NameDetail { get; }
 
         IDevice DeviceHackRef { get; }
         bool HasMotion { get; }

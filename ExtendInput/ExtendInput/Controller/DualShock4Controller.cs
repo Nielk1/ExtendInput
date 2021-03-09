@@ -26,7 +26,7 @@ namespace ExtendInput.Controller
         #endregion Device IDs
 
         #region Identity Hashes
-        private string IDENTITY_SHA256_895X = @"2e2415ca56598006b94f1274d15e64a1b99385c53e91102ae7708b8919fe124f";
+        private string IDENTITY_SHA256_2E2415CA = @"2e2415ca56598006b94f1274d15e64a1b99385c53e91102ae7708b8919fe124f";
         #endregion Identity Hashes
 
         #region String Definitions
@@ -46,44 +46,63 @@ namespace ExtendInput.Controller
         private const string ATOM_CONTROLLER_DS4 = "DS4";
         private const string ATOM_CONTROLLER_DS4V1 = "DS4V1";
         private const string ATOM_CONTROLLER_DS4V2 = "DS4V2";
-        private const string ATOM_CONTROLLER_DS4_895X = "DS4_895X";
+        private const string ATOM_CONTROLLER_DS4_2E2415CA = "DS4_2E2415CA";
         private const string ATOM_CONTROLLER_DS4_8951 = "DS4_8951";
         private const string ATOM_CONTROLLER_DS4_8952 = "DS4_8952";
+        private const string ATOM_CONTROLLER_DS4_SZ4002B = "DS4_SZ4002B";
+        private const string ATOM_CONTROLLER_DS4_SZ4003B = "DS4_SZ4003B";
         private const string ATOM_CONTROLLER_BROOKMARS = "BROOKMARS";
         private const string ATOM_CONTROLLER_UNKKNOWN = "UNKNOWN";
 
         private readonly string[] _CONTROLLER_DS4V1 = new string[] { ATOM_CONTROLLER_DS4V1, ATOM_CONTROLLER_DS4, ATOM_CONTROLLER_GAMEPAD };
         private readonly string[] _CONTROLLER_DS4V2 = new string[] { ATOM_CONTROLLER_DS4V2, ATOM_CONTROLLER_DS4, ATOM_CONTROLLER_GAMEPAD };
-        private readonly string[] _CONTROLLER_DS4_895X = new string[] { ATOM_CONTROLLER_DS4_895X, ATOM_CONTROLLER_DS4, ATOM_CONTROLLER_GAMEPAD };
+        private readonly string[] _CONTROLLER_DS4_2E2415CA = new string[] { ATOM_CONTROLLER_DS4_2E2415CA, ATOM_CONTROLLER_DS4, ATOM_CONTROLLER_GAMEPAD };
         private readonly string[] _CONTROLLER_DS4_8951 = new string[] { ATOM_CONTROLLER_DS4_8951, ATOM_CONTROLLER_DS4, ATOM_CONTROLLER_GAMEPAD };
         private readonly string[] _CONTROLLER_DS4_8952 = new string[] { ATOM_CONTROLLER_DS4_8952, ATOM_CONTROLLER_DS4, ATOM_CONTROLLER_GAMEPAD };
+        private readonly string[] _CONTROLLER_DS4_SZ4002B = new string[] { ATOM_CONTROLLER_DS4_SZ4002B, ATOM_CONTROLLER_DS4, ATOM_CONTROLLER_GAMEPAD };
+        private readonly string[] _CONTROLLER_DS4_SZ4003B = new string[] { ATOM_CONTROLLER_DS4_SZ4003B, ATOM_CONTROLLER_DS4, ATOM_CONTROLLER_GAMEPAD };
         private readonly string[] _CONTROLLER_BROOKMARS = new string[] { ATOM_CONTROLLER_BROOKMARS, ATOM_CONTROLLER_DS4, ATOM_CONTROLLER_GAMEPAD };
         private readonly string[] _CONTROLLER_UNKKNOWN = new string[] { ATOM_CONTROLLER_UNKKNOWN };
         #endregion String Definitions
 
         #region Device Property Defaults
         private const float DS4_PAD_MAX_X = 1919f;
-        private const float DS4_PAD_MAX_Y = 942f;
+        private const float DS4_PAD_MAX_Y = 941f;
 
         private const float NO8951_PAD_MAX_X = 1918f;
         private const float NO8951_PAD_MAX_Y = 940f;
 
         private const float NO8952_PAD_MAX_X = 940f;
         private const float NO8952_PAD_MAX_Y = 940f;
+
+        private const float SZ4002B_PAD_MAX_X = 1900f;
+        private const float SZ4002B_PAD_MAX_Y = 940f;
+
+        private const float SZ4003B_PAD_MAX_X = 1918f;
+        private const float SZ4003B_PAD_MAX_Y = 940f;
         #endregion Device Property Defaults
 
         enum DS4SubType
         {
-            None, // DS4 dongle with nothing connected
-            Unknown,
-            SonyDS4V1, // DS4V1 that has shown a non-zero temperture or is assumed correct due to coming through the offical dongle
+            None = -1, // DS4 dongle with nothing connected
+            Unknown = 0,
+            SonyDS4V1 = 1, // DS4V1 that has shown a non-zero temperture or is assumed correct due to coming through the offical dongle
             SonyDS4V2, // DS4V2 that has shown a non-zero temperture or is assumed correct due to coming through the offical dongle
             UnknownDS4V1, // DS4V1 when it first connects
             UnknownDS4V2, // DS4V2 when it first connects
-            BrookMars, // wired only controller, so it is detected immediately
-            No895X, // Has the No895X identifier
-            No8951, // The touch pad is bigger than the No8952, so that's how this is found based on input
-            No8952, // This has a readable extra button the No8951 does not, so that's how this is found based on input
+            BrookMars = 100, // wired only controller, so it is detected immediately
+
+            // These controllers have specific strange properties:
+            // 1. These controllers all share the same Private/Pulic Key, which means Sony could blacklist them all from the PS4 if they wanted
+            // 2. Their PID sometimes changes between USB and BT
+            // 3. Their MAC is sometimes not available under any method under USB, but not all cases
+            // 4. On USB, it is impossible to bit filter rumble and LED changes out, they always apply every write no matter what
+            // 5. On BT, rumble writes ignore the rumble flag and instead apply if the LED flag is set. LED sets of 0x000000 are ignored to facilitate this
+            PartialDetection2E2415CA = 200, // Controller is one of the below
+            No8951, // Uses V2 PID on BT and V1 on USB but SN is only on BT, The touch pad is bigger than the No8952, so that's how this is found based on input
+            No8952, // Uses V2 PID on BT and V1 on USB but SN is only on BT, This has a readable extra button the No8951 does not, so that's how this is found based on input
+            SZ4002B, // Uses V1 PID on BT&USB with SN on both BT&USB, mostly normal aside from pad size and some possible pad garbage data
+            SZ4003B, // Uses V2 PID on BT and V1 on USB with SN on both BT&USB, mostly normal aside from pad size and some possible pad garbage data
         }
         private DS4SubType ControllerSubType = DS4SubType.None;
 
@@ -151,47 +170,100 @@ namespace ExtendInput.Controller
             {
                 switch (ControllerSubType)
                 {
-                    case DS4SubType.None:         return _CONTROLLER_UNKKNOWN;
+                    case DS4SubType.None:                     return _CONTROLLER_UNKKNOWN;
                     case DS4SubType.SonyDS4V1:
-                    case DS4SubType.UnknownDS4V1: return _CONTROLLER_DS4V1;
+                    case DS4SubType.UnknownDS4V1:             return _CONTROLLER_DS4V1;
                     case DS4SubType.SonyDS4V2:
-                    case DS4SubType.UnknownDS4V2: return _CONTROLLER_DS4V2;
-                    case DS4SubType.BrookMars:    return _CONTROLLER_BROOKMARS;
-                    case DS4SubType.No895X:       return _CONTROLLER_DS4_895X;
-                    case DS4SubType.No8951:       return _CONTROLLER_DS4_8951;
-                    case DS4SubType.No8952:       return _CONTROLLER_DS4_8952;
-                    default:                      return _CONTROLLER_UNKKNOWN;
+                    case DS4SubType.UnknownDS4V2:             return _CONTROLLER_DS4V2;
+                    case DS4SubType.BrookMars:                return _CONTROLLER_BROOKMARS;
+                    case DS4SubType.PartialDetection2E2415CA: return _CONTROLLER_DS4_2E2415CA;
+                    case DS4SubType.No8951:                   return _CONTROLLER_DS4_8951;
+                    case DS4SubType.No8952:                   return _CONTROLLER_DS4_8952;
+                    case DS4SubType.SZ4002B:                  return _CONTROLLER_DS4_SZ4002B;
+                    case DS4SubType.SZ4003B:                  return _CONTROLLER_DS4_SZ4003B;
+                    default:                                  return _CONTROLLER_UNKKNOWN;
                 }
             }
         }
-        public string Name
+
+        public string NameDetail
         {
             get
             {
-                UInt16 VID = (UInt16)_device.VendorId;
-                UInt16 PID = (UInt16)_device.ProductId;
-
-                string DeviceName = GetDeviceName(VID, PID);
-
                 switch (ControllerSubType)
                 {
                     case DS4SubType.None:
                     case DS4SubType.BrookMars:
-                        return DeviceName;
+                        return Name;
                     case DS4SubType.SonyDS4V1:
                     case DS4SubType.SonyDS4V2:
                     case DS4SubType.UnknownDS4V1:
                     case DS4SubType.UnknownDS4V2:
-                    case DS4SubType.No895X:
+                    case DS4SubType.PartialDetection2E2415CA:
                     case DS4SubType.No8951:
                     case DS4SubType.No8952:
+                    case DS4SubType.SZ4002B:
+                    case DS4SubType.SZ4003B:
                     case DS4SubType.Unknown:
                     default:
-                        return $"{DeviceName} [{SerialNumber ?? "No ID"}]";
+                        return $"{Name} [{SerialNumber ?? "No ID"}]";
                 }
             }
         }
 
+        public string Name
+        {
+            get
+            {
+                switch (ControllerSubType)
+                {
+                    case DS4SubType.None:
+                        {
+                            UInt16 VID = (UInt16)_device.VendorId;
+                            UInt16 PID = (UInt16)_device.ProductId;
+                            if (VID == VENDOR_SONY)
+                            {
+                                switch (PID)
+                                {
+                                    case PRODUCT_SONY_DONGLE:
+                                        return "DUALSHOCK®4 USB Wireless Adaptor";
+                                    case PRODUCT_SONY_DONGLE_DFU:
+                                        return "DUALSHOCK®4 USB Wireless Adaptor in DFU mode!!!";
+                                }
+                                return $"Sony Device <{PID:X4}>";
+                            }
+                            return $"Unknown Device <{VID:X4},{PID:X4}>";
+                        }
+                    case DS4SubType.SonyDS4V1:
+                        return $"Sony DUALSHOCK®4 Controller V1";
+                    case DS4SubType.SonyDS4V2:
+                        return $"Sony DUALSHOCK®4 Controller V2";
+                    case DS4SubType.UnknownDS4V1:
+                        return $"Sony DUALSHOCK®4 Controller V1 (Possible Unoffical)";
+                    case DS4SubType.UnknownDS4V2:
+                        return $"Sony DUALSHOCK®4 Controller V2 (Possible Unoffical)";
+                    case DS4SubType.BrookMars:
+                        return "Brook Mars Wired Controller";
+                    case DS4SubType.PartialDetection2E2415CA:
+                        return "Partial Detection 2E2415CA";
+                    case DS4SubType.No8951:
+                        return "Model No. PS4-8951";
+                    case DS4SubType.No8952:
+                        return "Model No. PS4-8952";
+                    case DS4SubType.SZ4002B:
+                        return "Senze SZ-4002B";
+                    case DS4SubType.SZ4003B:
+                        return "Senze SZ-4003B";
+                    case DS4SubType.Unknown:
+                    default:
+                        {
+                            UInt16 VID = (UInt16)_device.VendorId;
+                            UInt16 PID = (UInt16)_device.ProductId;
+                            return $"Unknown Device <{VID:X4},{PID:X4}>";
+                        }
+                }
+            }
+        }
 
         private bool HaveSeenNonZeroRawTemp;
 
@@ -294,13 +366,15 @@ namespace ExtendInput.Controller
 
         public async void Identify()
         {
-            bool LEDInstead = false;
+            bool LEDInsteadOrNothingOnUSB = false;
             switch(ControllerSubType)
             {
-                case DS4SubType.No895X:
+                case DS4SubType.PartialDetection2E2415CA:
                 case DS4SubType.No8951:
                 case DS4SubType.No8952:
-                    LEDInstead = true;
+                case DS4SubType.SZ4002B:
+                case DS4SubType.SZ4003B:
+                    LEDInsteadOrNothingOnUSB = true;
                     break;
             }
 
@@ -311,7 +385,7 @@ namespace ExtendInput.Controller
                 report = new byte[78]
                 {
                     0x11, 0xC0, 0x20,
-                    (byte)(LEDInstead ? 0x02 : 0x01), 0x00, 0x00,
+                    (byte)(LEDInsteadOrNothingOnUSB ? 0x02 : 0x01), 0x00, 0x00,
                     0xff, 0xff,
                     0x00, 0x00, // LED must be black when doing LEDInstead
                     0x00, 0x0f, 0x0f,
@@ -328,10 +402,13 @@ namespace ExtendInput.Controller
             }
             else
             {
+                if (LEDInsteadOrNothingOnUSB)
+                    return; // these devices can't seperate LED color from rumble on USB, TODO once we have ReadOnly/SafeWrite/FullControl done, allow this on FullControl mode
+
                 report = new byte[32]
                 {
                     0x05,
-                    (byte)(LEDInstead ? 0x02 : 0x01), 0x00, 0x00,
+                    0x01, 0x00, 0x00,
                     0xff, 0xff,
                     0x00, 0x00, 0x00, 0x0f, // LED must be black when doing LEDInstead
                     0x0f,
@@ -345,7 +422,7 @@ namespace ExtendInput.Controller
             if (_device.WriteReport(report))
             {
                 Thread.Sleep(250);
-                report[1 + offset + 0] = (byte)(LEDInstead ? 0x02 : 0x01);
+                report[1 + offset + 0] = (byte)(LEDInsteadOrNothingOnUSB ? 0x02 : 0x01);
                 report[1 + offset + 3] = 0x00;
                 report[1 + offset + 4] = 0x00;
                 _device.WriteReport(report);
@@ -432,13 +509,13 @@ namespace ExtendInput.Controller
         private Regex MacAsSerialNumber = new Regex("^[0-9a-fA-F]{12}$");
         private string GetSerialNumber()
         {
-            switch (ControllerSubType)
+            //switch (ControllerSubType)
             {
-                case DS4SubType.None:
-                case DS4SubType.SonyDS4V1:
-                case DS4SubType.SonyDS4V2:
-                case DS4SubType.UnknownDS4V1:
-                case DS4SubType.UnknownDS4V2:
+            //    case DS4SubType.None:
+            //    case DS4SubType.SonyDS4V1:
+            //    case DS4SubType.SonyDS4V2:
+            //    case DS4SubType.UnknownDS4V1:
+            //    case DS4SubType.UnknownDS4V2:
                     // try asking the device for its MAC
                     {
                         byte[] FeatureBuffer;
@@ -474,49 +551,11 @@ namespace ExtendInput.Controller
                         }
                     }
 
-                    return null;
+                    //return null;
             }
             return null;
         }
 
-        private string GetDeviceName(UInt16 VID, UInt16 PID)
-        {
-            switch (ControllerSubType)
-            {
-                case DS4SubType.None:
-                    if (VID == VENDOR_SONY)
-                    {
-                        switch (PID)
-                        {
-                            case PRODUCT_SONY_DONGLE:
-                                return "DUALSHOCK®4 USB Wireless Adaptor";
-                            case PRODUCT_SONY_DONGLE_DFU:
-                                return "DUALSHOCK®4 USB Wireless Adaptor in DFU mode!!!";
-                        }
-                        return $"Sony Device <{PID:X4}>";
-                    }
-                    return $"Unknown Device <{VID:X4},{PID:X4}>";
-                case DS4SubType.SonyDS4V1:
-                    return $"Sony DUALSHOCK®4 Controller V1";
-                case DS4SubType.SonyDS4V2:
-                    return $"Sony DUALSHOCK®4 Controller V2";
-                case DS4SubType.UnknownDS4V1:
-                    return $"Sony DUALSHOCK®4 Controller V1 (Possible Unoffical)";
-                case DS4SubType.UnknownDS4V2:
-                    return $"Sony DUALSHOCK®4 Controller V2 (Possible Unoffical)";
-                case DS4SubType.BrookMars:
-                    return "Brook Mars Wired Controller";
-                case DS4SubType.No895X:
-                    return "Model No. 895?";
-                case DS4SubType.No8951:
-                    return "Model No. 8951";
-                case DS4SubType.No8952:
-                    return "Model No. 8952";
-                case DS4SubType.Unknown:
-                default:
-                    return $"Unknown Device <{VID:X4},{PID:X4}>";
-            }
-        }
 
         bool DisconnectedBit = false;
         private void OnReport(byte[] reportData)
@@ -594,15 +633,21 @@ namespace ExtendInput.Controller
                         // counter
                         // bld.Append((reportData[1 + baseOffset + 6] & 0xfc).ToString().PadLeft(3, '0'));
 
-                        if (   (ControllerSubType == DS4SubType.No895X)
-                            || (ControllerSubType == DS4SubType.No8952))
+                        if (ConnectionType == EConnectionType.Bluetooth)
                         {
-                            QuirkExtraButtonByte6Bit3RingBuffer = (byte)((QuirkExtraButtonByte6Bit3RingBuffer << 1) | ((reportData[1 + baseOffset + 6] & 0x04) == 0x04 ? 1 : 0));
-                            bool SeeButton = (QuirkExtraButtonByte6Bit3RingBuffer & QUIRK_EXTRA_BUTTON_BYTE6_BIT3_BT_OBSCURE_RINGBUFFER_CHECK) == QUIRK_EXTRA_BUTTON_BYTE6_BIT3_BT_OBSCURE_RINGBUFFER_CHECK;
-                            if (ControllerSubType == DS4SubType.No895X && SeeButton)
+                            if (_device.VendorId == VENDOR_SONY && _device.ProductId == PRODUCT_SONY_DS4V2)
                             {
-                                StateInFlight.Controls["clear"] = new ControlButton();
-                                ChangeControllerSubType(DS4SubType.No8952);
+                                if ((ControllerSubType == DS4SubType.PartialDetection2E2415CA)
+                                 || (ControllerSubType == DS4SubType.No8952))
+                                {
+                                    QuirkExtraButtonByte6Bit3RingBuffer = (byte)((QuirkExtraButtonByte6Bit3RingBuffer << 1) | ((reportData[1 + baseOffset + 6] & 0x04) == 0x04 ? 1 : 0));
+                                    bool SeeButton = (QuirkExtraButtonByte6Bit3RingBuffer & QUIRK_EXTRA_BUTTON_BYTE6_BIT3_BT_OBSCURE_RINGBUFFER_CHECK) == QUIRK_EXTRA_BUTTON_BYTE6_BIT3_BT_OBSCURE_RINGBUFFER_CHECK;
+                                    if (ControllerSubType == DS4SubType.PartialDetection2E2415CA && SeeButton)
+                                    {
+                                        StateInFlight.Controls["clear"] = new ControlButton();
+                                        ChangeControllerSubType(DS4SubType.No8952);
+                                    }
+                                }
                             }
                         }
 
@@ -694,8 +739,10 @@ namespace ExtendInput.Controller
                                 bool Finger2Valid = true;
 
                                 // No8951 sends some invalid touch data if you tap the pad a lot
-                                if (   (ControllerSubType == DS4SubType.No895X)
-                                    || (ControllerSubType == DS4SubType.No8951))
+                                if ((ControllerSubType == DS4SubType.PartialDetection2E2415CA)
+                                 || (ControllerSubType == DS4SubType.No8951)
+                                 || (ControllerSubType == DS4SubType.SZ4002B) // this malfunctions far less but it does malfunction
+                                 || (ControllerSubType == DS4SubType.SZ4003B)) // this malfunctions far less but it does malfunction
                                 {
                                     if (Finger1 && (F1X > TouchPadMaxX || F1Y > TouchPadMaxY))
                                         Finger1Valid = false;
@@ -703,9 +750,28 @@ namespace ExtendInput.Controller
                                         Finger2Valid = false;
 
                                     // we don't have to check if the finger is valid here since ANY value over the max of the 8951 proves this is an 8952, valid or invalid, since only the 8951 has this strange problem
-                                    if (ControllerSubType == DS4SubType.No895X && (F1X > NO8952_PAD_MAX_X || F2X > NO8952_PAD_MAX_X))
+                                    if (ControllerSubType == DS4SubType.PartialDetection2E2415CA && (F1X > NO8952_PAD_MAX_X || F2X > NO8952_PAD_MAX_X))
                                     {
-                                        ChangeControllerSubType(DS4SubType.No8951);
+                                        if (ConnectionType == EConnectionType.Bluetooth)
+                                        {
+                                            if (_device.VendorId == VENDOR_SONY && _device.ProductId == PRODUCT_SONY_DS4V2)
+                                            {
+                                                // TODO: see if we can figure out how to tell these apart, though manual override should be possible
+                                                ChangeControllerSubType(DS4SubType.No8951);
+                                                //ChangeControllerSubType(DS4SubType.SZ4003B);
+                                            }
+                                            else if (_device.VendorId == VENDOR_SONY && _device.ProductId == PRODUCT_SONY_DS4V1)
+                                            {
+                                                ChangeControllerSubType(DS4SubType.SZ4002B);
+                                            }
+                                        }
+                                        else if (ConnectionType == EConnectionType.USB && !string.IsNullOrWhiteSpace(SerialNumber))
+                                        {
+                                            if (_device.VendorId == VENDOR_SONY && _device.ProductId == PRODUCT_SONY_DS4V1)
+                                            {
+                                                ChangeControllerSubType(DS4SubType.SZ4003B);
+                                            }
+                                        }
                                     }
                                 }
 
@@ -817,17 +883,22 @@ namespace ExtendInput.Controller
                          || (ControllerSubType == DS4SubType.UnknownDS4V2))
                         {
                             string IdentityHash = GetControllerIdentityHash();
-                            if (IdentityHash == IDENTITY_SHA256_895X)
+                            if (IdentityHash == IDENTITY_SHA256_2E2415CA)
                             {
-                                ControllerSubType = DS4SubType.No895X;
+                                ControllerSubType = DS4SubType.PartialDetection2E2415CA;
                                 StoredDataHandler.SetMacData(SerialNumber, ControllerSubType.ToString());
                             }
                         }
 
-                        if (ControllerSubType == DS4SubType.No8951)
-                            ChangeControllerSubType(ControllerSubType);
-                        if (ControllerSubType == DS4SubType.No8952)
-                            ChangeControllerSubType(ControllerSubType);
+                        switch(ControllerSubType)
+                        {
+                            case DS4SubType.No8951:
+                            case DS4SubType.No8952:
+                            case DS4SubType.SZ4002B:
+                            case DS4SubType.SZ4003B:
+                                ChangeControllerSubType(ControllerSubType);
+                                break;
+                        }
                     }
 
                     ControllerMetadataUpdate?.Invoke();
@@ -881,6 +952,14 @@ namespace ExtendInput.Controller
                 case DS4SubType.No8952:
                     TouchPadMaxX = NO8952_PAD_MAX_X;
                     TouchPadMaxY = NO8952_PAD_MAX_Y;
+                    break;
+                case DS4SubType.SZ4002B:
+                    TouchPadMaxX = SZ4002B_PAD_MAX_X;
+                    TouchPadMaxY = SZ4002B_PAD_MAX_Y;
+                    break;
+                case DS4SubType.SZ4003B:
+                    TouchPadMaxX = SZ4003B_PAD_MAX_X;
+                    TouchPadMaxY = SZ4003B_PAD_MAX_Y;
                     break;
                 default:
                     TouchPadMaxX = DS4_PAD_MAX_X;

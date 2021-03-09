@@ -42,7 +42,7 @@ namespace ExtendInput.Controller
 
         public string[] ConnectionTypeCode { get; private set; }
         public string[] ControllerTypeCode { get; private set; }
-        public string Name
+        public string NameDetail
         {
             get
             {
