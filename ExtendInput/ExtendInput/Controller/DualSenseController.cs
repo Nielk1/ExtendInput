@@ -1,6 +1,7 @@
 ﻿using ExtendInput.Controls;
 using ExtendInput.DeviceProvider;
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Threading;
@@ -75,6 +76,8 @@ namespace ExtendInput.Controller
                 return retVal += $" [{Serial ?? "No ID"}]"; ;
             }
         }
+        public bool HasSelectableAlternatives => false;
+        public Dictionary<string, string> Alternates => null;
 
         public IDevice DeviceHackRef => _device;
 
@@ -422,5 +425,7 @@ namespace ExtendInput.Controller
                 Console.WriteLine("VSC Address Removed");
             }
         }*/
+
+        public void SetActiveAlternateController(string ControllerID) { }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using ExtendInput.Controls;
 using ExtendInput.DeviceProvider;
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Threading;
@@ -21,7 +22,8 @@ namespace ExtendInput.Controller
                 return _device.DevicePath;
             }
         }
-
+        public bool HasSelectableAlternatives => false;
+        public Dictionary<string, string> Alternates => null;
         public IDevice DeviceHackRef => _device;
         private SixtyBeatAudioDevice _device;
         int reportUsageLock = 0;
@@ -167,5 +169,8 @@ namespace ExtendInput.Controller
             Initalized = 0;
             //_device.CloseDevice();
         }
+
+        public void SetActiveAlternateController(string ControllerID) { }
+
     }
 }

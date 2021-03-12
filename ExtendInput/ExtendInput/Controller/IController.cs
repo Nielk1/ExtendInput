@@ -1,6 +1,7 @@
 ﻿using ExtendInput.Controls;
 using ExtendInput.DeviceProvider;
 using System;
+using System.Collections.Generic;
 
 namespace ExtendInput.Controller
 {
@@ -60,6 +61,8 @@ namespace ExtendInput.Controller
         EConnectionType ConnectionType { get; }
         string[] ConnectionTypeCode { get; }
         string[] ControllerTypeCode { get; }
+        bool HasSelectableAlternatives { get; }
+        Dictionary<string, string> Alternates { get; }
         string NameDetail { get; }
 
         IDevice DeviceHackRef { get; }
@@ -69,6 +72,7 @@ namespace ExtendInput.Controller
         ControllerState GetState();
         void Initalize();
         void Identify();
+        void SetActiveAlternateController(string ControllerID);
     }
 
     public static class ControllerMathTools

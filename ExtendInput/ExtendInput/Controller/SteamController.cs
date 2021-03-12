@@ -1,6 +1,7 @@
 ﻿using ExtendInput.Controls;
 using ExtendInput.DeviceProvider;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Threading;
@@ -52,6 +53,8 @@ namespace ExtendInput.Controller
                 return retVal;
             }
         }
+        public bool HasSelectableAlternatives => false;
+        public Dictionary<string, string> Alternates => null;
 
         public bool HasMotion => true;
 
@@ -966,5 +969,7 @@ namespace ExtendInput.Controller
                 Console.WriteLine("VSC Address Removed");
             }
         }*/
+
+        public void SetActiveAlternateController(string ControllerID) { }
     }
 }
