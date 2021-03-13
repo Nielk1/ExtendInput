@@ -94,6 +94,7 @@
     <Compile Include="Controls\EDPadDirection.cs" />
     <Compile Include="Controls\IControl.cs" />
     <Compile Include="Controls\IControlPair.cs" />
+    <Compile Include="Extensions.cs" />
     <Compile Include="StoredDataHandler.cs" />
     <Compile Include="DeviceManager.cs" />
     <Compile Include="DeviceProvider\SixtyBeatAudioDevice.cs" />
