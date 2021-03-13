@@ -16,8 +16,8 @@ namespace ExtendInput.Controller
         class ControllerSubTypeAttribute : Attribute
         {
             public string[] Tokens { get; private set; }
-            public float PadMaxX{ get; private set; }
-            public float PadMaxY { get; private set; }
+            public Int16 PadMaxX { get; private set; }
+            public Int16 PadMaxY { get; private set; }
             public string Name { get; private set; }
             public bool NoMac { get; private set; }
             public bool BT_UseLedBitForRumble { get; private set; }
@@ -26,11 +26,11 @@ namespace ExtendInput.Controller
             public bool PadIsClickOnly { get; private set; }
             public bool ExtraButton { get; private set; }
 
-            public ControllerSubTypeAttribute(string[] Token, string Name, float PadMaxX = -1, float PadMaxY = -1, bool NoMac = false, bool BT_UseLedBitForRumble = false, bool BT_BlackLedIgnored = false, bool USB_FlagsIgnored = false, bool PadIsClickOnly = false, bool ExtraButton = false)
+            public ControllerSubTypeAttribute(string[] Token, string Name, Int16 PadMaxX = -1, Int16 PadMaxY = -1, bool NoMac = false, bool BT_UseLedBitForRumble = false, bool BT_BlackLedIgnored = false, bool USB_FlagsIgnored = false, bool PadIsClickOnly = false, bool ExtraButton = false)
             {
                 this.Tokens = Token;
-                this.PadMaxX = PadMaxX >= 0 ? PadMaxX : DualShock4Controller.PAD_MAX_X;
-                this.PadMaxY = PadMaxY >= 0 ? PadMaxY : DualShock4Controller.PAD_MAX_Y;
+                this.PadMaxX = PadMaxX >= 0 ? PadMaxX : PAD_MAX_X;
+                this.PadMaxY = PadMaxY >= 0 ? PadMaxY : PAD_MAX_Y;
                 this.Name = Name;
                 this.NoMac = NoMac;
                 this.BT_UseLedBitForRumble = BT_UseLedBitForRumble;
@@ -55,8 +55,8 @@ namespace ExtendInput.Controller
         public const int PRODUCT_BROOK_MARS = 0x0E20;
         #endregion Device IDs
 
-        public const float PAD_MAX_X = 1919f;
-        public const float PAD_MAX_Y = 941f;
+        public const Int16 PAD_MAX_X = 1919;
+        public const Int16 PAD_MAX_Y = 941;
 
         #region Identity Hashes
         private string IDENTITY_SHA256_2E2415CA = @"2e2415ca56598006b94f1274d15e64a1b99385c53e91102ae7708b8919fe124f";
@@ -122,25 +122,17 @@ namespace ExtendInput.Controller
             // 4. On USB, it is impossible to bit filter rumble and LED changes out, they always apply every write no matter what
             // 5. On BT, rumble writes ignore the rumble flag and instead apply if the LED flag is set. LED sets of 0x000000 are ignored to facilitate this
             [ControllerSubType(
-                Token: new string[] { "DS4_Partial2E2415CA", "DS4", "GAMEPAD" },
-                Name: "Partial Detection 2E2415CA",
+                Token: new string[] { "DS4_2E2415CA", "DS4", "GAMEPAD" },
+                Name: "Quirks Pad 2E2415CA",
                 BT_UseLedBitForRumble: true,
                 BT_BlackLedIgnored: true,
                 USB_FlagsIgnored: true)]
             PartialDetection2E2415CA = 200, // Controller is one of the below
             
             [ControllerSubType(
-                Token: new string[] { "DS4_Unknown2E2415CA", "DS4", "GAMEPAD" },
-                Name: "Unknown 2E2415CA",
-                BT_UseLedBitForRumble: true,
-                BT_BlackLedIgnored: true,
-                USB_FlagsIgnored: true)]
-            UnknownQuirkspad2E2415CA,
-            
-            [ControllerSubType(
                 Token: new string[] { "DS4_8951", "DS4", "GAMEPAD" },
-                PadMaxX: 1918f,
-                PadMaxY: 940f,
+                PadMaxX: 1918,
+                PadMaxY: 940,
                 Name: "Model No. PS4-8951",
                 BT_UseLedBitForRumble: true,
                 BT_BlackLedIgnored: true,
@@ -149,8 +141,8 @@ namespace ExtendInput.Controller
             
             [ControllerSubType(
                 Token: new string[] { "DS4_8952", "DS4", "GAMEPAD" },
-                PadMaxX: 940f,
-                PadMaxY: 940f,
+                PadMaxX: 940,
+                PadMaxY: 940,
                 Name: "Model No. PS4-8952",
                 BT_UseLedBitForRumble: true,
                 BT_BlackLedIgnored: true,
@@ -159,8 +151,8 @@ namespace ExtendInput.Controller
             
             [ControllerSubType(
                 Token: new string[] { "DS4_SZ4002B", "DS4", "GAMEPAD" },
-                PadMaxX: 1900f,
-                PadMaxY: 940f,
+                PadMaxX: 1900,
+                PadMaxY: 940,
                 Name: "Senze SZ-4002B",
                 BT_UseLedBitForRumble: true,
                 BT_BlackLedIgnored: true,
@@ -169,8 +161,8 @@ namespace ExtendInput.Controller
             
             [ControllerSubType(
                 Token: new string[] { "DS4_SZ4003B", "DS4", "GAMEPAD" },
-                PadMaxX: 1918f,
-                PadMaxY: 940f,
+                PadMaxX: 1918,
+                PadMaxY: 940,
                 Name: "Senze SZ-4003B",
                 BT_UseLedBitForRumble: true,
                 BT_BlackLedIgnored: true,
@@ -179,16 +171,16 @@ namespace ExtendInput.Controller
             
             [ControllerSubType(
                 Token: new string[] { "DS4_YIYANG498", "DS4", "GAMEPAD" },
-                PadMaxX: 1918f,
-                PadMaxY: 940f,
+                PadMaxX: 1918,
+                PadMaxY: 940,
                 Name: "Yiyang 498",
                 BT_UseLedBitForRumble: true)]
             Yiyang498, // Uses V1 PID on BT&USB with MAC on both.  MAC is SN on BT and FeatureReport read on USB.  Pad size is wrong
 
             [ControllerSubType(
                 Token: new string[] { "DS4_STK4003", "DS4", "GAMEPAD" },
-                PadMaxX: 1918f,
-                PadMaxY: 940f,
+                PadMaxX: 1918,
+                PadMaxY: 940,
                 Name: "Saitake STK-4003",
                 BT_UseLedBitForRumble: true,
                 BT_BlackLedIgnored: true,
@@ -196,6 +188,8 @@ namespace ExtendInput.Controller
             STK4003, // Uses V2 PID on BT and V1 on USB with SN on both BT&USB, mostly normal aside from pad size and some possible pad garbage data
         }
         private DS4SubType ControllerSubType = DS4SubType.None;
+        private ControllerSubTypeAttribute ControllerAttribute = null;
+        private string IdentityHash = null;
 
 
 
@@ -227,12 +221,12 @@ namespace ExtendInput.Controller
         /// <summary>
         /// Current max possible X value for touch pad
         /// </summary>
-        private float TouchPadMaxX = 1919f;
+        private Int16 TouchPadMaxX = 1919;
 
         /// <summary>
         /// Current max possible Y value for touch pad
         /// </summary>
-        private float TouchPadMaxY = 942f;
+        private Int16 TouchPadMaxY = 942;
         
 
         private bool ControlsCreated = false;
@@ -859,11 +853,16 @@ namespace ExtendInput.Controller
 
                                 if (Finger1Valid || Finger2Valid)
                                 {
+                                    if (Finger1 && F1X > TouchPadMaxX) F1X = TouchPadMaxX;
+                                    if (Finger1 && F1Y > TouchPadMaxY) F1Y = TouchPadMaxY;
+                                    if (Finger2 && F2X > TouchPadMaxX) F2X = TouchPadMaxX;
+                                    if (Finger2 && F2Y > TouchPadMaxY) F2Y = TouchPadMaxY;
+
                                     byte TimeDelta = touch_last_frame ? ControllerMathTools.GetOverflowedDelta(last_touch_timestamp, touch_timestamp) : (byte)0;
 
                                     //Console.WriteLine($"{TimeDelta} {(tmp_now - tmp).Milliseconds}");
-                                    (StateInFlight.Controls["touch_center"] as ControlTouch).AddTouch(0, Finger1Valid && Finger1, (F1X / TouchPadMaxX) * 2f - 1f, (F1Y / TouchPadMaxY) * 2f - 1f, TimeDelta);
-                                    (StateInFlight.Controls["touch_center"] as ControlTouch).AddTouch(1, Finger2Valid && Finger2, (F2X / TouchPadMaxX) * 2f - 1f, (F2Y / TouchPadMaxY) * 2f - 1f, TimeDelta);
+                                    (StateInFlight.Controls["touch_center"] as ControlTouch).AddTouch(0, Finger1Valid && Finger1, (1.0f * F1X / TouchPadMaxX) * 2f - 1f, (1.0f * F1Y / TouchPadMaxY) * 2f - 1f, TimeDelta);
+                                    (StateInFlight.Controls["touch_center"] as ControlTouch).AddTouch(1, Finger2Valid && Finger2, (1.0f * F2X / TouchPadMaxX) * 2f - 1f, (1.0f * F2Y / TouchPadMaxY) * 2f - 1f, TimeDelta);
 
                                     last_touch_timestamp = touch_timestamp;
                                 }
@@ -900,6 +899,8 @@ namespace ExtendInput.Controller
         private void ResetControllerInfo()
         {
             ControllerSubType = GetControllerInitialTypeCode((UInt16)_device.VendorId, (UInt16)_device.ProductId);
+            ControllerAttribute = ControllerSubType.GetAttribute<ControllerSubTypeAttribute>();
+            IdentityHash = null;
 
             QuirkExtraButtonByte6Bit3RingBuffer = 0x00;
             SerialNumber = null;
@@ -964,7 +965,7 @@ namespace ExtendInput.Controller
                         if ((ControllerSubType == DS4SubType.UnknownDS4V1)
                          || (ControllerSubType == DS4SubType.UnknownDS4V2))
                         {
-                            string IdentityHash = GetControllerIdentityHash();
+                            IdentityHash = GetControllerIdentityHash();
                             if (IdentityHash == IDENTITY_SHA256_2E2415CA)
                             {
                                 ControllerSubType = DS4SubType.PartialDetection2E2415CA;
@@ -998,6 +999,8 @@ namespace ExtendInput.Controller
 
         private void ChangeControllerSubType(DS4SubType NewControllerSubType)
         {
+            ControllerAttribute = null;
+
             if (ConnectionType == EConnectionType.Dongle) // what are we doing here, get out, dongle assumed as true DS4s
                 return;
 
@@ -1005,13 +1008,13 @@ namespace ExtendInput.Controller
             if (!string.IsNullOrWhiteSpace(SerialNumber))
                 StoredDataHandler.SetMacData(SerialNumber, ControllerSubType.ToString()); // TODO make this a thread event to prevent a hang?
 
-            ControllerSubTypeAttribute attr = ControllerSubType.GetAttribute<ControllerSubTypeAttribute>();
+            ControllerAttribute = ControllerSubType.GetAttribute<ControllerSubTypeAttribute>();
 
             // note we entered an upgradable read lock if we called this from read locked code
             StateMutationLock.EnterWriteLock();
             try
             {
-                if (attr.ExtraButton)
+                if (ControllerAttribute.ExtraButton)
                 {
                     State.Controls["clear"] = new ControlButton();
                 }
@@ -1019,7 +1022,7 @@ namespace ExtendInput.Controller
                 {
                     State.Controls["clear"] = null;
                 }
-                if (attr.PadIsClickOnly)
+                if (ControllerAttribute.PadIsClickOnly)
                 {
                     State.Controls["touch_center"] = new ControlButton();
                 }
@@ -1033,8 +1036,8 @@ namespace ExtendInput.Controller
                 StateMutationLock.ExitWriteLock();
             }
 
-            TouchPadMaxX = attr.PadMaxX;
-            TouchPadMaxY = attr.PadMaxY;
+            TouchPadMaxX = ControllerAttribute.PadMaxX;
+            TouchPadMaxY = ControllerAttribute.PadMaxY;
 
             ControllerMetadataUpdate?.Invoke();
         }
