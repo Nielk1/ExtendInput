@@ -31,6 +31,8 @@ namespace ExtendInput.Controller
             public bool USB_FlagsIgnored { get; private set; }
             public bool PadIsClickOnly { get; private set; }
             public bool ExtraButton { get; private set; }
+            public bool AllowManualSelect { get; private set; }
+            public bool AllowMacSave { get; private set; }
 
             public ControllerSubTypeAttribute(
                 string[] Token,
@@ -48,7 +50,9 @@ namespace ExtendInput.Controller
                 bool BT_BlackLedIgnored = false,
                 bool USB_FlagsIgnored = false,
                 bool PadIsClickOnly = false,
-                bool ExtraButton = false)
+                bool ExtraButton = false,
+                bool AllowMacSave = false,
+                bool AllowManualSelect = false)
             {
                 this.Tokens = Token;
                 this.PadMaxX = PadMaxX >= 0 ? PadMaxX : PAD_MAX_X;
@@ -66,6 +70,8 @@ namespace ExtendInput.Controller
                 this.USB_FlagsIgnored = USB_FlagsIgnored;
                 this.PadIsClickOnly = PadIsClickOnly;
                 this.ExtraButton = ExtraButton;
+                this.AllowManualSelect = AllowManualSelect;
+                this.AllowMacSave = AllowMacSave;
             }
         }
 
@@ -87,7 +93,7 @@ namespace ExtendInput.Controller
         public const Int16 PAD_MAX_Y = 941;
 
         #region Identity Hashes
-        private const string IDENTITY_SHA256_2E2415CA = @"2e2415ca56598006b94f1274d15e64a1b99385c53e91102ae7708b8919fe124f";
+        private const string AUTH_IDENTITY_SHA256_2E2415CA = @"2e2415ca56598006b94f1274d15e64a1b99385c53e91102ae7708b8919fe124f";
         #endregion Identity Hashes
 
         #region String Definitions
@@ -136,7 +142,8 @@ namespace ExtendInput.Controller
                 Name: "Sony DUALSHOCK®4 Controller V1 (Possible Unoffical)",
                 NoTemperture: true,
                 USB_VID: VENDOR_SONY, USB_PID: PRODUCT_SONY_DS4V1,
-                BT_VID: VENDOR_SONY, BT_PID: PRODUCT_SONY_DS4V1)]
+                BT_VID: VENDOR_SONY, BT_PID: PRODUCT_SONY_DS4V1,
+                AllowManualSelect: true)]
             UnknownDS4V1,
             
             [ControllerSubType(
@@ -144,7 +151,8 @@ namespace ExtendInput.Controller
                 Name: "Sony DUALSHOCK®4 Controller V2 (Possible Unoffical)",
                 NoTemperture: true,
                 USB_VID: VENDOR_SONY, USB_PID: PRODUCT_SONY_DS4V2,
-                BT_VID: VENDOR_SONY, BT_PID: PRODUCT_SONY_DS4V2)]
+                BT_VID: VENDOR_SONY, BT_PID: PRODUCT_SONY_DS4V2,
+                AllowManualSelect: true)]
             UnknownDS4V2,
             
             [ControllerSubType(
@@ -152,7 +160,8 @@ namespace ExtendInput.Controller
                 Name: "Brook Mars Wired Controller",
                 //NoTemperture: true,
                 USB_VID: VENDOR_BROOK, USB_PID: PRODUCT_BROOK_MARS,
-                NoMac: true)]
+                NoMac: true,
+                PadIsClickOnly: true)]
             BrookMars = 100, // wired only controller, so it is detected immediately
 
             // These controllers have specific strange properties:
@@ -165,10 +174,12 @@ namespace ExtendInput.Controller
                 Token: new string[] { "DS4_2E2415CA", "DS4", "GAMEPAD" },
                 Name: "Quirks Pad 2E2415CA",
                 NoTemperture: true,
-                IdentitySha256: IDENTITY_SHA256_2E2415CA,
+                IdentitySha256: AUTH_IDENTITY_SHA256_2E2415CA,
                 BT_UseLedBitForRumble: true,
                 BT_BlackLedIgnored: true,
-                USB_FlagsIgnored: true)]
+                USB_FlagsIgnored: true,
+                AllowManualSelect: true,
+                AllowMacSave: true)]
             PartialDetection2E2415CA = 200,
             
             [ControllerSubType(
@@ -177,12 +188,14 @@ namespace ExtendInput.Controller
                 PadMaxY: 940,
                 Name: "Model No. PS4-8951",
                 NoTemperture: true,
-                IdentitySha256: IDENTITY_SHA256_2E2415CA,
+                IdentitySha256: AUTH_IDENTITY_SHA256_2E2415CA,
                 USB_VID: VENDOR_SONY, USB_PID: PRODUCT_SONY_DS4V1,
                 BT_VID: VENDOR_SONY, BT_PID: PRODUCT_SONY_DS4V2,
                 BT_UseLedBitForRumble: true,
                 BT_BlackLedIgnored: true,
-                USB_FlagsIgnored: true)]
+                USB_FlagsIgnored: true,
+                AllowManualSelect: true,
+                AllowMacSave: true)]
             No8951,
             
             [ControllerSubType(
@@ -191,12 +204,14 @@ namespace ExtendInput.Controller
                 PadMaxY: 940,
                 Name: "Model No. PS4-8952",
                 NoTemperture: true,
-                IdentitySha256: IDENTITY_SHA256_2E2415CA,
+                IdentitySha256: AUTH_IDENTITY_SHA256_2E2415CA,
                 USB_VID: VENDOR_SONY, USB_PID: PRODUCT_SONY_DS4V1,
                 BT_VID: VENDOR_SONY, BT_PID: PRODUCT_SONY_DS4V2,
                 BT_UseLedBitForRumble: true,
                 BT_BlackLedIgnored: true,
-                USB_FlagsIgnored: true)]
+                USB_FlagsIgnored: true,
+                AllowManualSelect: true,
+                AllowMacSave: true)]
             No8952,
             
             [ControllerSubType(
@@ -205,12 +220,14 @@ namespace ExtendInput.Controller
                 PadMaxY: 940,
                 Name: "Senze SZ-4002B",
                 NoTemperture: true,
-                IdentitySha256: IDENTITY_SHA256_2E2415CA,
+                IdentitySha256: AUTH_IDENTITY_SHA256_2E2415CA,
                 USB_VID: VENDOR_SONY, USB_PID: PRODUCT_SONY_DS4V1,
                 BT_VID: VENDOR_SONY, BT_PID: PRODUCT_SONY_DS4V1,
                 BT_UseLedBitForRumble: true,
                 BT_BlackLedIgnored: true,
-                USB_FlagsIgnored: true)]
+                USB_FlagsIgnored: true,
+                AllowManualSelect: true,
+                AllowMacSave: true)]
             SZ4002B,
             
             [ControllerSubType(
@@ -219,12 +236,14 @@ namespace ExtendInput.Controller
                 PadMaxY: 940,
                 Name: "Senze SZ-4003B",
                 NoTemperture: true,
-                IdentitySha256: IDENTITY_SHA256_2E2415CA,
+                IdentitySha256: AUTH_IDENTITY_SHA256_2E2415CA,
                 USB_VID: VENDOR_SONY, USB_PID: PRODUCT_SONY_DS4V1,
                 BT_VID: VENDOR_SONY, BT_PID: PRODUCT_SONY_DS4V2,
                 BT_UseLedBitForRumble: true,
                 BT_BlackLedIgnored: true,
-                USB_FlagsIgnored: true)]
+                USB_FlagsIgnored: true,
+                AllowManualSelect: true,
+                AllowMacSave: true)]
             SZ4003B,
             
             [ControllerSubType(
@@ -233,11 +252,13 @@ namespace ExtendInput.Controller
                 PadMaxY: 940,
                 Name: "Yiyang 498",
                 NoTemperture: true,
-                IdentitySha256: IDENTITY_SHA256_2E2415CA,
+                IdentitySha256: AUTH_IDENTITY_SHA256_2E2415CA,
                 USB_VID: VENDOR_SONY, USB_PID: PRODUCT_SONY_DS4V1, //USB_REV: 0x0100
                 BT_VID: VENDOR_SONY, BT_PID: PRODUCT_SONY_DS4V1, //BT_REV: 0x0000
                 BT_UseLedBitForRumble: true,
-                BT_BlackLedIgnored: false)]
+                BT_BlackLedIgnored: false,
+                AllowManualSelect: true,
+                AllowMacSave: true)]
             Yiyang498,
 
             [ControllerSubType(
@@ -246,12 +267,14 @@ namespace ExtendInput.Controller
                 PadMaxY: 940,
                 Name: "Saitake STK-4003",
                 NoTemperture: true,
-                IdentitySha256: IDENTITY_SHA256_2E2415CA,
+                IdentitySha256: AUTH_IDENTITY_SHA256_2E2415CA,
                 USB_VID: VENDOR_SONY, USB_PID: PRODUCT_SONY_DS4V1, //USB_REV: 0x0100
                 BT_VID: VENDOR_SONY, BT_PID: PRODUCT_SONY_DS4V2, //BT_REV: 0x0000
                 BT_UseLedBitForRumble: true,
                 BT_BlackLedIgnored: true,
-                USB_FlagsIgnored: true)]
+                USB_FlagsIgnored: true,
+                AllowManualSelect: true,
+                AllowMacSave: true)]
             STK4003,
 
             [ControllerSubType(
@@ -260,10 +283,12 @@ namespace ExtendInput.Controller
                 PadMaxY: 940,
                 Name: "Gamory 2075B",
                 NoTemperture: true,
-                IdentitySha256: IDENTITY_SHA256_2E2415CA,
+                IdentitySha256: AUTH_IDENTITY_SHA256_2E2415CA,
                 BT_VID: VENDOR_SONY, BT_PID: PRODUCT_SONY_DS4V2, //BT_REV: 0x0000
                 BT_UseLedBitForRumble: true,
-                BT_BlackLedIgnored: true)]
+                BT_BlackLedIgnored: true,
+                AllowManualSelect: true,
+                AllowMacSave: true)]
             Gamory2075B,
 
             //  0,0 __________________________ 1918,0
@@ -277,11 +302,13 @@ namespace ExtendInput.Controller
                 PadMaxY: 940,
                 Name: "P4 Gamepad Q300",
                 NoTemperture: true,
-                IdentitySha256: IDENTITY_SHA256_2E2415CA,
+                IdentitySha256: AUTH_IDENTITY_SHA256_2E2415CA,
                 USB_VID: VENDOR_SONY, USB_PID: PRODUCT_SONY_DS4V1, //USB_REV: 0x0100
                 BT_VID: VENDOR_SONY, BT_PID: PRODUCT_SONY_DS4V1, //BT_REV: 0x0000
                 BT_UseLedBitForRumble: true,
-                BT_BlackLedIgnored: false)]
+                BT_BlackLedIgnored: false,
+                AllowManualSelect: true,
+                AllowMacSave: true)]
             P4GamepadQ300,
         }
         private DS4SubType ControllerSubType = DS4SubType.None;
@@ -570,7 +597,7 @@ namespace ExtendInput.Controller
 
             if (_device.WriteReport(report))
             {
-                Thread.Sleep(250);
+                Thread.Sleep(500);
                 report[1 + offset + 0] = (byte)((ConnectionType == EConnectionType.Bluetooth && ControllerAttribute.BT_UseLedBitForRumble) ? 0x02 : 0x01);
                 report[1 + offset + 3] = 0x00;
                 report[1 + offset + 4] = 0x00;
@@ -578,7 +605,7 @@ namespace ExtendInput.Controller
             }
         }
 
-        private string GetControllerIdentityHash()
+        private string GetControllerAuthIdentityHash()
         {
             byte[] RawData = new byte[0x100 + 0x10 + 0x100 + 0x100 + 0x100];
             for (; ; )
@@ -620,8 +647,15 @@ namespace ExtendInput.Controller
             );
         }
 
-        private DS4SubType GetControllerInitialTypeCode(UInt16 VID, UInt16 PID)
+        private DS4SubType GetControllerInitialTypeCode(UInt16 VID, UInt16 PID, bool HaveSeenNonZeroRawTemp, string IdentityHash)
         {
+            const int ID_MATCH               = 0x100000;
+            const int HAS_NO_ID              = 0x080000;
+            const int BATTERY_STATUS         = 0x040000;
+            const int HAS_MATCHING_AUTH_HASH = 0x020000;
+            const int HAS_NO_AUTH_HASH       = 0x010000;
+            const int TYPE_AUTH              = 0x00FFFF;
+
             bool FromDongle = false;
             if (_device != null && VID == VENDOR_SONY && PID == PRODUCT_SONY_DONGLE) // we are an offical dongle
             {
@@ -632,7 +666,52 @@ namespace ExtendInput.Controller
                 FromDongle = true;
             }
 
-            switch (VID)
+            List<Tuple<int, DS4SubType>> Candidates = new List<Tuple<int, DS4SubType>>();
+            foreach (DS4SubType subType in Enum.GetValues(typeof(DS4SubType)))
+            {
+                int Rank = 0;//(int)subType;
+                ControllerSubTypeAttribute attr = subType.GetAttribute<ControllerSubTypeAttribute>();
+                // controller VID/PID is correct or target doesn't use one
+                if ((ConnectionType == EConnectionType.USB       && attr.USB_VID == _device.VendorId && attr.USB_PID == _device.ProductId) // USB type matches
+                 || (ConnectionType == EConnectionType.Bluetooth && attr.BT_VID  == _device.VendorId && attr.BT_PID  == _device.ProductId) // BT types matches
+                 || (ConnectionType == EConnectionType.Dongle    && attr.BT_VID  == _device.VendorId && attr.BT_PID  == _device.ProductId)) // BT types matches (via dongle)
+                {
+                    Rank += ID_MATCH;
+                }
+                else if (attr.USB_VID == -1 && attr.USB_PID == -1 && attr.BT_VID == -1 && attr.BT_PID == -1)
+                {
+                    Rank += HAS_NO_ID;
+                }
+                // we have some sort of match from above
+                if (Rank > 0)
+                {
+                    // temp matches expectation
+                    if ((attr.NoTemperture && !HaveSeenNonZeroRawTemp) || (!attr.NoTemperture && HaveSeenNonZeroRawTemp))
+                    {
+                        Rank += BATTERY_STATUS;
+                    }
+                    if ((attr.NoTemperture && !HaveSeenNonZeroRawTemp) || !attr.NoTemperture)
+                    {
+                        // No target IdentityHash or we have a matching IdentityHash
+                        if (IdentityHash == null)
+                        {
+                            Rank += HAS_NO_AUTH_HASH;
+                            Rank += TYPE_AUTH - (int)subType;
+                            Candidates.Add(new Tuple<int, DS4SubType>(Rank, subType));
+                        }
+                        else if (attr.IdentitySha256 == IdentityHash)
+                        {
+                            Rank += HAS_MATCHING_AUTH_HASH;
+                            Rank += TYPE_AUTH - (int)subType;
+                            Candidates.Add(new Tuple<int, DS4SubType>(Rank, subType));
+                        }
+                    }
+                }
+            }
+
+            return Candidates.OrderByDescending(dr => dr.Item1).FirstOrDefault()?.Item2 ?? (FromDongle ? DS4SubType.None : DS4SubType.Unknown);
+
+            /*switch (VID)
             {
                 case VENDOR_SONY:
                     switch (PID)
@@ -651,7 +730,7 @@ namespace ExtendInput.Controller
                     }
                     break;
             }
-            return FromDongle ? DS4SubType.None : DS4SubType.Unknown;
+            return FromDongle ? DS4SubType.None : DS4SubType.Unknown;*/
         }
 
 
@@ -962,13 +1041,13 @@ namespace ExtendInput.Controller
 
         private void ResetControllerInfo()
         {
-            ControllerSubType = GetControllerInitialTypeCode((UInt16)_device.VendorId, (UInt16)_device.ProductId);
-            ControllerAttribute = ControllerSubType.GetAttribute<ControllerSubTypeAttribute>();
             HaveSeenNonZeroRawTemp = false;
             IdentityHash = null;
-
-            QuirkExtraButtonByte6Bit3RingBuffer = 0x00;
             SerialNumber = null;
+            QuirkExtraButtonByte6Bit3RingBuffer = 0x00;
+
+            ControllerSubType = GetControllerInitialTypeCode((UInt16)_device.VendorId, (UInt16)_device.ProductId, HaveSeenNonZeroRawTemp, IdentityHash);
+            ControllerAttribute = ControllerSubType.GetAttribute<ControllerSubTypeAttribute>();
 
             if (!ControlsCreated)
             {
@@ -985,7 +1064,7 @@ namespace ExtendInput.Controller
                     State.Controls["home"] = new ControlButton();
                     State.Controls["stick_left"] = new ControlStick(HasClick: true);
                     State.Controls["stick_right"] = new ControlStick(HasClick: true);
-                    if (this.ControllerSubType == DS4SubType.BrookMars)
+                    if (ControllerAttribute?.PadIsClickOnly ?? false)
                     {
                         State.Controls["touch_center"] = new ControlButton();
                     }
@@ -1026,30 +1105,24 @@ namespace ExtendInput.Controller
                         DS4SubType ControllerSubTypeRead = DS4SubType.Unknown;
                         if (!string.IsNullOrWhiteSpace(ControllerData) && Enum.TryParse<DS4SubType>(ControllerData, out ControllerSubTypeRead))
                             ControllerSubType = ControllerSubTypeRead;
-
-                        if ((ControllerSubType == DS4SubType.UnknownDS4V1)
-                         || (ControllerSubType == DS4SubType.UnknownDS4V2))
-                        {
-                            IdentityHash = GetControllerIdentityHash();
-                            if (IdentityHash == IDENTITY_SHA256_2E2415CA)
-                            {
-                                ControllerSubType = DS4SubType.PartialDetection2E2415CA;
-                                StoredDataHandler.SetMacData(SerialNumber, ControllerSubType.ToString());
-                            }
-                        }
-
-                        //switch(ControllerSubType)
-                        //{
-                        //    case DS4SubType.No8951:
-                        //    case DS4SubType.No8952:
-                        //    case DS4SubType.SZ4002B:
-                        //    case DS4SubType.SZ4003B:
-                        //    case DS4SubType.Yiyang498:
-                        //    case DS4SubType.STK4003:
-                                ChangeControllerSubType(ControllerSubType);
-                        //        break;
-                        //}
                     }
+                    if (   (ControllerSubType == DS4SubType.UnknownDS4V1)
+                        || (ControllerSubType == DS4SubType.UnknownDS4V2))
+                    {
+                        IdentityHash = GetControllerAuthIdentityHash();
+                        //if (IdentityHash == AUTH_IDENTITY_SHA256_2E2415CA)
+                        //{
+                        //    ControllerSubType = DS4SubType.PartialDetection2E2415CA;
+                        //    StoredDataHandler.SetMacData(SerialNumber, ControllerSubType.ToString());
+                        //}
+                            
+                        //ControllerSubType = GetControllerInitialTypeCode((UInt16)_device.VendorId, (UInt16)_device.ProductId, HaveSeenNonZeroRawTemp, IdentityHash);
+                        //ControllerAttribute = ControllerSubType.GetAttribute<ControllerSubTypeAttribute>();
+                        //if (ControllerAttribute.AllowMacSave)
+                        //    StoredDataHandler.SetMacData(SerialNumber, ControllerSubType.ToString());
+                    }
+                    ControllerSubType = GetControllerInitialTypeCode((UInt16)_device.VendorId, (UInt16)_device.ProductId, HaveSeenNonZeroRawTemp, IdentityHash);
+                    ChangeControllerSubType(ControllerSubType);
 
                     ControllerMetadataUpdate?.Invoke();
                 });
@@ -1067,22 +1140,28 @@ namespace ExtendInput.Controller
             lock (ManualSelectionList)
             {
                 ManualSelectionList.Clear();
-                foreach (DS4SubType subType in Enum.GetValues(typeof(DS4SubType)))
+                if (ControllerAttribute?.AllowManualSelect ?? false)
                 {
-                    ControllerSubTypeAttribute attr = subType.GetAttribute<ControllerSubTypeAttribute>();
-                    // controller VID/PID is correct or target doesn't use one
-                    if ((ConnectionType == EConnectionType.USB       && attr.USB_VID == _device.VendorId && attr.USB_PID == _device.ProductId) // USB type matches
-                     || (ConnectionType == EConnectionType.Bluetooth && attr.BT_VID  == _device.VendorId && attr.BT_PID  == _device.ProductId) // BT types matches
-                     || (ConnectionType == EConnectionType.Dongle    && attr.BT_VID  == _device.VendorId && attr.BT_PID  == _device.ProductId) // BT types matches (via dongle)
-                     || (attr.USB_VID == -1 && attr.USB_PID == -1 && attr.BT_VID == -1 && attr.BT_PID == -1)) // subtype can't possibly match by ID
+                    foreach (DS4SubType subType in Enum.GetValues(typeof(DS4SubType)))
                     {
-                        // temp matches expectation
-                        if ((attr.NoTemperture && !HaveSeenNonZeroRawTemp) || (!attr.NoTemperture && HaveSeenNonZeroRawTemp))
+                        ControllerSubTypeAttribute attr = subType.GetAttribute<ControllerSubTypeAttribute>();
+                        if (attr.AllowManualSelect)
                         {
-                            // No target IdentityHash or we have a matching IdentityHash
-                            if (IdentityHash == null || attr.IdentitySha256 == IdentityHash)
+                            // controller VID/PID is correct or target doesn't use one
+                            if ((ConnectionType == EConnectionType.USB && attr.USB_VID == _device.VendorId && attr.USB_PID == _device.ProductId) // USB type matches
+                             || (ConnectionType == EConnectionType.Bluetooth && attr.BT_VID == _device.VendorId && attr.BT_PID == _device.ProductId) // BT types matches
+                             || (ConnectionType == EConnectionType.Dongle && attr.BT_VID == _device.VendorId && attr.BT_PID == _device.ProductId) // BT types matches (via dongle)
+                             || (attr.USB_VID == -1 && attr.USB_PID == -1 && attr.BT_VID == -1 && attr.BT_PID == -1)) // subtype can't possibly match by ID
                             {
-                                ManualSelectionList.Add(subType);
+                                // temp matches expectation
+                                if ((attr.NoTemperture && !HaveSeenNonZeroRawTemp) || !attr.NoTemperture)
+                                {
+                                    // No target IdentityHash or we have a matching IdentityHash
+                                    if (IdentityHash == null || attr.IdentitySha256 == IdentityHash)
+                                    {
+                                        ManualSelectionList.Add(subType);
+                                    }
+                                }
                             }
                         }
                     }
@@ -1094,14 +1173,13 @@ namespace ExtendInput.Controller
         {
             ControllerAttribute = null;
 
-            if (ConnectionType == EConnectionType.Dongle) // what are we doing here, get out, dongle assumed as true DS4s
-                return;
+            //if (ConnectionType == EConnectionType.Dongle) // what are we doing here, get out, dongle assumed as true DS4s
+            //    return;
 
             ControllerSubType = NewControllerSubType;
-            if (!string.IsNullOrWhiteSpace(SerialNumber))
-                StoredDataHandler.SetMacData(SerialNumber, ControllerSubType.ToString()); // TODO make this a thread event to prevent a hang?
-
             ControllerAttribute = ControllerSubType.GetAttribute<ControllerSubTypeAttribute>();
+            if (!string.IsNullOrWhiteSpace(SerialNumber) && ControllerAttribute.AllowMacSave)
+                StoredDataHandler.SetMacData(SerialNumber, ControllerSubType.ToString()); // TODO make this a thread event to prevent a hang?
 
             // note we entered an upgradable read lock if we called this from read locked code
             StateMutationLock.EnterWriteLock();
