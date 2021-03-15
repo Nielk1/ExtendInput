@@ -551,7 +551,7 @@ namespace ExtendInput.Controller
             }
             else
             {
-                if (ControllerAttribute.USB_FlagsIgnored ?? false)
+                if (ControllerAttribute?.USB_FlagsIgnored ?? false)
                     return; // these devices can't seperate LED color from rumble on USB, TODO once we have ReadOnly/SafeWrite/FullControl done, allow this on FullControl mode
 
                 report = new byte[32]
