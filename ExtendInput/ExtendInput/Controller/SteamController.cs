@@ -483,7 +483,7 @@ namespace ExtendInput.Controller
                 try
                 {
                     // Clone the current state before altering it since the OldState is likely a shared reference
-                    ControllerState StateInFlight = (ControllerState)State.Clone();
+                    //ControllerState StateInFlight = (ControllerState)State.Clone();
 
                     //OldState = State; // shouldn't this be a clone?
                     //if (_attached == false) { return; }
@@ -674,13 +674,13 @@ namespace ExtendInput.Controller
 
                                             bool LeftAnalogMultiplexMode = (RawState.ulButtons[2] & 128) == 128;
                                             bool LeftStickClick = (RawState.ulButtons[2] & 64) == 64;
-                                            (StateInFlight.Controls["stick_left"] as ControlStick).Click = LeftStickClick;
-                                            bool Unknown = (RawState.ulButtons[2] & 32) == 32; // what is this?
-                                            bool RightPadTouch = (RawState.ulButtons[2] & 16) == 16;
+                                            //(StateInFlight.Controls["stick_left"] as ControlStick).Click = LeftStickClick;
+                                            //bool Unknown = (RawState.ulButtons[2] & 32) == 32; // what is this?
+                                            //bool RightPadTouch = (RawState.ulButtons[2] & 16) == 16;
                                             bool LeftPadTouch = (RawState.ulButtons[2] & 8) == 8;
-                                            (StateInFlight.Controls["touch_right"] as ControlTouch).Click = (RawState.ulButtons[2] & 4) == 4;
+                                            //(StateInFlight.Controls["touch_right"] as ControlTouch).Click = (RawState.ulButtons[2] & 4) == 4;
                                             bool ThumbOrLeftPadPress = (RawState.ulButtons[2] & 2) == 2; // what is this even for?
-                                            (StateInFlight.Controls["grip"] as ControlButtonPair).Right.Button0 = (RawState.ulButtons[2] & 1) == 1;
+                                            //(StateInFlight.Controls["grip"] as ControlButtonPair).Right.Button0 = (RawState.ulButtons[2] & 1) == 1;
 
                                             RawState.sTriggerL = reportData[1 + 8 + 3];
                                             RawState.sTriggerR = reportData[1 + 8 + 4];
@@ -756,11 +756,20 @@ namespace ExtendInput.Controller
                                             RawState.sGyroQuatY = BitConverter.ToInt16(reportData, 1 + 8 + 36);
                                             RawState.sGyroQuatZ = BitConverter.ToInt16(reportData, 1 + 8 + 38);
 
-                                            ProcessStateBytes();
+                                            ControllerState StateInFlight = ProcessStateBytes();
 
-                                            ConState = InternalConState.Connected;
+                                            if (ConState != InternalConState.Connected)
+                                            {
+                                                ConState = InternalConState.Connected;
+                                                ControllerMetadataUpdate?.Invoke();
+                                            }
                                             ConnectedTime = DateTime.UtcNow;
-                                            ControllerMetadataUpdate?.Invoke();
+
+                                            // bring OldState in line with new State
+                                            OldState = State;
+                                            State = StateInFlight;
+
+                                            StateUpdated?.Invoke(this, State);
                                         }
                                         break;
 
@@ -807,14 +816,14 @@ namespace ExtendInput.Controller
                                         break;
                                 }
                             }
-                            break; ;
+                            break;
                     }
 
-                    // bring OldState in line with new State
-                    OldState = State;
-                    State = StateInFlight;
-
-                    StateUpdated?.Invoke(this, State);
+                    //// bring OldState in line with new State
+                    //OldState = State;
+                    //State = StateInFlight;
+                    //
+                    //StateUpdated?.Invoke(this, State);
                 }
                 finally
                 {
@@ -853,7 +862,7 @@ namespace ExtendInput.Controller
             return ((ucHeader & k_nSegmentNumberMask) == m_unNextSegmentNumber);
         }
 
-        private void ProcessStateBytes()
+        private ControllerState ProcessStateBytes()
         {
             //OldState = State; // shouldn't this be a clone?
             ControllerState StateInFlight = (ControllerState)State.Clone(); // shouldn't this be a clone?
@@ -949,6 +958,8 @@ namespace ExtendInput.Controller
             (StateInFlight.Controls["motion"] as ControlMotion).OrientationZ = RawState.sGyroQuatZ;
 
             RawState.LeftTouchChange = false;
+
+            return StateInFlight;
         }
 
         /*private void DeviceAttachedHandler()

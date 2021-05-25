@@ -707,7 +707,6 @@ namespace ExtendInput.Controller
                         }
                         else if (IdentityHash != null)
                         {
-                            Rank += HAS_MATCHING_AUTH_HASH;
                             Rank += TYPE_AUTH - (int)subType;
                             Candidates.Add(new Tuple<int, DS4SubType>(Rank, subType));
                         }
