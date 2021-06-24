@@ -294,7 +294,7 @@ namespace ExtendInput.Controller
                         if (ConnectionType == EConnectionType.Bluetooth)
                         {
                             baseOffset = 1;
-                            HasStateData = (reportData[1 + 1] & 0x01) == 0x01;
+                            HasStateData = (reportData[1] & 0x01) == 0x01;
                         }
 
                         if (HasStateData)
