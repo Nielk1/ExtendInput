@@ -663,6 +663,8 @@ namespace ExtendInput.Controller
                 _device.ReadFeatureData(out FeatureBuffer, 0xE3);
                 VID = BitConverter.ToUInt16(FeatureBuffer, 1);
                 PID = BitConverter.ToUInt16(FeatureBuffer, 3);
+                if (VID == 0x0000 && PID == 0x0000)
+                    return DS4SubType.None;
                 FromDongle = true;
             }
 
@@ -672,9 +674,9 @@ namespace ExtendInput.Controller
                 int Rank = 0;//(int)subType;
                 ControllerSubTypeAttribute attr = subType.GetAttribute<ControllerSubTypeAttribute>();
                 // controller VID/PID is correct or target doesn't use one
-                if ((ConnectionType == EConnectionType.USB       && attr.USB_VID == _device.VendorId && attr.USB_PID == _device.ProductId) // USB type matches
-                 || (ConnectionType == EConnectionType.Bluetooth && attr.BT_VID  == _device.VendorId && attr.BT_PID  == _device.ProductId) // BT types matches
-                 || (ConnectionType == EConnectionType.Dongle    && attr.BT_VID  == _device.VendorId && attr.BT_PID  == _device.ProductId)) // BT types matches (via dongle)
+                if ((ConnectionType == EConnectionType.USB       && attr.USB_VID == VID && attr.USB_PID == PID) // USB type matches
+                 || (ConnectionType == EConnectionType.Bluetooth && attr.BT_VID  == VID && attr.BT_PID  == PID) // BT types matches
+                 || (ConnectionType == EConnectionType.Dongle    && attr.BT_VID  == VID && attr.BT_PID  == PID)) // BT types matches (via dongle)
                 {
                     Rank += ID_MATCH;
                 }
@@ -693,7 +695,7 @@ namespace ExtendInput.Controller
                     if ((attr.NoTemperture && !HaveSeenNonZeroRawTemp) || !attr.NoTemperture)
                     {
                         // No target IdentityHash or we have a matching IdentityHash
-                        if (IdentityHash == null)
+                        if (IdentityHash == null)// && attr.IdentitySha256 == null)
                         {
                             Rank += HAS_NO_AUTH_HASH;
                             Rank += TYPE_AUTH - (int)subType;
@@ -767,7 +769,6 @@ namespace ExtendInput.Controller
                 string SerialNumber = _device.ReadSerialNumber();
                 if (!string.IsNullOrWhiteSpace(SerialNumber))
                 {
-                    // TODO confirm this is in the right order and we don't need to reverse it
                     if (MacAsSerialNumber.IsMatch(SerialNumber))
                         SerialNumber = $"{SerialNumber.Substring(0, 2)}:{SerialNumber.Substring(2, 2)}:{SerialNumber.Substring(4, 2)}:{SerialNumber.Substring(6, 2)}:{SerialNumber.Substring(8, 2)}:{SerialNumber.Substring(10, 2)}".ToUpperInvariant();
                     if (SerialNumber != "00:00:00:00:00:00")
