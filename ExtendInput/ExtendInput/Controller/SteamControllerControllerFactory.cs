@@ -43,6 +43,7 @@ namespace ExtendInput.Controller
                         ConType = EConnectionType.Dongle;
                         break;
                     case SteamController.ProductIdChell:
+                        if (devicePath.Contains("mi_03")) return null; // skip odd 2nd device
                         ConType = EConnectionType.USB;
                         CtrlType = SteamController.EControllerType.Chell;
                         break;

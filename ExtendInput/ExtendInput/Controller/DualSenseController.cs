@@ -23,6 +23,20 @@ namespace ExtendInput.Controller
         private const byte _REPORT_STATE_8 = 0x38;
         private const byte _REPORT_STATE_9 = 0x39;
 
+        #region String Definitions
+        private const string ATOM_CONNECTION_WIRE = "CONNECTION_WIRE";
+        private const string ATOM_CONNECTION_USB_WIRE = "CONNECTION_WIRE_USB";
+        private const string ATOM_CONNECTION_BT = "CONNECTION_BT";
+        //private const string ATOM_CONNECTION_DONGLE = "CONNECTION_DONGLE";
+        //private const string ATOM_CONNECTION_DS4_DONGLE = "CONNECTION_DONGLE_DS5";
+        private const string ATOM_CONNECTION_UNKKNOWN = "CONNECTION_UNKNOWN";
+
+        private readonly string[] _CONNECTION_WIRE = new string[] { ATOM_CONNECTION_USB_WIRE, ATOM_CONNECTION_WIRE };
+        private readonly string[] _CONNECTION_BT = new string[] { ATOM_CONNECTION_BT };
+        //private readonly string[] _CONNECTION_DONGLE = new string[] { ATOM_CONNECTION_DS4_DONGLE, ATOM_CONNECTION_DONGLE };
+        private readonly string[] _CONNECTION_UNKKNOWN = new string[] { ATOM_CONNECTION_UNKKNOWN };
+        #endregion String Definitions
+
         public bool SensorsEnabled;
         private HidDevice _device;
         int reportUsageLock = 0;
@@ -41,8 +55,27 @@ namespace ExtendInput.Controller
 
         public EConnectionType ConnectionType { get; private set; }
 
-        public string[] ConnectionTypeCode { get; private set; }
-        public string[] ControllerTypeCode { get; private set; }
+        public string[] ConnectionTypeCode
+        {
+            get
+            {
+                switch (ConnectionType)
+                {
+                    case EConnectionType.USB: return _CONNECTION_WIRE;
+                    case EConnectionType.Bluetooth: return _CONNECTION_BT;
+                    //case EConnectionType.Dongle: return _CONNECTION_DONGLE;
+                    default: return _CONNECTION_UNKKNOWN;
+                }
+            }
+        }
+        public string[] ControllerTypeCode
+        {
+            get
+            {
+                return new string[] { "DEVICE_DS5" };
+
+            }
+        }
         public string Name => "Sony DUALSENSE Controller";
         public string[] NameDetails
         {
