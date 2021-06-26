@@ -43,12 +43,11 @@ namespace ExtendInput.Controller
 
         public string[] ConnectionTypeCode { get; private set; }
         public string[] ControllerTypeCode { get; private set; }
-        public string NameDetail
+        public string Name => "Sony DUALSENSE Controller";
+        public string[] NameDetails
         {
             get
             {
-                string retVal = "Sony DUALSENSE Controller";
-
                 string Serial = null;
 
                 if (_device.VendorId == VendorId
@@ -73,7 +72,7 @@ namespace ExtendInput.Controller
                 if (string.IsNullOrWhiteSpace(Serial))
                     Serial = null;
 
-                return retVal += $" [{Serial ?? "No ID"}]"; ;
+                return new string[] { $"[{Serial ?? "No ID"}]" };
             }
         }
         public bool HasSelectableAlternatives => false;

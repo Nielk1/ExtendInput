@@ -63,7 +63,8 @@ namespace ExtendInput.Controller
         string[] ControllerTypeCode { get; }
         bool HasSelectableAlternatives { get; }
         Dictionary<string, string> Alternates { get; }
-        string NameDetail { get; }
+        string Name { get; }
+        string[] NameDetails { get; }
 
         IDevice DeviceHackRef { get; }
         bool HasMotion { get; }

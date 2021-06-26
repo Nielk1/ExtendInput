@@ -15,11 +15,12 @@ namespace ExtendInput.Controller
 
         public string[] ConnectionTypeCode { get; private set; }
         public string[] ControllerTypeCode { get; private set; }
-        public string NameDetail
+        public string Name => "SixtyBeat Gamepad";
+        public string[] NameDetails
         {
             get
             {
-                return _device.DevicePath;
+                return new string[] { _device.DevicePath };
             }
         }
         public bool HasSelectableAlternatives => false;
@@ -41,8 +42,8 @@ namespace ExtendInput.Controller
         int Initalized;
         public SixtyBeatGamepadController(SixtyBeatAudioDevice device)
         {
-            ConnectionTypeCode = new string[] { "UNKNOWN" };
-            ControllerTypeCode = new string[] { "GAMEPAD" };
+            ConnectionTypeCode = new string[] { "CONNECTION_UNKNOWN" };
+            ControllerTypeCode = new string[] { "DEVICE_GAMEPAD" };
 
             State.Controls["quad_left"] = new ControlButtonQuad();
             State.Controls["quad_right"] = new ControlButtonQuad();

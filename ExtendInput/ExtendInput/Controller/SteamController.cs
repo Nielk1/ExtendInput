@@ -28,7 +28,7 @@ namespace ExtendInput.Controller
 
         public string[] ConnectionTypeCode { get; private set; }
         public string[] ControllerTypeCode { get; private set; }
-        public string NameDetail
+        public string Name
         {
             get
             {
@@ -39,18 +39,26 @@ namespace ExtendInput.Controller
                     case EControllerType.ReleaseV2: retVal += " V2"; break;
                     case EControllerType.Chell: retVal += " Chell"; break;
                 }
+                return retVal;
+            }
+        }
+        public string[] NameDetails
+        {
+            get
+            {
+                string retVal = string.Empty;
                 if (ConState == InternalConState.Disconnected)
                 {
-                    retVal += $" <{ConState}>";
+                    retVal += $"<{ConState}>";
                 }
                 else
                 {
-                    retVal += $" <{ConState}>";
+                    retVal += $"<{ConState}>";
 #if Serial
                 retVal += $" [{Serial ?? "No ID"}]";
 #endif
                 }
-                return retVal;
+                return new string[] { retVal };
             }
         }
         public bool HasSelectableAlternatives => false;
@@ -221,25 +229,25 @@ namespace ExtendInput.Controller
             switch (ConnectionType)
             {
                 case EConnectionType.USB:
-                    ConnectionTypeCode = new string[] { "USB_WIRE", "WIRE" };
+                    ConnectionTypeCode = new string[] { "CONNECTION_WIRE_USB", "CONNECTION_WIRE" };
                     break;
                 case EConnectionType.Bluetooth:
-                    ConnectionTypeCode = new string[] { "BT" };
+                    ConnectionTypeCode = new string[] { "CONNECTION_BT" };
                     break;
                 case EConnectionType.Dongle:
-                    ConnectionTypeCode = new string[] { "SC_DONGLE", "DONGLE" };
+                    ConnectionTypeCode = new string[] { "CONNECTION_DONGLE_SC", "CONNECTION_DONGLE" };
                     break;
                 default:
-                    ConnectionTypeCode = new string[] { "UNKNOWN" };
+                    ConnectionTypeCode = new string[] { "CONNECTION_UNKNOWN" };
                     break;
             }
             if (type == EControllerType.Chell)
             {
-                ControllerTypeCode = new string[] { "SC_CHELL", "GAMEPAD" };
+                ControllerTypeCode = new string[] { "DEVICE_SC_CHELL", "DEVICE_GAMEPAD" };
             }
             else
             {
-                ControllerTypeCode = new string[] { "SC", "GAMEPAD" };
+                ControllerTypeCode = new string[] { "DEVICE_SC", "DEVICE_GAMEPAD" };
             }
 
             Initalized = 0;

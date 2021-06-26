@@ -97,12 +97,12 @@ namespace ExtendInput.Controller
         #endregion Identity Hashes
 
         #region String Definitions
-        private const string ATOM_CONNECTION_WIRE = "WIRE";
-        private const string ATOM_CONNECTION_USB_WIRE = "USB_WIRE";
-        private const string ATOM_CONNECTION_BT = "BT";
-        private const string ATOM_CONNECTION_DONGLE = "DONGLE";
-        private const string ATOM_CONNECTION_DS4_DONGLE = "DS4_DONGLE";
-        private const string ATOM_CONNECTION_UNKKNOWN = "UNKNOWN";
+        private const string ATOM_CONNECTION_WIRE = "CONNECTION_WIRE";
+        private const string ATOM_CONNECTION_USB_WIRE = "CONNECTION_WIRE_USB";
+        private const string ATOM_CONNECTION_BT = "CONNECTION_BT";
+        private const string ATOM_CONNECTION_DONGLE = "CONNECTION_DONGLE";
+        private const string ATOM_CONNECTION_DS4_DONGLE = "CONNECTION_DONGLE_DS4";
+        private const string ATOM_CONNECTION_UNKKNOWN = "CONNECTION_UNKNOWN";
 
         private readonly string[] _CONNECTION_WIRE = new string[] { ATOM_CONNECTION_USB_WIRE, ATOM_CONNECTION_WIRE };
         private readonly string[] _CONNECTION_BT = new string[] { ATOM_CONNECTION_BT };
@@ -113,32 +113,32 @@ namespace ExtendInput.Controller
         enum DS4SubType
         {
             [ControllerSubType(
-                Token: null,
+                Token: new string[] { "DEVICE_NONE" },
                 Name: null,
                 NoMac: true)]
             None = -1, // DS4 dongle with nothing connected
 
             [ControllerSubType(
-                Token: new string[] { "UNKNOWN" },
+                Token: new string[] { "DEVICE_UNKNOWN" },
                 Name: null)]
             Unknown = 0,
             
             [ControllerSubType(
-                Token: new string[] { "DS4V1", "DS4", "GAMEPAD" },
+                Token: new string[] { "DEVICE_DS4V1", "DEVICE_DS4", "DEVICE_GAMEPAD" },
                 Name: "Sony DUALSHOCK®4 Controller V1",
                 USB_VID: VENDOR_SONY, USB_PID: PRODUCT_SONY_DS4V1,
                 BT_VID: VENDOR_SONY, BT_PID: PRODUCT_SONY_DS4V1)]
             SonyDS4V1 = 1,
             
             [ControllerSubType(
-                Token: new string[] { "DS4V2", "DS4", "GAMEPAD" },
+                Token: new string[] { "DEVICE_DS4V2", "DEVICE_DS4", "DEVICE_GAMEPAD" },
                 Name: "Sony DUALSHOCK®4 Controller V2",
                 USB_VID: VENDOR_SONY, USB_PID: PRODUCT_SONY_DS4V2,
                 BT_VID: VENDOR_SONY, BT_PID: PRODUCT_SONY_DS4V2)]
             SonyDS4V2,
             
             [ControllerSubType(
-                Token: new string[] { "DS4V1", "DS4", "GAMEPAD" },
+                Token: new string[] { "DEVICE_DS4V1", "DEVICE_DS4", "DEVICE_GAMEPAD" },
                 Name: "Sony DUALSHOCK®4 Controller V1 (Possible Unoffical)",
                 NoTemperture: true,
                 USB_VID: VENDOR_SONY, USB_PID: PRODUCT_SONY_DS4V1,
@@ -147,7 +147,7 @@ namespace ExtendInput.Controller
             UnknownDS4V1,
             
             [ControllerSubType(
-                Token: new string[] { "DS4V2", "DS4", "GAMEPAD" },
+                Token: new string[] { "DEVICE_DS4V2", "DEVICE_DS4", "DEVICE_GAMEPAD" },
                 Name: "Sony DUALSHOCK®4 Controller V2 (Possible Unoffical)",
                 NoTemperture: true,
                 USB_VID: VENDOR_SONY, USB_PID: PRODUCT_SONY_DS4V2,
@@ -156,7 +156,7 @@ namespace ExtendInput.Controller
             UnknownDS4V2,
             
             [ControllerSubType(
-                Token: new string[] { "BROOKMARS", "DS4", "GAMEPAD" },
+                Token: new string[] { "DEVICE_BROOKMARS", "DEVICE_DS4", "DEVICE_GAMEPAD" },
                 Name: "Brook Mars Wired Controller",
                 //NoTemperture: true,
                 USB_VID: VENDOR_BROOK, USB_PID: PRODUCT_BROOK_MARS,
@@ -171,7 +171,7 @@ namespace ExtendInput.Controller
             // 4. On USB, it is impossible to bit filter rumble and LED changes out, they always apply every write no matter what
             // 5. On BT, rumble writes ignore the rumble flag and instead apply if the LED flag is set. LED sets of 0x000000 are ignored to facilitate this
             [ControllerSubType(
-                Token: new string[] { "DS4_2E2415CA", "DS4", "GAMEPAD" },
+                Token: new string[] { "DEVICE_DS4_2E2415CA", "DEVICE_DS4", "DEVICE_GAMEPAD" },
                 Name: "Quirks Pad 2E2415CA",
                 NoTemperture: true,
                 IdentitySha256: AUTH_IDENTITY_SHA256_2E2415CA,
@@ -183,7 +183,7 @@ namespace ExtendInput.Controller
             PartialDetection2E2415CA = 200,
             
             [ControllerSubType(
-                Token: new string[] { "DS4_8951", "DS4", "GAMEPAD" },
+                Token: new string[] { "DEVICE_DS4_8951", "DEVICE_DS4", "DEVICE_GAMEPAD" },
                 PadMaxX: 1918,
                 PadMaxY: 940,
                 Name: "Model No. PS4-8951",
@@ -199,7 +199,7 @@ namespace ExtendInput.Controller
             No8951,
             
             [ControllerSubType(
-                Token: new string[] { "DS4_8952", "DS4", "GAMEPAD" },
+                Token: new string[] { "DEVICE_DS4_8952", "DEVICE_DS4", "DEVICE_GAMEPAD" },
                 PadMaxX: 940,
                 PadMaxY: 940,
                 Name: "Model No. PS4-8952",
@@ -215,7 +215,7 @@ namespace ExtendInput.Controller
             No8952,
             
             [ControllerSubType(
-                Token: new string[] { "DS4_SZ4002B", "DS4", "GAMEPAD" },
+                Token: new string[] { "DEVICE_DS4_SZ4002B", "DEVICE_DS4", "DEVICE_GAMEPAD" },
                 PadMaxX: 1900,
                 PadMaxY: 940,
                 Name: "Senze SZ-4002B",
@@ -231,7 +231,7 @@ namespace ExtendInput.Controller
             SZ4002B,
             
             [ControllerSubType(
-                Token: new string[] { "DS4_SZ4003B", "DS4", "GAMEPAD" },
+                Token: new string[] { "DEVICE_DS4_SZ4003B", "DEVICE_DS4", "DEVICE_GAMEPAD" },
                 PadMaxX: 1918,
                 PadMaxY: 940,
                 Name: "Senze SZ-4003B",
@@ -247,7 +247,7 @@ namespace ExtendInput.Controller
             SZ4003B,
             
             [ControllerSubType(
-                Token: new string[] { "DS4_YIYANG498", "DS4", "GAMEPAD" },
+                Token: new string[] { "DEVICE_DS4_YIYANG498", "DEVICE_DS4", "DEVICE_GAMEPAD" },
                 PadMaxX: 1918,
                 PadMaxY: 940,
                 Name: "Yiyang 498",
@@ -262,7 +262,7 @@ namespace ExtendInput.Controller
             Yiyang498,
 
             [ControllerSubType(
-                Token: new string[] { "DS4_STK4003", "DS4", "GAMEPAD" },
+                Token: new string[] { "DEVICE_DS4_STK4003", "DEVICE_DS4", "DEVICE_GAMEPAD" },
                 PadMaxX: 1918,
                 PadMaxY: 940,
                 Name: "Saitake STK-4003",
@@ -278,7 +278,7 @@ namespace ExtendInput.Controller
             STK4003,
 
             [ControllerSubType(
-                Token: new string[] { "DS4_Gamory2075B", "DS4", "GAMEPAD" },
+                Token: new string[] { "DEVICE_DS4_Gamory2075B", "DEVICE_DS4", "DEVICE_GAMEPAD" },
                 PadMaxX: 1918,
                 PadMaxY: 940,
                 Name: "Gamory 2075B",
@@ -297,7 +297,7 @@ namespace ExtendInput.Controller
             //        \                    /
             // 223,940 \__________________/ 1705,940
             [ControllerSubType(
-                Token: new string[] { "DS4_P4GamepadQ300", "DS4", "GAMEPAD" },
+                Token: new string[] { "DEVICE_DS4_P4GamepadQ300", "DEVICE_DS4", "DEVICE_GAMEPAD" },
                 PadMaxX: 1918,
                 PadMaxY: 940,
                 Name: "P4 Gamepad Q300",
@@ -381,7 +381,8 @@ namespace ExtendInput.Controller
         {
             get
             {
-                return ControllerAttribute?.Tokens ?? new string[] { "UNKNOWN" };
+                return ControllerAttribute?.Tokens ?? new string[] { "DEVICE_UNKNOWN" };
+
             }
         }
 
@@ -407,13 +408,24 @@ namespace ExtendInput.Controller
             }
         }
 
-        public string NameDetail
+        public string[] NameDetails
         {
             get
             {
-                if(ControllerAttribute?.NoMac ?? false)
-                    return Name;
-                return $"{Name} [{SerialNumber ?? "No ID"}]";
+                if (ControllerSubType == DS4SubType.None)
+                {
+                    UInt16 VID = (UInt16)_device.VendorId;
+                    UInt16 PID = (UInt16)_device.ProductId;
+                    if (VID == VENDOR_SONY && PID == PRODUCT_SONY_DONGLE)
+                    {
+                        return new string[] { $"No Controller" };
+                    }
+                }
+
+                if (ControllerAttribute?.NoMac ?? false)
+                    return null;
+
+                return new string[] { $"[{SerialNumber ?? "No ID"}]" };
             }
         }
 
@@ -607,6 +619,9 @@ namespace ExtendInput.Controller
 
         private string GetControllerAuthIdentityHash()
         {
+            if (_device.VendorId == VENDOR_SONY && _device.ProductId == PRODUCT_SONY_DONGLE)
+                return null;
+
             byte[] RawData = new byte[0x100 + 0x10 + 0x100 + 0x100 + 0x100];
             for (; ; )
             {
@@ -789,7 +804,9 @@ namespace ExtendInput.Controller
 
             if (0 == Interlocked.Exchange(ref reportUsageLock, 1))
             {
-                StateMutationLock.EnterUpgradeableReadLock();
+                bool DongleConnectionStatusChanged = false;
+                bool ControllerTempDataAppeared = false;
+                StateMutationLock.EnterReadLock();
                 try
                 {
                     // Clone the current state before altering it since the OldState is likely a shared reference
@@ -899,9 +916,7 @@ namespace ExtendInput.Controller
                         {
                             HaveSeenNonZeroRawTemp = true;
                             // we see the temp is not 0, which means any suspect DS4s can now be converted to confirmed DS4s
-                            if (ControllerSubType == DS4SubType.UnknownDS4V1) ChangeControllerSubType(DS4SubType.SonyDS4V1);
-                            if (ControllerSubType == DS4SubType.UnknownDS4V2) ChangeControllerSubType(DS4SubType.SonyDS4V2);
-                                
+                            ControllerTempDataAppeared = true;    
                         }
 
                         (StateInFlight.Controls["motion"] as ControlMotion).AngularVelocityX = BitConverter.ToInt16(reportData, 1 + baseOffset + 12);
@@ -930,7 +945,7 @@ namespace ExtendInput.Controller
                         if (DisconnectedFlag != DisconnectedBit)
                         {
                             DisconnectedBit = DisconnectedFlag;
-                            ResetControllerInfo();
+                            DongleConnectionStatusChanged = true;
                         }
 
                         // Brook Mars has emulated touch with stick, we don't care about that since we'd do it in software
@@ -1030,10 +1045,19 @@ namespace ExtendInput.Controller
                 }
                 finally
                 {
-                    StateMutationLock.ExitUpgradeableReadLock();
+                    StateMutationLock.ExitReadLock();
+
+                    if (ControllerTempDataAppeared)
+                    {
+                        if (ControllerSubType == DS4SubType.UnknownDS4V1) ChangeControllerSubType(DS4SubType.SonyDS4V1);
+                        if (ControllerSubType == DS4SubType.UnknownDS4V2) ChangeControllerSubType(DS4SubType.SonyDS4V2);
+                    }
+
+                    if (DongleConnectionStatusChanged)
+                        ResetControllerInfo();
+
                     Interlocked.Exchange(ref reportUsageLock, 0);
                 }
-
 
                 // TODO: change how this works because we don't want to lock, we need to actually change the polling rate in the device
                 if (ConnectionType == EConnectionType.Dongle && DisconnectedBit)
@@ -1042,7 +1066,6 @@ namespace ExtendInput.Controller
         }
 
         object UpdateLocalDataLock = new object();
-        Thread UpdateLocalDataThread = null;
         bool UpdateLocalDataPoison = false;
 
         private void ResetControllerInfo()
@@ -1089,50 +1112,57 @@ namespace ExtendInput.Controller
             }
             ControllerMetadataUpdate?.Invoke();
 
-            lock (UpdateLocalDataLock)
+            //lock (UpdateLocalDataLock)
             {
-                UpdateLocalDataPoison = true;
-                while (UpdateLocalDataThread?.IsAlive ?? false)
-                    Thread.Sleep(100); // we will actually lock up here while waiting for this thread to find a stop point, so this is far from the best way to handle this
-                UpdateLocalDataPoison = false;
+                //UpdateLocalDataPoison = true;
+                //while (UpdateLocalDataThread?.IsAlive ?? false)
+                //    Thread.Sleep(100); // we will actually lock up here while waiting for this thread to find a stop point, so this is far from the best way to handle this
+                //UpdateLocalDataPoison = false;
 
-                UpdateLocalDataThread = new Thread(() =>
+                //if(UpdateLocalDataThread == null)
                 {
-                    if (UpdateLocalDataPoison)
-                        return;
-                    string SerialNumber_ = GetSerialNumber();
-                    if (UpdateLocalDataPoison)
-                        return;
-                    SerialNumber = SerialNumber_;
+                    //UpdateLocalDataThread = new Thread(() =>
+                    //{
+                        lock (UpdateLocalDataLock)
+                        {
+                            if (UpdateLocalDataPoison)
+                                return;
+                            string SerialNumber_ = GetSerialNumber();
+                            if (UpdateLocalDataPoison)
+                                return;
+                            SerialNumber = SerialNumber_;
 
-                    if (!string.IsNullOrWhiteSpace(SerialNumber))
-                    {
-                        string ControllerData = StoredDataHandler.GetMacData(SerialNumber);
-                        DS4SubType ControllerSubTypeRead = DS4SubType.Unknown;
-                        if (!string.IsNullOrWhiteSpace(ControllerData) && Enum.TryParse<DS4SubType>(ControllerData, out ControllerSubTypeRead))
-                            ControllerSubType = ControllerSubTypeRead;
-                    }
-                    if (   (ControllerSubType == DS4SubType.UnknownDS4V1)
-                        || (ControllerSubType == DS4SubType.UnknownDS4V2))
-                    {
-                        IdentityHash = GetControllerAuthIdentityHash();
-                        //if (IdentityHash == AUTH_IDENTITY_SHA256_2E2415CA)
-                        //{
-                        //    ControllerSubType = DS4SubType.PartialDetection2E2415CA;
-                        //    StoredDataHandler.SetMacData(SerialNumber, ControllerSubType.ToString());
-                        //}
+                            if (!string.IsNullOrWhiteSpace(SerialNumber))
+                            {
+                                string ControllerData = StoredDataHandler.GetMacData(SerialNumber);
+                                DS4SubType ControllerSubTypeRead = DS4SubType.Unknown;
+                                if (!string.IsNullOrWhiteSpace(ControllerData) && Enum.TryParse<DS4SubType>(ControllerData, out ControllerSubTypeRead))
+                                    ControllerSubType = ControllerSubTypeRead;
+                            }
+                            if (   (ControllerSubType == DS4SubType.UnknownDS4V1)
+                                || (ControllerSubType == DS4SubType.UnknownDS4V2))
+                            {
+                                IdentityHash = GetControllerAuthIdentityHash();
+                                //if (IdentityHash == AUTH_IDENTITY_SHA256_2E2415CA)
+                                //{
+                                //    ControllerSubType = DS4SubType.PartialDetection2E2415CA;
+                                //    StoredDataHandler.SetMacData(SerialNumber, ControllerSubType.ToString());
+                                //}
                             
-                        //ControllerSubType = GetControllerInitialTypeCode((UInt16)_device.VendorId, (UInt16)_device.ProductId, HaveSeenNonZeroRawTemp, IdentityHash);
-                        //ControllerAttribute = ControllerSubType.GetAttribute<ControllerSubTypeAttribute>();
-                        //if (ControllerAttribute.AllowMacSave)
-                        //    StoredDataHandler.SetMacData(SerialNumber, ControllerSubType.ToString());
-                    }
-                    ControllerSubType = GetControllerInitialTypeCode((UInt16)_device.VendorId, (UInt16)_device.ProductId, HaveSeenNonZeroRawTemp, IdentityHash);
-                    ChangeControllerSubType(ControllerSubType);
+                                //ControllerSubType = GetControllerInitialTypeCode((UInt16)_device.VendorId, (UInt16)_device.ProductId, HaveSeenNonZeroRawTemp, IdentityHash);
+                                //ControllerAttribute = ControllerSubType.GetAttribute<ControllerSubTypeAttribute>();
+                                //if (ControllerAttribute.AllowMacSave)
+                                //    StoredDataHandler.SetMacData(SerialNumber, ControllerSubType.ToString());
+                            }
+                            ControllerSubType = GetControllerInitialTypeCode((UInt16)_device.VendorId, (UInt16)_device.ProductId, HaveSeenNonZeroRawTemp, IdentityHash);
+                            ChangeControllerSubType(ControllerSubType);
 
-                    ControllerMetadataUpdate?.Invoke();
-                });
-                UpdateLocalDataThread.Start();
+                            ControllerMetadataUpdate?.Invoke();
+                        }
+                    //});
+                    //UpdateLocalDataThread.Name = "DualShock4Controller:UpdateLocalDataThread";
+                }
+                //UpdateLocalDataThread.Start();
             }
         }
 
@@ -1187,7 +1217,6 @@ namespace ExtendInput.Controller
             if (!string.IsNullOrWhiteSpace(SerialNumber) && ControllerAttribute.AllowMacSave)
                 StoredDataHandler.SetMacData(SerialNumber, ControllerSubType.ToString()); // TODO make this a thread event to prevent a hang?
 
-            // note we entered an upgradable read lock if we called this from read locked code
             StateMutationLock.EnterWriteLock();
             try
             {
@@ -1216,9 +1245,9 @@ namespace ExtendInput.Controller
             TouchPadMaxX = ControllerAttribute.PadMaxX;
             TouchPadMaxY = ControllerAttribute.PadMaxY;
 
-            ControllerMetadataUpdate?.Invoke();
-
             UpdateAlternateSubTypes();
+
+            ControllerMetadataUpdate?.Invoke();
         }
     }
 }

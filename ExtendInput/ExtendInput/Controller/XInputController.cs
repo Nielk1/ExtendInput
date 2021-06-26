@@ -15,11 +15,18 @@ namespace ExtendInput.Controller
 
         public string[] ConnectionTypeCode { get; private set; }
         public string[] ControllerTypeCode { get; private set; }
-        public string NameDetail
+        public string Name
         {
             get
             {
                 return _device.DevicePath;
+            }
+        }
+        public string[] NameDetails
+        {
+            get
+            {
+                return null;
             }
         }
         public bool HasSelectableAlternatives => false;
@@ -42,8 +49,8 @@ namespace ExtendInput.Controller
         int Initalized;
         public XInputController(XInputDevice device)
         {
-            ConnectionTypeCode = new string[] { "UNKNOWN" };
-            ControllerTypeCode = new string[] { "XBOX", "GAMEPAD" };
+            ConnectionTypeCode = new string[] { "CONNECTION_UNKNOWN" };
+            ControllerTypeCode = new string[] { "DEVICEXBOX", "DEVICEGAMEPAD" };
 
             State.Controls["quad_left"] = new ControlDPad();
             State.Controls["quad_right"] = new ControlButtonQuad();
