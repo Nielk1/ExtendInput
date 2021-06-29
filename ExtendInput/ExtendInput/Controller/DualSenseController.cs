@@ -1,4 +1,5 @@
-﻿using ExtendInput.Controls;
+﻿using Brod.Common.Utilities;
+using ExtendInput.Controls;
 using ExtendInput.DeviceProvider;
 using System;
 using System.Collections.Generic;
@@ -121,6 +122,112 @@ namespace ExtendInput.Controller
         public delegate void StateUpdatedEventHandler(object sender, ControllerState e);
         public event StateUpdatedEventHandler StateUpdated;
 
+
+        static byte[] data = new byte[] {
+                0x02, // 0x31 // report id
+       /*  1 */ 0x00, // 0x03 rumble emulation 0xF0
+                      // 0x04 right trigger motor
+                      // 0x08 left trigger motor
+                      // 0x10
+                      // 0x20
+                      // 0x40
+                      // 0x80
+       /*  2 */ 0x00, // 0x01 Mute light, off/on/blink
+                      // 0x02
+                      // 0x04 LED color
+                      // 0x08 all lights turn off?
+                      // 0x10 5 indiactor lights
+                      // 0x20
+                      // 0x40
+                      // 0x80
+       /*  3 */ 0x00, // Rumble right (weak)
+       /*  4 */ 0x00, // Rumble left (strong)
+       /*  5 */ 0x00,
+       /*  6 */ 0x00,
+       /*  7 */ 0x00,
+       /*  8 */ 0x00, // 0x02 activated mic
+       /*  9 */ 0x00, // 0x00 Mute light off
+                      // 0x01 Mute light on
+                      // 0x02 Mute light fade on/mid
+                      // no other values change anything?
+       /* 10 */ 0x00, // 0x10 sets unknown bit in byte 53
+       /* 11 */ 0x00, // Right Trigger Motor // 06 26 0F 35 B3 00 EF A2 08 D6 39 acts like a machine gun
+       /* 12 */ 0x00, //                     // 10 06 09 21 38 58 53 7C 48 10 57 acts like a machine gun
+       /* 13 */ 0x00, //                     //
+       /* 14 */ 0x00, //                     //
+       /* 15 */ 0x00, //                     //
+       /* 16 */ 0x00, //                     //
+       /* 17 */ 0x00, //                     //
+       /* 18 */ 0x00, //                     //
+       /* 19 */ 0x00, //                     //
+       /* 20 */ 0x00, //                     //
+       /* 21 */ 0x00, //                     //
+       /* 22 */ 0x00, // Left Trigger Motor  // 96 25 B9 93 D4 8E CC 8D AE A6 23 acts like 2stage
+       /* 23 */ 0x00, //
+       /* 24 */ 0x00, //
+       /* 25 */ 0x00, //
+       /* 26 */ 0x00, //
+       /* 27 */ 0x00, //
+       /* 28 */ 0x00, //
+       /* 29 */ 0x00, //
+       /* 30 */ 0x00, //
+       /* 31 */ 0x00, //
+       /* 32 */ 0x00, //
+       /* 33 */ 0x00, 0x00, 0x00, 0x00, // copied into range 43-46
+       /* 37 */ 0x00,
+       /* 38 */ 0x00,
+       /* 39 */ 0x00, // 0x01 - enable brightness change
+                      // 0x02 - enable color light fade anim
+                      // 0x04
+                      // 0x08
+                      // 0x10
+                      // 0x20
+                      // 0x40
+                      // 0x80
+       /* 40 */ 0x00,
+       /* 41 */ 0x00, // 0x01 - Unknown bit in byte 54
+       /* 42 */ 0x00, // 0x00 - nothing?
+                      // 0x01 - fade in
+                      // 0x02 - fade out
+       /* 43 */ 0x00, // 0x00 - bright
+                      // 0x01 - mid
+                      // 0x02 - dim
+       /* 44 */ 0x00, // 0x1f are light bits for the 5 lights
+       /* 45 */ 0x00, // LED Red
+       /* 46 */ 0x00, // LED Green
+       /* 47 */ 0x00, // LED Blue
+       /* 48 */ 0x00,
+       /* 49 */ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+            };
+
+        /*private void SendReport()
+        {
+            {
+                byte[] outDataFinal = null;
+                if (_device.DevicePath.Contains(@"00001124-0000-1000-8000-00805f9b34fb"))
+                {
+                    outDataFinal = new byte[] {
+                        0xa2,
+                        0x31,
+                        0x02
+                    }.Concat(data.Skip(1)).Concat(new byte[44]).Take(79).ToArray();
+
+                    Crc32 crcE = new Crc32();
+                    byte[] crc = crcE.ComputeHash(outDataFinal, 0, outDataFinal.Length - 4);
+
+                    outDataFinal[outDataFinal.Length - 1] = crc[0];
+                    outDataFinal[outDataFinal.Length - 2] = crc[1];
+                    outDataFinal[outDataFinal.Length - 3] = crc[2];
+                    outDataFinal[outDataFinal.Length - 4] = crc[3];
+                }
+                else
+                {
+                    outDataFinal = new byte[] { 0x00 }.Concat(data).Concat(new byte[99]).Take(79).ToArray();
+                }
+                bool success = _device.WriteReport(outDataFinal.Skip(1).ToArray());
+            }
+        }*/
+
         public DualSenseController(HidDevice device, EConnectionType ConnectionType = EConnectionType.Unknown)
         {
             this.ConnectionType = ConnectionType;
@@ -141,6 +248,28 @@ namespace ExtendInput.Controller
             // According to this the normalized domain of the DS4 gyro is 1024 units per rad/s: https://gamedev.stackexchange.com/a/87178
 
             _device = device;
+            /*
+            //new Thread(() =>
+            {
+                //Thread.Sleep(1);
+                {
+                    byte oldFlags = data[2];
+                    data[2] |= 0x08;
+                    SendReport();
+                    data[2] = oldFlags;
+                }
+                //Thread.Sleep(1);
+                {
+                    byte oldFlags = data[2];
+                    data[2] |= 0x04;
+                    data[45] = 0xff;// (byte)random.Next(0, 255);
+                    data[46] = 0x00;// (byte)random.Next(0, 255);
+                    data[47] = 0x00;// (byte)random.Next(0, 255);
+                    SendReport();
+                    data[2] = oldFlags;
+                }
+            }//).Start();
+            */
 
             Initalized = 0;
 
