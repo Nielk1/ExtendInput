@@ -250,7 +250,7 @@ namespace ExtendInput.Controller
                 Token: new string[] { "DEVICE_DS4_YIYANG498", "DEVICE_DS4", "DEVICE_GAMEPAD" },
                 PadMaxX: 1918,
                 PadMaxY: 940,
-                Name: "Yiyang 498",
+                Name: "Yiyang 498", // May actually be a Senze SZ-4006B?   Maybe Senze rebrands them
                 NoTemperture: true,
                 IdentitySha256: AUTH_IDENTITY_SHA256_2E2415CA,
                 USB_VID: VENDOR_SONY, USB_PID: PRODUCT_SONY_DS4V1, //USB_REV: 0x0100
@@ -260,6 +260,29 @@ namespace ExtendInput.Controller
                 AllowManualSelect: true,
                 AllowMacSave: true)]
             Yiyang498,
+
+            //   0,0 __________________________ 1918,0 ~ exact
+            //      |                          |
+            //      |                          |
+            // 0,230|__________________________|1928,230 ~ aprox
+            //       \                        /
+            //        \                      /
+            //         \                    /
+            //  180,940 \__________________/ 1738,940 ~ aprox
+            [ControllerSubType(
+                Token: new string[] { "DEVICE_DS4_SZ4011B", "DEVICE_DS4", "DEVICE_GAMEPAD" },
+                PadMaxX: 1918,
+                PadMaxY: 940,
+                Name: "Senze SZ-4011B",
+                NoTemperture: true,
+                IdentitySha256: AUTH_IDENTITY_SHA256_2E2415CA,
+                //USB_VID: VENDOR_SONY, USB_PID: PRODUCT_SONY_DS4V1, //USB_REV: 0x0100
+                BT_VID: VENDOR_SONY, BT_PID: PRODUCT_SONY_DS4V2, //BT_REV: 0x0000
+                BT_UseLedBitForRumble: true,
+                BT_BlackLedIgnored: true,
+                AllowManualSelect: true,
+                AllowMacSave: true)]
+            SZ4011B,
 
             [ControllerSubType(
                 Token: new string[] { "DEVICE_DS4_STK4003", "DEVICE_DS4", "DEVICE_GAMEPAD" },
@@ -572,7 +595,7 @@ namespace ExtendInput.Controller
 
                 report = new byte[78]
                 {
-                    0x11, 0xC0, 0x20,
+                    _REPORT_STATE_1, 0xC0, 0x20,
                     (byte)(ControllerAttribute.BT_UseLedBitForRumble ? 0x02 : 0x01), 0x00, 0x00,
                     0xff, 0xff,
                     0x00, 0x00, // LED must be black when doing LEDInstead
@@ -817,7 +840,17 @@ namespace ExtendInput.Controller
 
                     int baseOffset = 0;
                     bool HasStateData = true;
-                    if (ConnectionType == EConnectionType.Bluetooth)
+                    if (ConnectionType == EConnectionType.Bluetooth && new byte[] {
+                        _REPORT_STATE_1,
+                        _REPORT_STATE_2,
+                        _REPORT_STATE_3,
+                        _REPORT_STATE_4,
+                        _REPORT_STATE_5,
+                        _REPORT_STATE_6,
+                        _REPORT_STATE_7,
+                        _REPORT_STATE_8,
+                        _REPORT_STATE_9
+                    }.Contains(reportData[0]))
                     {
                         baseOffset = 2;
                         HasStateData = (reportData[1] & 0x80) == 0x80;
