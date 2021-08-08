@@ -909,8 +909,8 @@ namespace ExtendInput.Controller
                         (StateInFlight.Controls["stick_left"] as ControlStick).Click = (reportData[1 + baseOffset + 5] & 64) == 64;
                         (StateInFlight.Controls["menu"] as ControlButtonPair).Right.Button0 = (reportData[1 + baseOffset + 5] & 32) == 32;
                         (StateInFlight.Controls["menu"] as ControlButtonPair).Left.Button0 = (reportData[1 + baseOffset + 5] & 16) == 16;
-                        (StateInFlight.Controls["bumpers2"] as ControlButtonPair).Right.Button0 = (reportData[1 + baseOffset + 5] & 8) == 8;
-                        (StateInFlight.Controls["bumpers2"] as ControlButtonPair).Left.Button0 = (reportData[1 + baseOffset + 5] & 4) == 4;
+                        //(StateInFlight.Controls["bumpers2"] as ControlButtonPair).Right.Button0 = (reportData[1 + baseOffset + 5] & 8) == 8;
+                        //(StateInFlight.Controls["bumpers2"] as ControlButtonPair).Left.Button0 = (reportData[1 + baseOffset + 5] & 4) == 4;
                         (StateInFlight.Controls["bumpers"] as ControlButtonPair).Right.Button0 = (reportData[1 + baseOffset + 5] & 2) == 2;
                         (StateInFlight.Controls["bumpers"] as ControlButtonPair).Left.Button0 = (reportData[1 + baseOffset + 5] & 1) == 1;
 
@@ -1131,7 +1131,7 @@ namespace ExtendInput.Controller
                     State.Controls["quad_left"] = new ControlDPad();
                     State.Controls["quad_right"] = new ControlButtonQuad();
                     State.Controls["bumpers"] = new ControlButtonPair();
-                    State.Controls["bumpers2"] = new ControlButtonPair();
+                    //State.Controls["bumpers2"] = new ControlButtonPair();
                     State.Controls["triggers"] = new ControlTriggerPair(HasStage2: false);
                     State.Controls["menu"] = new ControlButtonPair();
                     State.Controls["home"] = new ControlButton();
