@@ -11,6 +11,9 @@ namespace ExtendInput.Controls
         public bool[] Touch { get; private set; }
         public bool Click { get; set; }
 
+        public int PhysicalWidth { get; set; }
+        public int PhysicalHeight { get; set; }
+
         public ControlTouch(int TouchCount, bool HasClick)
         {
             this.TouchCount = TouchCount;

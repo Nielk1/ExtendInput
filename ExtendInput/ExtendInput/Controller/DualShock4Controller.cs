@@ -944,6 +944,8 @@ namespace ExtendInput.Controller
                         else
                         {
                             (StateInFlight.Controls["touch_center"] as ControlTouch).Click = (reportData[1 + baseOffset + 6] & 0x2) == 0x2;
+                            (StateInFlight.Controls["touch_center"] as ControlTouch).PhysicalWidth = ControllerAttribute.PadMaxX;
+                            (StateInFlight.Controls["touch_center"] as ControlTouch).PhysicalHeight = ControllerAttribute.PadMaxY;
                         }
 
                         (StateInFlight.Controls["triggers"] as ControlTriggerPair).Left.Analog = (float)reportData[1 + baseOffset + 7] / byte.MaxValue;
