@@ -256,6 +256,10 @@
                                         } else {
                                             ratioW = control.Data.PhysicalWidth / control.Data.PhysicalHeight;
                                         }
+                                        if (!isFinite(ratioW) || !isFinite(ratioH)) {
+                                            ratioW = 1;
+                                            ratioH = 1;
+                                        }
                                         if (renderElement.children('svg').length == 0) {
                                             var domString =
                                                 '<svg id="control_render_' + control_id + '" width="140" height="140" xmlns="http://www.w3.org/2000/svg">' +
@@ -280,7 +284,7 @@
                                             var stickFloat = ctrl.find('.pad_float_' + i);
                                             if (control.Data.Touch[i]) {
                                                 stickFloat.attr('transform', 'translate(' + (6 + (64 + control.Data.X[i] * 63) * ratioW) + ',' + (6 + (64 + control.Data.Y[i] * 63) * ratioH) + ')');
-                                                stickFloat.children('.pad_float_text').attr('transform', 'translate(' + (control.Data.X[i] > 0.5 ? -6 : 6) + ',' + (control.Data.Y[i] > 0.5 ? -6 : 6) + ')');
+                                                stickFloat.children('.pad_float_text').attr('transform', 'translate(' + (control.Data.X[i] > 0 ? -6 : 6) + ',' + (control.Data.Y[i] > 0 ? -6 : 6) + ')');
                                                 stickFloat.show();
                                             } else {
                                                 stickFloat.hide();
