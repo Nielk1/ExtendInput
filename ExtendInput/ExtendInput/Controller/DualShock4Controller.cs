@@ -550,6 +550,11 @@ namespace ExtendInput.Controller
                 // Start reading before the controller is active if it's a dongle since the dongle has to be asked if it has a controller or not
                 _device.StartReading();
             }
+            else
+            {
+                PollingState = EPollingState.RunOnce;
+                _device.StartReading();
+            }
         }
 
         public void Dispose()
@@ -1085,6 +1090,13 @@ namespace ExtendInput.Controller
                         State = StateInFlight;
 
                         ControllerStateUpdate?.Invoke(this, State);
+
+                        if (PollingState == EPollingState.RunOnce)
+                        {
+                            _device.StopReading();
+                            PollingState = EPollingState.Inactive;
+                            _device.CloseDevice();
+                        }
                     }
                 }
                 finally

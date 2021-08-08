@@ -25,6 +25,11 @@ namespace ExtendInput.Controller
         SlowPoll,
 
         /// <summary>
+        /// This device will poll once and then switch to inactive
+        /// </summary>
+        RunOnce,
+
+        /// <summary>
         /// Device is active and being polled constantly
         /// </summary>
         Active,
