@@ -53,10 +53,12 @@ namespace ExtendInput.Controller
         FullControl,
     }
 
-    public delegate void ControllerNameUpdateEvent();
+    public delegate void ControllerNameUpdateEvent(IController sender);
+    public delegate void ControllerStateUpdateEvent(IController sender, ControllerState State);
     public interface IController : IDisposable
     {
         event ControllerNameUpdateEvent ControllerMetadataUpdate;
+        event ControllerStateUpdateEvent ControllerStateUpdate;
 
         EConnectionType ConnectionType { get; }
         string[] ConnectionTypeCode { get; }
@@ -65,6 +67,8 @@ namespace ExtendInput.Controller
         Dictionary<string, string> Alternates { get; }
         string Name { get; }
         string[] NameDetails { get; }
+
+        string UniqueID { get; }
 
         IDevice DeviceHackRef { get; }
         bool HasMotion { get; }

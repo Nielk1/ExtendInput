@@ -25,7 +25,15 @@ namespace ExtendInput.Controller
 
         const float PadAngle = 0.261799f; // 15 deg in radians
 
-
+        public string UniqueID
+        {
+            get
+            {
+                //if (!string.IsNullOrWhiteSpace(SerialNumber))
+                //    return SerialNumber;
+                return _device.UniqueKey;
+            }
+        }
         public string[] ConnectionTypeCode { get; private set; }
         public string[] ControllerTypeCode { get; private set; }
         public string Name
@@ -198,8 +206,6 @@ namespace ExtendInput.Controller
         private InternalConState ConState;
         private DateTime ConnectedTime;
 
-        public delegate void StateUpdatedEventHandler(object sender, ControllerState e);
-        public event StateUpdatedEventHandler StateUpdated;
 
         // TODO for now it is safe to assume the startup connection type is correct, however, in the future we will need to have connection events trigger a recheck of the type or something once the V2 controller is out (if ever)
         public SteamController(HidDevice device, EConnectionType connection = EConnectionType.Unknown, EControllerType type = EControllerType.Unknown)
@@ -302,6 +308,7 @@ namespace ExtendInput.Controller
         }
 
         public event ControllerNameUpdateEvent ControllerMetadataUpdate;
+        public event ControllerStateUpdateEvent ControllerStateUpdate;
 
         public void DeInitalize()
         {
@@ -769,7 +776,7 @@ namespace ExtendInput.Controller
                                             if (ConState != InternalConState.Connected)
                                             {
                                                 ConState = InternalConState.Connected;
-                                                ControllerMetadataUpdate?.Invoke();
+                                                ControllerMetadataUpdate?.Invoke(this);
                                             }
                                             ConnectedTime = DateTime.UtcNow;
 
@@ -777,7 +784,7 @@ namespace ExtendInput.Controller
                                             OldState = State;
                                             State = StateInFlight;
 
-                                            StateUpdated?.Invoke(this, State);
+                                            ControllerStateUpdate?.Invoke(this, State);
                                         }
                                         break;
 
@@ -793,11 +800,11 @@ namespace ExtendInput.Controller
                                                 case ConnectionState.CONNECT:
                                                     ConState = InternalConState.Connected;
                                                     ConnectedTime = DateTime.UtcNow;
-                                                    ControllerMetadataUpdate?.Invoke();
+                                                    ControllerMetadataUpdate?.Invoke(this);
                                                     break;
                                                 case ConnectionState.DISCONNECT:
                                                     ConState = InternalConState.Disconnected;
-                                                    ControllerMetadataUpdate?.Invoke();
+                                                    ControllerMetadataUpdate?.Invoke(this);
                                                     break;
                                             }
                                         }

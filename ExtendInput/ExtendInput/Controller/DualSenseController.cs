@@ -46,6 +46,7 @@ namespace ExtendInput.Controller
         //private DateTime tmp = DateTime.Now;
 
         public event ControllerNameUpdateEvent ControllerMetadataUpdate;
+        public event ControllerStateUpdateEvent ControllerStateUpdate;
 
         public bool HasMotion => true;
 
@@ -55,6 +56,16 @@ namespace ExtendInput.Controller
         }
 
         public EConnectionType ConnectionType { get; private set; }
+
+        public string UniqueID
+        {
+            get
+            {
+                //if (!string.IsNullOrWhiteSpace(SerialNumber))
+                //    return SerialNumber;
+                return _device.UniqueKey;
+            }
+        }
 
         public string[] ConnectionTypeCode
         {
@@ -118,9 +129,6 @@ namespace ExtendInput.Controller
         ControllerState OldState = null;
 
         int Initalized;
-
-        public delegate void StateUpdatedEventHandler(object sender, ControllerState e);
-        public event StateUpdatedEventHandler StateUpdated;
 
 
         static byte[] data = new byte[] {
@@ -548,7 +556,7 @@ namespace ExtendInput.Controller
                             OldState = State;
                             State = StateInFlight;
 
-                            StateUpdated?.Invoke(this, State);
+                            ControllerStateUpdate?.Invoke(this, State);
                         }
                     }
                 }

@@ -386,6 +386,16 @@ namespace ExtendInput.Controller
 
         //private ControllerSubTypeAttribute NO8952Attr = DS4SubType.No8952.GetAttribute<ControllerSubTypeAttribute>();
 
+        public string UniqueID
+        {
+            get
+            {
+                //if(!string.IsNullOrWhiteSpace(SerialNumber))
+                //    return SerialNumber;
+                return _device.UniqueKey;
+            }
+        }
+
         public string[] ConnectionTypeCode
         {
             get
@@ -495,6 +505,7 @@ namespace ExtendInput.Controller
         //private DateTime tmp = DateTime.Now;
 
         public event ControllerNameUpdateEvent ControllerMetadataUpdate;
+        public event ControllerStateUpdateEvent ControllerStateUpdate;
 
         // The controller state can drastically change, where it picks up or loses items based on passive detection of quirky controllers, this makes it safe
         private ReaderWriterLockSlim StateMutationLock = new ReaderWriterLockSlim();
@@ -513,8 +524,6 @@ namespace ExtendInput.Controller
         ControllerState OldState = new ControllerState();
 
 
-        public delegate void StateUpdatedEventHandler(object sender, ControllerState e);
-        public event StateUpdatedEventHandler StateUpdated;
 
         public DualShock4Controller(HidDevice device, EConnectionType ConnectionType = EConnectionType.Unknown)
         {
@@ -1073,7 +1082,7 @@ namespace ExtendInput.Controller
                         OldState = State;
                         State = StateInFlight;
 
-                        StateUpdated?.Invoke(this, State);
+                        ControllerStateUpdate?.Invoke(this, State);
                     }
                 }
                 finally
@@ -1143,7 +1152,7 @@ namespace ExtendInput.Controller
                     StateMutationLock.ExitWriteLock();
                 }
             }
-            ControllerMetadataUpdate?.Invoke();
+            ControllerMetadataUpdate?.Invoke(this);
 
             //lock (UpdateLocalDataLock)
             {
@@ -1190,7 +1199,7 @@ namespace ExtendInput.Controller
                             ControllerSubType = GetControllerInitialTypeCode((UInt16)_device.VendorId, (UInt16)_device.ProductId, HaveSeenNonZeroRawTemp, IdentityHash);
                             ChangeControllerSubType(ControllerSubType);
 
-                            ControllerMetadataUpdate?.Invoke();
+                            ControllerMetadataUpdate?.Invoke(this);
                         }
                     //});
                     //UpdateLocalDataThread.Name = "DualShock4Controller:UpdateLocalDataThread";
@@ -1280,7 +1289,7 @@ namespace ExtendInput.Controller
 
             UpdateAlternateSubTypes();
 
-            ControllerMetadataUpdate?.Invoke();
+            ControllerMetadataUpdate?.Invoke(this);
         }
     }
 }

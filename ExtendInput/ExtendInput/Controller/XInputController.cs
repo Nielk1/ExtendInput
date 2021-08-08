@@ -12,7 +12,15 @@ namespace ExtendInput.Controller
     {
         public EConnectionType ConnectionType => EConnectionType.Unknown;
 
-
+        public string UniqueID
+        {
+            get
+            {
+                //if (!string.IsNullOrWhiteSpace(SerialNumber))
+                //    return SerialNumber;
+                return _device.UniqueKey;
+            }
+        }
         public string[] ConnectionTypeCode { get; private set; }
         public string[] ControllerTypeCode { get; private set; }
         public string Name
@@ -37,12 +45,10 @@ namespace ExtendInput.Controller
         int reportUsageLock = 0;
 
         public event ControllerNameUpdateEvent ControllerMetadataUpdate;
+        public event ControllerStateUpdateEvent ControllerStateUpdate;
 
         ControllerState State = new ControllerState();
 
-
-        public delegate void StateUpdatedEventHandler(object sender, ControllerState e);
-        public event StateUpdatedEventHandler StateUpdated;
 
         public bool HasMotion => false;
 
@@ -170,7 +176,7 @@ namespace ExtendInput.Controller
                     // bring OldState in line with new State
                     State = StateInFlight;
 
-                    StateUpdated?.Invoke(this, State);
+                    ControllerStateUpdate?.Invoke(this, State);
                 }
                 finally
                 {
