@@ -61,6 +61,7 @@
         var $controllers = null;
 
         var ControllerActive = false;
+        var ControllerActiveSubtype = null;
         var ControllerPollAjax = null;
 
         $(document).ready(function () {
@@ -91,15 +92,29 @@
                 return true;
             });
 
+            $controllers.on('click', '.alternate_controller', function (evt) {
+                evt.preventDefault();
+                var controllerID = $(evt.currentTarget).parents('.controller').attr('id').split('_')[1];
+                var alternateID = $(evt.target).data('id');
+                $.post("/alternate_controller", { controller: controllerID, alternate: alternateID }, function (data) {
+                    /*if (data) {
+                        PollControllerFunc();
+                    }*/
+                });
+                return true;
+            });
+
             function PollControllerFunc() {
                 if (ControllerPollAjax != null) ControllerPollAjax.abort();
                 if (ControllerActive) {
                     ControllerPollAjax = $.get("/poll_controller", function (data) {
                         var knownChildren = {};
                         $state_data.children().each((i, elem) => knownChildren[elem.id] = true);
-                        for (const control_id in data) {
+                        var NewSubtype = (ControllerActiveSubtype != data.subtype);
+                        ControllerActiveSubtype = data.subtype;
+                        for (const control_id in data.controls) {
                             var existing = $state_data.children('#state_' + control_id);
-                            var control = data[control_id];
+                            var control = data.controls[control_id];
 
                             if (existing.length == 0) {
                                 var wrapper = $('<div class="col-sm-6 col-md-4 pb-4 col-lg-3"/>');
@@ -115,8 +130,8 @@
                                     {
                                         var renderElement = wrapper.find('.control-value');
                                         renderElement.addClass('text-center');
-                                        if (renderElement.children('svg').length == 0) {
-                                            renderElement.append(
+                                        if (NewSubtype || renderElement.children('svg').length == 0) {
+                                            renderElement.empty().append(
                                                 '<svg id="control_render_' + control_id + '" width="182" height="182" xmlns="http://www.w3.org/2000/svg">' +
                                                 '<g>' +
                                                 '<ellipse class="btn_n" ry="30" rx="30" cy="151" cx="091" stroke="#000" fill="#fff" />' +
@@ -137,8 +152,8 @@
                                     {
                                         var renderElement = wrapper.find('.control-value');
                                         renderElement.addClass('text-center');
-                                        if (renderElement.children('svg').length == 0) {
-                                            renderElement.append(
+                                        if (NewSubtype || renderElement.children('svg').length == 0) {
+                                            renderElement.empty().append(
                                                 '<svg id="control_render_' + control_id + '" width="182" height="182" xmlns="http://www.w3.org/2000/svg">' +
                                                 '<g>' +
                                                 '<path class="btn_n" d="M 091,031 m 0,0 30,60 30,-60 z" stroke="#000" fill="#fff" transform="rotate(180 091 031) translate(-30,-30)"></path>' +
@@ -166,8 +181,8 @@
                                     {
                                         var renderElement = wrapper.find('.control-value');
                                         renderElement.addClass('text-center');
-                                        if (renderElement.children('svg').length == 0) {
-                                            renderElement.append(
+                                        if (NewSubtype || renderElement.children('svg').length == 0) {
+                                            renderElement.empty().append(
                                                 '<svg id="control_render_' + control_id + '" width="182" height="62" xmlns="http://www.w3.org/2000/svg">' +
                                                 '<g>' +
                                                 '<ellipse class="btn_r" ry="30" rx="30" cy="31" cx="151" stroke="#000" fill="#fff" />' +
@@ -184,8 +199,8 @@
                                     {
                                         var renderElement = wrapper.find('.control-value');
                                         renderElement.addClass('text-center');
-                                        if (renderElement.children('svg').length == 0) {
-                                            renderElement.append(
+                                        if (NewSubtype || renderElement.children('svg').length == 0) {
+                                            renderElement.empty().append(
                                                 '<svg id="control_render_' + control_id + '" width="62" height="62" xmlns="http://www.w3.org/2000/svg">' +
                                                 '<g>' +
                                                 '<ellipse class="btn_x" ry="30" rx="30" cy="31" cx="031" stroke="#000" fill="#fff" />' +
@@ -200,8 +215,8 @@
                                     {
                                         var renderElement = wrapper.find('.control-value');
                                         renderElement.addClass('text-center');
-                                        if (renderElement.children('svg').length == 0) {
-                                            renderElement.append(
+                                        if (NewSubtype || renderElement.children('svg').length == 0) {
+                                            renderElement.empty().append(
                                                 '<svg id="control_render_' + control_id + '" width="182" height="62" xmlns="http://www.w3.org/2000/svg">' +
                                                 '<g>' +
 
@@ -227,8 +242,8 @@
                                     {
                                         var renderElement = wrapper.find('.control-value');
                                         renderElement.addClass('text-center');
-                                        if (renderElement.children('svg').length == 0) {
-                                            renderElement.append(
+                                        if (NewSubtype || renderElement.children('svg').length == 0) {
+                                            renderElement.empty().append(
                                                 '<svg id="control_render_' + control_id + '" width="140" height="140" xmlns="http://www.w3.org/2000/svg">' +
                                                 '<g>' +
                                                 '<path class="stick_click" d="M 2,2 m 0,136 136,0 0,-136 -136,0 z" stroke="#999" fill="none" stroke-width="3"></path>' +
@@ -260,7 +275,7 @@
                                             ratioW = 1;
                                             ratioH = 1;
                                         }
-                                        if (renderElement.children('svg').length == 0) {
+                                        if (NewSubtype || renderElement.children('svg').length == 0) {
                                             var domString =
                                                 '<svg id="control_render_' + control_id + '" width="140" height="140" xmlns="http://www.w3.org/2000/svg">' +
                                                 '<g transform="translate(' + (((1 - ratioW) / 2) * 130) + ',' + (((1 - ratioH) / 2) * 130) + ')">' +
@@ -277,7 +292,7 @@
                                             domString +=
                                                 '</g>' +
                                                 '</svg>';
-                                            renderElement.append(domString);
+                                            renderElement.empty().append(domString);
                                         }
                                         var ctrl = $('#control_render_' + control_id);
                                         for (var i = 0; i < control.Data.Touch.length; i++) {
@@ -318,17 +333,76 @@
                     var knownChildren = {};
                     $controllers.children().each((i, elem) => knownChildren[elem.id] = true);
                     for (const controller_id in data.Controllers) {
+                        var controller = data.Controllers[controller_id];
                         var existing = $controllers.children('#controller_' + controller_id);
                         if (existing.length == 0) {
-                            var wrapper = $('<div class="col-md-6 col-lg-4 pb-4"/>');
+                            var wrapper = $('<div class="controller col-md-6 col-lg-4 pb-4"/>');
                             wrapper.attr('id', 'controller_' + controller_id);
-                            wrapper.append('<div class="card"><div class="card-body"><h5 class="card-title"></h5><p class="card-text" style="white-space:pre;"></p></div><a href="#" class="btn btn-primary btn-lg btn-block activate_controller" role="button" data-id="' + controller_id + '">Activate</a></div>');
+                            var cardWrapper = $('<div class="card" />');
+                            if (data.ControllerImages[controller_id] != null) {
+                                var cardImage = $('<img class="card-img-top controller_image" />');
+                                cardImage.attr("src", "/images/controller/" + data.ControllerImages[controller_id]);
+                                cardImage.attr("alt", controller.Name);
+                                cardWrapper.append(cardImage);
+                            } else {
+                                var cardImage = $('<img class="card-img-top controller_image" />');
+                                cardImage.attr("src", "/images/controller/placeholder.png");
+                                cardImage.attr("alt", controller.Name);
+                                cardWrapper.append(cardImage);
+                            }
+
+                            cardWrapper.append('<div class="card-body"><h5 class="card-title"></h5><p class="card-text" style="white-space:pre;"></p></div>');
+
+                            if (controller.HasSelectableAlternatives) {
+                                var menu = $('<div class="list-group small alternate_controller_list" />');
+                                menu.append('<h6 class="list-group-item">Alternate Controllers</h6>');
+                                for (var alternate in controller.Alternates) {
+                                    var alternate_item = $('<a class="alternate_controller list-group-item list-group-item-action" href="#" />');
+                                    alternate_item.attr('data-id', alternate);
+                                    alternate_item.text(controller.Alternates[alternate]);
+                                    menu.append(alternate_item);
+                                }
+                                var alternateBody = $('<div class="card-body" />');
+                                alternateBody.append(menu);
+                                cardWrapper.append(alternateBody);
+                            }
+
+                            cardWrapper.append('<a href="#" class="btn btn-primary btn-lg btn-block activate_controller" role="button" data-id="' + controller_id + '">Activate</a>');
+                            wrapper.append(cardWrapper);
                         } else {
                             wrapper = existing;
                             delete knownChildren['controller_' + controller_id];
+
+                            var menu = wrapper.find('.alternate_controller_list');
+                            for (var alternate in controller.Alternates) {
+                                if (menu.children('.alternate_controller[data-id="' + alternate + '"]').length == 0) {
+                                    var alternate_item = $('<a class="alternate_controller list-group-item list-group-item-action" href="#" />');
+                                    alternate_item.attr('data-id', alternate);
+                                    alternate_item.text(controller.Alternates[alternate]);
+                                    menu.append(alternate_item);
+                                }
+                            }
+
+                            if (data.ControllerImages[controller_id] != null) {
+                                var cardImage = wrapper.find('.controller_image');
+                                cardImage.attr("src", "/images/controller/" + data.ControllerImages[controller_id]);
+                                cardImage.attr("alt", controller.Name);
+                            } else {
+                                var cardImage = wrapper.find('.controller_image');
+                                cardImage.attr("src", "/images/controller/placeholder.png");
+                                cardImage.attr("alt", controller.Name);
+                            }
                         }
 
-                        var controller = data.Controllers[controller_id];
+                        var knownAlternates = {};
+                        var alternate_controller_list_dom = wrapper.find('.alternate_controller_list');
+                        alternate_controller_list_dom.children('.alternate_controller').each((i, elem) => knownAlternates[$(elem).data('id')] = true);
+                        for (const alternate in knownAlternates) {
+                            if (!controller.Alternates[alternate])
+                                alternate_controller_list_dom.children('.alternate_controller[data-id="' + alternate + '"]').remove();
+                        }
+
+
                         wrapper.find('.card-title').text(controller.Name);
                         if (controller.NameDetails != null) {
                             wrapper.find('.card-text').text(controller.NameDetails.join('\r\n'));

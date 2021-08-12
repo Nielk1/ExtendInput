@@ -12,6 +12,8 @@ using ExtendInput.Controller;
 using System.Threading;
 using ExtendInput.Controls;
 using Newtonsoft.Json.Linq;
+using EmbedIO.Files;
+using System.Web;
 
 namespace ExtendInputControllerTester
 {
@@ -22,7 +24,6 @@ namespace ExtendInputControllerTester
         static SemaphoreSlim ControllersLock = new SemaphoreSlim(1);
         static Dictionary<string, IController> Controllers = new Dictionary<string, IController>();
         static IController activeController = null;
-
         static void Main(string[] args)
         {
             string urlX = "http://localhost:9697/";
@@ -91,10 +92,14 @@ namespace ExtendInputControllerTester
                 .WithLocalSessionManager()
                 //.WithModule(new ActionModule("/", HttpVerbs.Post, SawVideo));
                 //.WithStaticFolder("/", "index.html", true)
+                .WithStaticFolder("/images/controller", "../../images/controller", true)
+                //.WithModule(new FileModule("/images/controller", provider))
                 .WithModule(new ActionModule("/poll_controller", HttpVerbs.Get, PollController))
                 .WithModule(new ActionModule("/poll_other", HttpVerbs.Get, PollOther))
                 .WithModule(new ActionModule("/activate_controller", HttpVerbs.Post, ActivateController))
+                .WithModule(new ActionModule("/alternate_controller", HttpVerbs.Post, AlternateController))
                 .WithModule(new ActionModule("/", HttpVerbs.Get, ctx => ctx.SendStringAsync(File.ReadAllText("../../index.html"), "text/html", Encoding.UTF8)));
+                //.WithStaticFolder("/images/controller/","../images/controller/",true, new FileModule(,)
             //.WithModule(new ActionModule("/", HttpVerbs.Get, DeviceList))
             //.WithModule(new ActionModule("/", HttpVerbs.Get, DeviceList))
             //.WithModule(new WebSocketControllerModule("/terminal/"));
@@ -112,14 +117,19 @@ namespace ExtendInputControllerTester
             {
                 if (activeController == null) return;
                 ControllerState State = activeController.GetState();
-                JObject output = new JObject();
+                JObject controls = new JObject();
                 foreach (string key in State.Controls.Keys)
                 {
                     JObject obj = new JObject();
                     obj["Type"] = State.Controls[key]?.GetType()?.ToString();
                     obj["Data"] = State.Controls[key] != null ? JObject.FromObject(State.Controls[key]) : null;
-                    output[key] = obj;
+                    controls[key] = obj;
                 }
+                JObject output = new JObject()
+                {
+                    ["controls"] = controls,
+                    ["subtype"] = activeController.ControllerTypeCode?.First(),
+                };
                 //await context.SendDataAsync(output);
                 await context.SendStringAsync(output.ToString(Newtonsoft.Json.Formatting.None), "application/json", Encoding.UTF8);
             }
@@ -134,7 +144,44 @@ namespace ExtendInputControllerTester
             await ControllersLock.WaitAsync();
             try
             {
-                await context.SendDataAsync(new { Controllers = Controllers });
+                Dictionary<string, string> ControllerImages = new Dictionary<string, string>();
+                foreach (string ControllerID in Controllers.Keys)
+                {
+                    foreach (string ControllerTypeCode in Controllers[ControllerID].ControllerTypeCode)
+                    {
+                        string FileName = Path.Combine(@"..\..\images\controller", ControllerTypeCode);
+                        if (File.Exists(FileName + ".png")) { ControllerImages[ControllerID] = ControllerTypeCode + ".png"; break; }
+                        if (File.Exists(FileName + ".jpg")) { ControllerImages[ControllerID] = ControllerTypeCode + ".jpg"; break; }
+                        if (File.Exists(FileName + ".jpeg")) { ControllerImages[ControllerID] = ControllerTypeCode + ".jpeg"; break; }
+                    }
+                }
+
+                await context.SendDataAsync(new {
+                    Controllers = Controllers,
+                    ControllerImages = ControllerImages,
+                });
+            }
+            finally
+            {
+                ControllersLock.Release();
+            }
+        }
+
+        private static async Task AlternateController(IHttpContext context)
+        {
+            await ControllersLock.WaitAsync();
+            try
+            {
+                string raw = await context.GetRequestBodyAsStringAsync();
+                var data = HttpUtility.ParseQueryString(raw);
+
+                if (Controllers.ContainsKey(data["controller"]))
+                {
+                    Controllers[data["controller"]].SetActiveAlternateController(data["alternate"]);
+                    await context.SendDataAsync(true);
+                    return;
+                }
+                await context.SendDataAsync(false);
             }
             finally
             {
