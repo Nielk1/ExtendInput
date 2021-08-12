@@ -131,6 +131,8 @@ namespace ExtendInput.Controller
             
             [ControllerSubType(
                 Token: new string[] { "DEVICE_DS4V1", "DEVICE_DS4", "DEVICE_GAMEPAD" },
+                PhysicalWidth: 50,
+                PhysicalHeight: 25,
                 Name: "Sony DUALSHOCK®4 Controller V1",
                 USB_VID: VENDOR_SONY, USB_PID: PRODUCT_SONY_DS4V1,
                 BT_VID: VENDOR_SONY, BT_PID: PRODUCT_SONY_DS4V1)]
@@ -147,8 +149,6 @@ namespace ExtendInput.Controller
             
             [ControllerSubType(
                 Token: new string[] { "DEVICE_DS4V1", "DEVICE_DS4", "DEVICE_GAMEPAD" },
-                PhysicalWidth: 50,
-                PhysicalHeight: 25,
                 Name: "Sony DUALSHOCK®4 Controller V1 (Possible Unoffical)",
                 NoTemperture: true,
                 USB_VID: VENDOR_SONY, USB_PID: PRODUCT_SONY_DS4V1,
