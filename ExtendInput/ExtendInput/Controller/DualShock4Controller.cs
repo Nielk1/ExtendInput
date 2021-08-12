@@ -207,6 +207,7 @@ namespace ExtendInput.Controller
                 IdentitySha256: AUTH_IDENTITY_SHA256_2E2415CA,
                 USB_VID: VENDOR_SONY, USB_PID: PRODUCT_SONY_DS4V1,
                 BT_VID: VENDOR_SONY, BT_PID: PRODUCT_SONY_DS4V2,
+                ExtraButton: true,
                 BT_UseLedBitForRumble: true,
                 BT_BlackLedIgnored: true,
                 USB_FlagsIgnored: true,
@@ -922,7 +923,7 @@ namespace ExtendInput.Controller
                         // counter
                         // bld.Append((reportData[1 + baseOffset + 6] & 0xfc).ToString().PadLeft(3, '0'));
 
-                        if (ConnectionType == EConnectionType.Bluetooth)
+                        /*if (ConnectionType == EConnectionType.Bluetooth)
                         {
                             if (_device.VendorId == VENDOR_SONY && _device.ProductId == PRODUCT_SONY_DS4V2)
                             {
@@ -938,11 +939,27 @@ namespace ExtendInput.Controller
                                     }
                                 }
                             }
+                        }*/
+
+                        if (ControllerAttribute.ExtraButton)
+                        {
+                            if ((StateInFlight.Controls["clear"] as ControlButton) != null)
+                                switch (ConnectionType)
+                                {
+                                    case EConnectionType.Bluetooth:
+                                    case EConnectionType.Dongle:
+                                        QuirkExtraButtonByte6Bit3RingBuffer = (byte)((QuirkExtraButtonByte6Bit3RingBuffer << 1) | ((reportData[1 + baseOffset + 6] & 0x04) == 0x04 ? 1 : 0));
+                                        (StateInFlight.Controls["clear"] as ControlButton).Button0 = (QuirkExtraButtonByte6Bit3RingBuffer & QUIRK_EXTRA_BUTTON_BYTE6_BIT3_BT_OBSCURE_RINGBUFFER_CHECK) == QUIRK_EXTRA_BUTTON_BYTE6_BIT3_BT_OBSCURE_RINGBUFFER_CHECK;
+                                        break;
+                                    case EConnectionType.USB:
+                                        (StateInFlight.Controls["clear"] as ControlButton).Button0 = (reportData[1 + baseOffset + 6] & 0x04) == 0x04;
+                                        break;
+                                }
                         }
 
                         (StateInFlight.Controls["home"] as ControlButton).Button0 = (reportData[1 + baseOffset + 6] & 0x1) == 0x1;
 
-                        if (_device.VendorId == VENDOR_BROOK || _device.ProductId == PRODUCT_BROOK_MARS)
+                        if (ControllerAttribute.PadIsClickOnly)
                         {
                             (StateInFlight.Controls["touch_center"] as ControlButton).Button0 = (reportData[1 + baseOffset + 6] & 0x2) == 0x2;
                         }
@@ -1291,6 +1308,8 @@ namespace ExtendInput.Controller
                 else
                 {
                     State.Controls["touch_center"] = new ControlTouch(TouchCount: 2, HasClick: true);
+                    (State.Controls["touch_center"] as ControlTouch).PhysicalWidth = ControllerAttribute.PadMaxX;
+                    (State.Controls["touch_center"] as ControlTouch).PhysicalHeight = ControllerAttribute.PadMaxY;
                 }
             }
             finally
