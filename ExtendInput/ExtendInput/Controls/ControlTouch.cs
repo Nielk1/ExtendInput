@@ -69,6 +69,8 @@ namespace ExtendInput.Controls
             ControlTouch newData = new ControlTouch(this.TouchCount, this.HasClick);
 
             newData.Click = this.Click;
+            newData.PhysicalWidth = this.PhysicalWidth;
+            newData.PhysicalHeight = this.PhysicalHeight;
 
             for (int i = 0; i < this.TouchCount; i++)
             {

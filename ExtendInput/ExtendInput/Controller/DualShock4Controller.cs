@@ -18,6 +18,8 @@ namespace ExtendInput.Controller
             public string[] Tokens { get; private set; }
             public Int16 PadMaxX { get; private set; }
             public Int16 PadMaxY { get; private set; }
+            public Int16 PhysicalWidth { get; private set; }
+            public Int16 PhysicalHeight { get; private set; }
             public string Name { get; private set; }
             public string IdentitySha256 { get; private set; }
             public int USB_VID { get; private set; }
@@ -40,6 +42,8 @@ namespace ExtendInput.Controller
                 string IdentitySha256 = null,
                 Int16 PadMaxX = -1,
                 Int16 PadMaxY = -1,
+                Int16 PhysicalWidth = -1,
+                Int16 PhysicalHeight = -1,
                 int USB_VID = -1,
                 int USB_PID = -1,
                 int BT_VID = -1,
@@ -57,6 +61,8 @@ namespace ExtendInput.Controller
                 this.Tokens = Token;
                 this.PadMaxX = PadMaxX >= 0 ? PadMaxX : PAD_MAX_X;
                 this.PadMaxY = PadMaxY >= 0 ? PadMaxY : PAD_MAX_Y;
+                this.PhysicalWidth = PhysicalWidth >= 0 ? PhysicalWidth : this.PadMaxX;
+                this.PhysicalHeight = PhysicalHeight >= 0 ? PhysicalHeight : this.PadMaxY;
                 this.Name = Name;
                 this.IdentitySha256 = IdentitySha256;
                 this.USB_VID = USB_VID;
@@ -132,6 +138,8 @@ namespace ExtendInput.Controller
             
             [ControllerSubType(
                 Token: new string[] { "DEVICE_DS4V2", "DEVICE_DS4", "DEVICE_GAMEPAD" },
+                PhysicalWidth: 50,
+                PhysicalHeight: 25,
                 Name: "Sony DUALSHOCK®4 Controller V2",
                 USB_VID: VENDOR_SONY, USB_PID: PRODUCT_SONY_DS4V2,
                 BT_VID: VENDOR_SONY, BT_PID: PRODUCT_SONY_DS4V2)]
@@ -139,6 +147,8 @@ namespace ExtendInput.Controller
             
             [ControllerSubType(
                 Token: new string[] { "DEVICE_DS4V1", "DEVICE_DS4", "DEVICE_GAMEPAD" },
+                PhysicalWidth: 50,
+                PhysicalHeight: 25,
                 Name: "Sony DUALSHOCK®4 Controller V1 (Possible Unoffical)",
                 NoTemperture: true,
                 USB_VID: VENDOR_SONY, USB_PID: PRODUCT_SONY_DS4V1,
@@ -202,6 +212,8 @@ namespace ExtendInput.Controller
                 Token: new string[] { "DEVICE_DS4_8952", "DEVICE_DS4", "DEVICE_GAMEPAD" },
                 PadMaxX: 940,
                 PadMaxY: 940,
+                PhysicalWidth: 23,
+                PhysicalHeight: 40,
                 Name: "Model No. PS4-8952",
                 NoTemperture: true,
                 IdentitySha256: AUTH_IDENTITY_SHA256_2E2415CA,
@@ -966,8 +978,6 @@ namespace ExtendInput.Controller
                         else
                         {
                             (StateInFlight.Controls["touch_center"] as ControlTouch).Click = (reportData[1 + baseOffset + 6] & 0x2) == 0x2;
-                            (StateInFlight.Controls["touch_center"] as ControlTouch).PhysicalWidth = ControllerAttribute.PadMaxX;
-                            (StateInFlight.Controls["touch_center"] as ControlTouch).PhysicalHeight = ControllerAttribute.PadMaxY;
                         }
 
                         (StateInFlight.Controls["triggers"] as ControlTriggerPair).Left.Analog = (float)reportData[1 + baseOffset + 7] / byte.MaxValue;
@@ -1173,6 +1183,8 @@ namespace ExtendInput.Controller
                     else
                     {
                         State.Controls["touch_center"] = new ControlTouch(TouchCount: 2, HasClick: true);
+                        (State.Controls["touch_center"] as ControlTouch).PhysicalWidth = ControllerAttribute.PhysicalWidth;
+                        (State.Controls["touch_center"] as ControlTouch).PhysicalHeight = ControllerAttribute.PhysicalHeight;
                     }
                     // According to this the normalized domain of the DS4 gyro is 1024 units per rad/s: https://gamedev.stackexchange.com/a/87178
                     State.Controls["motion"] = new ControlMotion();
@@ -1308,8 +1320,8 @@ namespace ExtendInput.Controller
                 else
                 {
                     State.Controls["touch_center"] = new ControlTouch(TouchCount: 2, HasClick: true);
-                    (State.Controls["touch_center"] as ControlTouch).PhysicalWidth = ControllerAttribute.PadMaxX;
-                    (State.Controls["touch_center"] as ControlTouch).PhysicalHeight = ControllerAttribute.PadMaxY;
+                    (State.Controls["touch_center"] as ControlTouch).PhysicalWidth = ControllerAttribute.PhysicalWidth;
+                    (State.Controls["touch_center"] as ControlTouch).PhysicalHeight = ControllerAttribute.PhysicalHeight;
                 }
             }
             finally
