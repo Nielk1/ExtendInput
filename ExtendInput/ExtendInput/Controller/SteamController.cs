@@ -208,8 +208,15 @@ namespace ExtendInput.Controller
 
 
         // TODO for now it is safe to assume the startup connection type is correct, however, in the future we will need to have connection events trigger a recheck of the type or something once the V2 controller is out (if ever)
-        public SteamController(HidDevice device, EConnectionType connection = EConnectionType.Unknown, EControllerType type = EControllerType.Unknown)
+        public SteamController(HidDevice device, EConnectionType ConnectionType = EConnectionType.Unknown, EControllerType type = EControllerType.Unknown)
         {
+            this.ConnectionType = ConnectionType;
+            ControllerType = type;
+
+            _device = device;
+
+            _device.DeviceReport += OnReport;
+
             State.Controls["quad_left"] = new ControlDPad(/*4*/);
             State.Controls["quad_right"] = new ControlButtonQuad();
             State.Controls["bumpers"] = new ControlButtonPair();
@@ -220,19 +227,14 @@ namespace ExtendInput.Controller
             State.Controls["stick_left"] = new ControlStick(HasClick: true);
             State.Controls["touch_left"] = new ControlTouch(TouchCount: 1, HasClick: true);
             State.Controls["touch_right"] = new ControlTouch(TouchCount: 1, HasClick: true);
-
             if (type == EControllerType.Chell)
             {
                 State.Controls["grid_center"] = new ControlButtonGrid(2, 2);
             }
-
             State.Controls["motion"] = new ControlMotion();
 
-            _device = device;
-            ConnectionType = connection;
-            ControllerType = type;
 
-            switch (ConnectionType)
+            switch (this.ConnectionType)
             {
                 case EConnectionType.USB:
                     ConnectionTypeCode = new string[] { "CONNECTION_WIRE_USB", "CONNECTION_WIRE" };
@@ -259,11 +261,16 @@ namespace ExtendInput.Controller
             Initalized = 0;
 
             ConnectedTime = DateTime.MinValue;
-
-            _device.DeviceReport += OnReport;
         }
         public void Dispose()
         {
+            if (Initalized > 1)
+            {
+                _device.StopReading();
+
+                Initalized = 0;
+                _device.CloseDevice();
+            }
         }
 
         public void Initalize()
@@ -284,7 +291,7 @@ namespace ExtendInput.Controller
 
             // open the device overlapped read so we don't get stuck waiting for a report when we write to it
             //_device.OpenDevice(DeviceMode.Overlapped, DeviceMode.NonOverlapped, ShareMode.ShareRead | ShareMode.ShareWrite);
-            _device.OpenDevice(DeviceMode.Overlapped, DeviceMode.Overlapped, ShareMode.ShareRead | ShareMode.ShareWrite);
+            //_device.OpenDevice(DeviceMode.Overlapped, DeviceMode.Overlapped, ShareMode.ShareRead | ShareMode.ShareWrite);
 
             //_device.Inserted += DeviceAttachedHandler;
             //_device.Removed += DeviceRemovedHandler;
@@ -655,7 +662,21 @@ namespace ExtendInput.Controller
                                                     //Console.WriteLine($"Error Packet {reportID}\t{BitConverter.ToString(m_rgubBuffer)}");
                                                 }
 
-                                                ProcessStateBytes();
+                                                //ProcessStateBytes();
+                                                ControllerState StateInFlight = ProcessStateBytes();
+
+                                                if (ConState != InternalConState.Connected)
+                                                {
+                                                    ConState = InternalConState.Connected;
+                                                    ControllerMetadataUpdate?.Invoke(this);
+                                                }
+                                                ConnectedTime = DateTime.UtcNow;
+
+                                                // bring OldState in line with new State
+                                                OldState = State;
+                                                State = StateInFlight;
+
+                                                ControllerStateUpdate?.Invoke(this, State);
                                             }
                                             break;
                                         case EBLEPacketReportNums.BLEReportStatus:

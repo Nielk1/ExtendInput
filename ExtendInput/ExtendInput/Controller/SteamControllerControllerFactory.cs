@@ -50,7 +50,7 @@ namespace ExtendInput.Controller
                 }
 
                 SteamController ctrl = new SteamController(_device, ConType, CtrlType);
-                ctrl.HalfInitalize();
+                //ctrl.HalfInitalize();
                 return ctrl;
             }
         }
