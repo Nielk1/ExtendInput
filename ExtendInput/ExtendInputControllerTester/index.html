@@ -119,9 +119,12 @@
                             if (existing.length == 0) {
                                 var wrapper = $('<div class="col-sm-6 col-md-4 pb-4 col-lg-3"/>');
                                 wrapper.attr('id', 'state_' + control_id);
-                                wrapper.append('<div class="card"><div class="pb-3"><h5 class="card-title text-center" data-toggle="tooltip" data-placement="top" title="' + control.Type + '">' + control_id + '</h5><div class="card-text control-value" style="white-space:pre;"></div></div></div>');
+                                wrapper.append('<div class="card"><div class="pb-3"><h5 class="card-title text-center">' + control_id + '</h5><div class="control_type card-title text-center small">' + control.Type + '</div><div class="card-text control-value" style="white-space:pre;"></div></div></div>');
                             } else {
                                 wrapper = existing;
+                                var controlType = wrapper.find('.control_type');
+                                if (controlType.text() != control.Type)
+                                    controlType.text(control.Type);
                                 delete knownChildren['state_' + control_id];
                             }
 
@@ -315,7 +318,6 @@
 
                             if (existing.length == 0) {
                                 $state_data.append(wrapper);
-                                wrapper.find('[data-toggle="tooltip"]').tooltip()
                             }
                         }
                         for (const control_id in knownChildren) {
