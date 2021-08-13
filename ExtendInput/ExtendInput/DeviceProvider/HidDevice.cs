@@ -162,7 +162,7 @@ namespace ExtendInput.DeviceProvider
                         }
                         catch
                         {
-                            reading = false;
+                            //reading = false;
                         }
                     }
                     reading = false;
