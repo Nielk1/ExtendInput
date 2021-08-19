@@ -119,7 +119,7 @@
                             if (existing.length == 0) {
                                 var wrapper = $('<div class="col-sm-6 col-md-4 pb-4 col-lg-3"/>');
                                 wrapper.attr('id', 'state_' + control_id);
-                                wrapper.append('<div class="card"><div class="pb-3"><h5 class="card-title text-center">' + control_id + '</h5><div class="control_type card-title text-center small">' + control.Type + '</div><div class="card-text control-value" style="white-space:pre;"></div></div></div>');
+                                wrapper.append('<div class="card"><div class="pb-3"><h5 class="card-title text-center">' + control_id + '</h5><div class="control_type card-title text-center small" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + control.Type + '</div><div class="card-text control-value" style="white-space:pre;"></div></div></div>');
                             } else {
                                 wrapper = existing;
                                 var controlType = wrapper.find('.control_type');

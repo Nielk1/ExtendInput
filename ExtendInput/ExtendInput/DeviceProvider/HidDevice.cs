@@ -160,9 +160,11 @@ namespace ExtendInput.DeviceProvider
                                 threadSafeEvent?.Invoke(data);
                             }
                         }
-                        catch
+                        catch (System.TimeoutException)
+                        { }
+                        catch (Exception ex) // for example System.IO.IOException: 'Operation failed after some time.'
                         {
-                            //reading = false;
+                            reading = false;
                         }
                     }
                     reading = false;
