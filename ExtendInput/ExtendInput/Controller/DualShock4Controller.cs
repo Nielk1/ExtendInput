@@ -980,8 +980,8 @@ namespace ExtendInput.Controller
                             (StateInFlight.Controls["touch_center"] as ControlTouch).Click = (reportData[1 + baseOffset + 6] & 0x2) == 0x2;
                         }
 
-                        (StateInFlight.Controls["triggers"] as ControlTriggerPair).Left.Analog = (float)reportData[1 + baseOffset + 7] / byte.MaxValue;
-                        (StateInFlight.Controls["triggers"] as ControlTriggerPair).Right.Analog = (float)reportData[1 + baseOffset + 8] / byte.MaxValue;
+                        (StateInFlight.Controls["triggers"] as ControlTriggerPair).Left.Analog  = (float)(reportData[1 + baseOffset + 7] > 0 ? reportData[1 + baseOffset + 7] : (reportData[1 + baseOffset + 5] & 8) == 8 ? 1 : 0) / byte.MaxValue;
+                        (StateInFlight.Controls["triggers"] as ControlTriggerPair).Right.Analog = (float)(reportData[1 + baseOffset + 8] > 0 ? reportData[1 + baseOffset + 8] : (reportData[1 + baseOffset + 5] & 4) == 4 ? 1 : 0) / byte.MaxValue;
 
                         // GyroTimestamp
                         //bld.Append(BitConverter.ToUInt16(reportData, 1 + baseOffset + 9).ToString().PadLeft(5));
