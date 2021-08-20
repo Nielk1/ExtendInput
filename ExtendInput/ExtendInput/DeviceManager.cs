@@ -8,6 +8,12 @@ using System.Diagnostics;
 
 namespace ExtendInput
 {
+    public enum AccesMode
+    {
+        ReadOnly,
+        SafeWriteOnly,
+        FullControl,
+    }
     public class DeviceManager
     {
         List<IDeviceProvider> DeviceProviders;
@@ -16,10 +22,13 @@ namespace ExtendInput
         public event ControllerChangeEventHandler ControllerAdded;
         public event DeviceChangeEventHandler ControllerRemoved;
 
-        public DeviceManager()
+        private AccesMode AccessMode;
+
+        public DeviceManager(AccesMode AccessMode = AccesMode.SafeWriteOnly)
         {
             DeviceProviders = new List<IDeviceProvider>();
             ControllerFactories = new List<IControllerFactory>();
+            this.AccessMode = AccessMode;
 
             foreach (Type item in typeof(IDeviceProvider).GetTypeInfo().Assembly.GetTypes())
             {

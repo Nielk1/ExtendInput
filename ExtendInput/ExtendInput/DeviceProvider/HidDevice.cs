@@ -20,6 +20,9 @@ namespace ExtendInput.DeviceProvider
         private bool IsOpen = false;
         private HidSharp.HidStream stream;
 
+        [Obsolete("Design to get rid of this")]
+        public HidSharp.HidDevice HackDevice { get { return internalDevice; } }
+
         public HidDevice(HidSharp.HidDevice internalDevice)
         {
             Properties = new Dictionary<string, dynamic>();

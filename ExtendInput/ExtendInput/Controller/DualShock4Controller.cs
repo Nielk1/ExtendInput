@@ -573,12 +573,18 @@ namespace ExtendInput.Controller
         public void Dispose()
         {
             // If we're a dongle and are slow-polling, our read thread is still active and must be stopped
-            if (PollingState == EPollingState.SlowPoll)
+            switch (PollingState)
             {
-                _device.StopReading();
+                case EPollingState.Active:
+                case EPollingState.SlowPoll:
+                case EPollingState.RunOnce:
+                    {
+                        _device.StopReading();
 
-                PollingState = EPollingState.Inactive;
-                _device.CloseDevice();
+                        PollingState = EPollingState.Inactive;
+                        _device.CloseDevice();
+                    }
+                    break;
             }
         }
 

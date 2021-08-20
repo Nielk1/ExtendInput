@@ -4,6 +4,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Linq;
+using System.Text;
 using System.Threading;
 
 namespace ExtendInput.Controller
@@ -35,40 +37,54 @@ namespace ExtendInput.Controller
             }
         }
         public string[] ConnectionTypeCode { get; private set; }
-        public string[] ControllerTypeCode { get; private set; }
+        public string[] ControllerTypeCode
+        {
+            get
+            {
+                switch(ConState)
+                {
+                    case InternalConState.Disconnected: return new string[] { "DEVICE_NONE" };
+                }
+
+                switch(ControllerType)
+                {
+                    case EControllerType.Chell: return new string[] { "DEVICE_SC_CHELL", "DEVICE_GAMEPAD" };
+                    case EControllerType.ReleaseV1: return new string[] { "DEVICE_SC", "DEVICE_GAMEPAD" }; ;
+                }
+
+                return new string[] { "DEVICE_UNKNOWN" };
+            }
+        }
         public string Name
         {
             get
             {
+                if (ConnectionType == EConnectionType.Dongle && ConState == InternalConState.Disconnected)
+                    return "Valve Steam Controller Dongle";
+
                 string retVal = "Valve Steam Controller";
                 switch (ControllerType)
                 {
-                    case EControllerType.ReleaseV1: retVal += " 1001"; break;
-                    case EControllerType.ReleaseV2: retVal += " V2"; break;
+                    case EControllerType.ReleaseV1: retVal += " Gordon"; break;
+                    //case EControllerType.ReleaseV2: retVal += " V2"; break;
                     case EControllerType.Chell: retVal += " Chell"; break;
                 }
                 return retVal;
             }
         }
+
         public string[] NameDetails
         {
             get
             {
-                string retVal = string.Empty;
-                if (ConState == InternalConState.Disconnected)
+                if (ConnectionType == EConnectionType.Dongle && ConState == InternalConState.Disconnected)
                 {
-                    retVal += $"<{ConState}>";
+                    return new string[] { $"No Controller" };
                 }
-                else
-                {
-                    retVal += $"<{ConState}>";
-#if Serial
-                retVal += $" [{Serial ?? "No ID"}]";
-#endif
-                }
-                return new string[] { retVal };
+                return new string[] { $"[{SerialNumber ?? "No ID"}]" };
             }
         }
+
         public bool HasSelectableAlternatives => false;
         public Dictionary<string, string> Alternates => null;
 
@@ -192,10 +208,11 @@ namespace ExtendInput.Controller
             ulButtons5 = new byte[3]
         };
 
-        int Initalized;
+        //int Initalized;
 
         public EConnectionType ConnectionType { get; private set; }
         public EControllerType ControllerType { get; private set; }
+        public EPollingState PollingState { get; private set; }
 
         private enum InternalConState
         {
@@ -206,14 +223,24 @@ namespace ExtendInput.Controller
         private InternalConState ConState;
         private DateTime ConnectedTime;
 
+        private string SerialNumber;
+        SemaphoreSlim UpdateLocalDataLock = new SemaphoreSlim(1);
+        SemaphoreSlim SharedDongleLock;
+        bool UpdateLocalDataPoison = false;
+        
+        Thread GetSerialNumberThread;
 
         // TODO for now it is safe to assume the startup connection type is correct, however, in the future we will need to have connection events trigger a recheck of the type or something once the V2 controller is out (if ever)
-        public SteamController(HidDevice device, EConnectionType ConnectionType = EConnectionType.Unknown, EControllerType type = EControllerType.Unknown)
+        public SteamController(HidDevice device, SemaphoreSlim SharedDongleLock, EConnectionType ConnectionType = EConnectionType.Unknown, EControllerType type = EControllerType.Unknown)
         {
+            this.SharedDongleLock = SharedDongleLock;
+
             this.ConnectionType = ConnectionType;
-            ControllerType = type;
+            this.ControllerType = type;
 
             _device = device;
+
+            PollingState = EPollingState.Inactive;
 
             _device.DeviceReport += OnReport;
 
@@ -249,43 +276,103 @@ namespace ExtendInput.Controller
                     ConnectionTypeCode = new string[] { "CONNECTION_UNKNOWN" };
                     break;
             }
-            if (type == EControllerType.Chell)
-            {
-                ControllerTypeCode = new string[] { "DEVICE_SC_CHELL", "DEVICE_GAMEPAD" };
-            }
-            else
-            {
-                ControllerTypeCode = new string[] { "DEVICE_SC", "DEVICE_GAMEPAD" };
-            }
 
-            Initalized = 0;
+            //Initalized = 0;
 
             ConnectedTime = DateTime.MinValue;
+
+            if (this.ConnectionType == EConnectionType.Dongle)
+            {
+                //Initalized = 1;
+                PollingState = EPollingState.SlowPoll;
+                _device.StartReading();
+            }
+            if (string.IsNullOrWhiteSpace(SerialNumber))
+            {
+                StartSnThread();
+            }
         }
+
+        private void StartSnThread(bool start = true)
+        {
+            UpdateLocalDataPoison = true;
+            GetSerialNumberThread?.Abort();
+
+            if (start)
+            {
+                switch (ControllerType)
+                {
+                    case EControllerType.ReleaseV1:
+                        {
+                            Thread.Sleep(1000);
+                            UpdateLocalDataPoison = false;
+
+                            GetSerialNumberThread = new Thread(() =>
+                            {
+                                if (UpdateLocalDataPoison)
+                                    return;
+                                Thread.Sleep(1000);
+                                SharedDongleLock?.Wait();
+                                try
+                                {
+                                    UpdateLocalDataLock.Wait();
+                                    try
+                                    {
+                                        if (!UpdateLocalDataPoison && ConState != InternalConState.Disconnected && string.IsNullOrWhiteSpace(SerialNumber))
+                                        {
+                                            string _SerialNumber;
+                                            if (GetSerialNumber(StringAttribute.Device, out _SerialNumber))
+                                            {
+                                                SerialNumber = _SerialNumber;
+                                                ConState = string.IsNullOrWhiteSpace(SerialNumber) ? InternalConState.Disconnected : InternalConState.Connected;
+                                                ControllerMetadataUpdate?.Invoke(this);
+                                            }
+                                        }
+                                    }
+                                    finally
+                                    {
+                                        UpdateLocalDataLock.Release();
+                                    }
+                                }
+                                finally
+                                {
+                                    SharedDongleLock?.Release();
+                                }
+                            });
+                        }
+                        break;
+                }
+
+                GetSerialNumberThread?.Start();
+            }
+        }
+
         public void Dispose()
         {
-            if (Initalized > 1)
+            switch (PollingState)
             {
-                _device.StopReading();
+                case EPollingState.Active:
+                case EPollingState.SlowPoll:
+                case EPollingState.RunOnce:
+                    {
+                        _device.StopReading();
 
-                Initalized = 0;
-                _device.CloseDevice();
+                        PollingState = EPollingState.Inactive;
+                        _device.CloseDevice();
+                    }
+                    break;
             }
         }
 
         public void Initalize()
         {
-            if (Initalized > 1) return;
+            if (PollingState == EPollingState.Active) return;
 
-            HalfInitalize();
-
-            //_attached = _device.IsConnected;
-
-            Initalized = 2;
+            PollingState = EPollingState.Active;
             _device.StartReading();
         }
 
-        public void HalfInitalize()
+        /*public void HalfInitalize()
         {
             if (Initalized > 0) return;
 
@@ -312,24 +399,28 @@ namespace ExtendInput.Controller
                 } catch { }
             }).Start();
 #endif
-        }
+        }*/
 
         public event ControllerNameUpdateEvent ControllerMetadataUpdate;
         public event ControllerStateUpdateEvent ControllerStateUpdate;
 
         public void DeInitalize()
         {
-            if (Initalized == 0) return;
+            if (PollingState == EPollingState.Inactive) return;
+            if (PollingState == EPollingState.SlowPoll) return;
 
-            //_device.Inserted -= DeviceAttachedHandler;
-            //_device.Removed -= DeviceRemovedHandler;
+            // dongles switch back to slow poll instead of going inactive
+            if (ConnectionType == EConnectionType.Dongle)
+            {
+                PollingState = EPollingState.SlowPoll;
+            }
+            else
+            {
+                _device.StopReading();
 
-            //_device.MonitorDeviceEvents = false;
-
-            _device.StopReading();
-
-            Initalized = 0;
-            _device.CloseDevice();
+                PollingState = EPollingState.Inactive;
+                _device.CloseDevice();
+            }
         }
 
         private object FeatureReportLocalLock = new object();
@@ -409,6 +500,60 @@ namespace ExtendInput.Controller
             //return GetFeatureReport(reportData) != null;
             var result = _device.WriteFeatureData(reportData);
             return result;
+        }
+
+
+        const int FEATURE_READ_TRIES = 50;
+        const int FEATURE_READ_WAIT_MS = 1;
+        enum FeatureReportIDs : byte
+        {
+            GetStringAttribute = 0xAE,
+        }
+        enum StringAttribute : byte
+        {
+            Board = 0x00,
+            Device = 0x01,
+        }
+        private bool GetSerialNumber(StringAttribute Type, out string SerialNumber)
+        {
+            SerialNumber = null;
+
+            byte[] reportData = new byte[65];
+            reportData[1] = (byte)FeatureReportIDs.GetStringAttribute;
+            reportData[2] = 0x15;
+            reportData[3] = (byte)Type;
+
+            bool result = false;
+            for (int i = 0; i < FEATURE_READ_TRIES; i++)
+            {
+                result = _device.WriteFeatureData(reportData);
+                if (result) break;
+                if (i == 9) break;
+                Thread.Sleep(FEATURE_READ_WAIT_MS);
+            }
+            if (!result) return false;
+
+            for (int i = 0; i < 10; i++)
+            {
+                result = _device.ReadFeatureData(out reportData);
+                if (result) break;
+                if (i == 9) break;
+                Thread.Sleep(1000);
+            }
+            if (reportData[1] == (byte)FeatureReportIDs.GetStringAttribute)
+            {
+                if (reportData[3] == (byte)Type)
+                {
+                    int i = 0;
+                    for (; i < reportData[2]; i++)
+                        if (reportData[i + 4] == 0x00)
+                            break;
+                    SerialNumber = Encoding.ASCII.GetString(reportData, 4, i);
+                    //SerialNumber = Encoding.ASCII.GetString(reportData, 4, reportData[2] - 4);
+                }
+                return true;
+            }
+            return false;
         }
 
 #if Serial
@@ -492,7 +637,7 @@ namespace ExtendInput.Controller
 
         private void OnReport(byte[] reportData)
         {
-            if (Initalized < 2) return;
+            if (PollingState == EPollingState.Inactive) return;
 
             int reportID = reportData[0];
 
@@ -668,6 +813,7 @@ namespace ExtendInput.Controller
                                                 if (ConState != InternalConState.Connected)
                                                 {
                                                     ConState = InternalConState.Connected;
+                                                    StartSnThread();
                                                     ControllerMetadataUpdate?.Invoke(this);
                                                 }
                                                 ConnectedTime = DateTime.UtcNow;
@@ -677,6 +823,13 @@ namespace ExtendInput.Controller
                                                 State = StateInFlight;
 
                                                 ControllerStateUpdate?.Invoke(this, State);
+
+                                                if (PollingState == EPollingState.RunOnce)
+                                                {
+                                                    _device.StopReading();
+                                                    PollingState = EPollingState.Inactive;
+                                                    _device.CloseDevice();
+                                                }
                                             }
                                             break;
                                         case EBLEPacketReportNums.BLEReportStatus:
@@ -797,6 +950,7 @@ namespace ExtendInput.Controller
                                             if (ConState != InternalConState.Connected)
                                             {
                                                 ConState = InternalConState.Connected;
+                                                StartSnThread();
                                                 ControllerMetadataUpdate?.Invoke(this);
                                             }
                                             ConnectedTime = DateTime.UtcNow;
@@ -806,6 +960,13 @@ namespace ExtendInput.Controller
                                             State = StateInFlight;
 
                                             ControllerStateUpdate?.Invoke(this, State);
+
+                                            if (PollingState == EPollingState.RunOnce)
+                                            {
+                                                _device.StopReading();
+                                                PollingState = EPollingState.Inactive;
+                                                _device.CloseDevice();
+                                            }
                                         }
                                         break;
 
@@ -821,10 +982,13 @@ namespace ExtendInput.Controller
                                                 case ConnectionState.CONNECT:
                                                     ConState = InternalConState.Connected;
                                                     ConnectedTime = DateTime.UtcNow;
+                                                    StartSnThread();
                                                     ControllerMetadataUpdate?.Invoke(this);
                                                     break;
                                                 case ConnectionState.DISCONNECT:
                                                     ConState = InternalConState.Disconnected;
+                                                    SerialNumber = null;
+                                                    StartSnThread(false);
                                                     ControllerMetadataUpdate?.Invoke(this);
                                                     break;
                                             }
