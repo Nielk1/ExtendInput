@@ -244,20 +244,20 @@ namespace ExtendInput.Controller
 
             _device.DeviceReport += OnReport;
 
-            State.Controls["quad_left"] = new ControlDPad(/*4*/);
+            if (type != EControllerType.Chell)
+                State.Controls["quad_left"] = new ControlDPad(/*4*/);
             State.Controls["quad_right"] = new ControlButtonQuad();
             State.Controls["bumpers"] = new ControlButtonPair();
             State.Controls["triggers"] = new ControlTriggerPair(HasStage2: true);
             State.Controls["menu"] = new ControlButtonPair();
             State.Controls["grip"] = new ControlButtonPair();
             State.Controls["home"] = new ControlButton();
-            State.Controls["stick_left"] = new ControlStick(HasClick: true);
+            if (type != EControllerType.Chell)
+                State.Controls["stick_left"] = new ControlStick(HasClick: true);
             State.Controls["touch_left"] = new ControlTouch(TouchCount: 1, HasClick: true);
             State.Controls["touch_right"] = new ControlTouch(TouchCount: 1, HasClick: true);
             if (type == EControllerType.Chell)
-            {
                 State.Controls["grid_center"] = new ControlButtonGrid(2, 2);
-            }
             State.Controls["motion"] = new ControlMotion();
 
 
@@ -1115,7 +1115,8 @@ namespace ExtendInput.Controller
             }
             //bool LeftAnalogMultiplexMode = (RawState.ulButtons[2] & 128) == 128;
             bool LeftStickClick = (RawState.ulButtons[2] & 64) == 64;
-            (StateInFlight.Controls["stick_left"] as ControlStick).Click = LeftStickClick;
+            if (ControllerType != EControllerType.Chell)
+                (StateInFlight.Controls["stick_left"] as ControlStick).Click = LeftStickClick;
             //bool Unknown = (RawState.ulButtons[2] & 32) == 32; // what is this?
             bool RightPadTouch = (RawState.ulButtons[2] & 16) == 16;
             bool LeftPadTouch = (RawState.ulButtons[2] & 8) == 8;
@@ -1125,9 +1126,11 @@ namespace ExtendInput.Controller
 
             (StateInFlight.Controls["triggers"] as ControlTriggerPair).Left.Analog = (float)RawState.sTriggerL / byte.MaxValue;
             (StateInFlight.Controls["triggers"] as ControlTriggerPair).Right.Analog = (float)RawState.sTriggerR / byte.MaxValue;
-
-            (StateInFlight.Controls["stick_left"] as ControlStick).X = (float)RawState.sLeftStickX / Int16.MaxValue;
-            (StateInFlight.Controls["stick_left"] as ControlStick).Y = (float)-RawState.sLeftStickY / Int16.MaxValue;
+            if (ControllerType != EControllerType.Chell)
+            {
+                (StateInFlight.Controls["stick_left"] as ControlStick).X = (float)RawState.sLeftStickX / Int16.MaxValue;
+                (StateInFlight.Controls["stick_left"] as ControlStick).Y = (float)-RawState.sLeftStickY / Int16.MaxValue;
+            }
             if (RawState.LeftTouchChange)
             {
                 float LeftPadX = LeftPadTouch ? (float)RawState.sLeftPadX / Int16.MaxValue : 0f;
