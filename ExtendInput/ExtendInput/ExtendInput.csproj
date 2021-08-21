@@ -72,6 +72,7 @@
     <Compile Include="Controller\IControllerFactory.cs" />
     <Compile Include="Controller\SixtyBeatGamepadControllerFactory.cs" />
     <Compile Include="Controller\SixtyBeatGamepadController.cs" />
+    <Compile Include="Controller\Wrapper.cs" />
     <Compile Include="Controls\ControlButton.cs" />
     <Compile Include="Controls\ControlButtonGrid.cs" />
     <Compile Include="Controls\ControlButtonPair.cs" />

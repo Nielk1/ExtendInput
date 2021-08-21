@@ -33,7 +33,7 @@ namespace ExtendInput.Controller
                 string devicePath = _device.DevicePath.ToString();
 
                 EConnectionType ConType = EConnectionType.Unknown;
-                SteamController.EControllerType CtrlType = SteamController.EControllerType.ReleaseV1;
+                SteamController.EControllerType CtrlType = SteamController.EControllerType.Gordon;
                 switch (_device.ProductId)
                 {
                     case SteamController.ProductIdBT:
