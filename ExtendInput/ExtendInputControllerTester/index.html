@@ -311,6 +311,39 @@
                                         if (control.Data.HasClick) if (control.Data.Click) ctrl.find('.pad_click').addClass('active-o'); else ctrl.find('.pad_click').removeClass('active-o', 'disable-o'); else ctrl.find('.pad_click').addClass('disable-o');
                                     }
                                     break;
+                                case 'ExtendInput.Controls.ControlButtonGrid':
+                                    {
+                                        var renderElement = wrapper.find('.control-value');
+                                        renderElement.addClass('text-center');
+                                        if (NewSubtype || renderElement.children('svg').length == 0) {
+                                            var domString =
+                                                '<svg id="control_render_' + control_id + '" width="140" height="140" xmlns="http://www.w3.org/2000/svg">' +
+                                                '<g>';
+                                            for (var x = 0; x < control.Data.Button.length; x++) {
+                                                for (var y = 0; y < control.Data.Button[0].length; y++) {
+                                                    var sizeX = 136 / control.Data.Button.length;
+                                                    var sizeY = 136 / control.Data.Button[0].length;
+                                                    domString += '<path class="btn_' + x + '_' + y + '" d="M ' + (1 + sizeX * x) + ',' + (1 + sizeY * y) + ' m 0,' + sizeX + ' ' + sizeY + ',0 0,-' + sizeX + ' -' + sizeY + ',0 z" stroke="#999" fill="none" stroke-width="2"></path>';
+                                                }
+                                            }
+                                            domString +=
+                                                '</g>' +
+                                                '</svg>'
+                                            renderElement.empty().append(domString);
+                                        }
+                                        var ctrl = $('#control_render_' + control_id);
+                                        '<g>';
+                                        for (var x = 0; x < control.Data.Button.length; x++) {
+                                            for (var y = 0; y < control.Data.Button[0].length; y++) {
+                                                if (control.Data.Button[x][y]) ctrl.find('.btn_' + x + '_' + y).addClass('active'); else ctrl.find('.btn_' + x + '_' + y).removeClass('active');
+                                            }
+                                        }
+                                        //var stickFloat = ctrl.find('.stick_float');
+                                        //stickFloat.attr('cx', 70 + control.Data.X * 63);
+                                        //stickFloat.attr('cy', 70 + control.Data.Y * 63);
+                                        //if (control.Data.HasClick) if (control.Data.Click) ctrl.find('.stick_click').addClass('active-o'); else ctrl.find('.stick_click').removeClass('active-o', 'disable-o'); else ctrl.find('.stick_click').addClass('disable-o');
+                                    }
+                                    break;
                                 default:
                                     wrapper.find('.control-value').addClass('text-monospace small').text(JSON.stringify(control.Data, null, 2));
                                     break;
