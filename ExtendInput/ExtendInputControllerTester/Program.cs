@@ -151,12 +151,6 @@ namespace ExtendInputControllerTester
                 {
                     foreach (string ControllerTypeCode in Controllers[ControllerID].ControllerTypeCode)
                     {
-                        /*{
-                            string FileName = Path.Combine(@"..\..\images\controller", ControllerTypeCode);
-                            if (File.Exists(FileName + ".png")) { ControllerImages[ControllerID] = ControllerTypeCode + ".png"; break; }
-                            if (File.Exists(FileName + ".jpg")) { ControllerImages[ControllerID] = ControllerTypeCode + ".jpg"; break; }
-                            if (File.Exists(FileName + ".jpeg")) { ControllerImages[ControllerID] = ControllerTypeCode + ".jpeg"; break; }
-                        }*/
                         if (!ControllerImages.ContainsKey(ControllerTypeCode))
                         {
                             string FileName = Path.Combine(@"..\..\images\controller", ControllerTypeCode);
@@ -164,6 +158,9 @@ namespace ExtendInputControllerTester
                             if (File.Exists(FileName + ".jpg")) { ControllerImages[ControllerTypeCode] = ControllerTypeCode + ".jpg"; break; }
                             if (File.Exists(FileName + ".jpeg")) { ControllerImages[ControllerTypeCode] = ControllerTypeCode + ".jpeg"; break; }
                         }
+                    }
+                    foreach (string ControllerTypeCode in Controllers[ControllerID].ControllerTypeCode)
+                    {
                         if (!IconImages.ContainsKey(ControllerTypeCode))
                         {
                             string FileName = Path.Combine(@"..\..\images\icon", ControllerTypeCode);
