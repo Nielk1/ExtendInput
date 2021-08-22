@@ -1230,7 +1230,7 @@ namespace ExtendInput.Controller
                                 if (!string.IsNullOrWhiteSpace(ControllerData) && Enum.TryParse<DS4SubType>(ControllerData, out ControllerSubTypeRead))
                                     ControllerSubType = ControllerSubTypeRead;
                             }
-                            if (   (ControllerSubType == DS4SubType.UnknownDS4V1)
+                            /*if (   (ControllerSubType == DS4SubType.UnknownDS4V1)
                                 || (ControllerSubType == DS4SubType.UnknownDS4V2))
                             {
                                 IdentityHash = GetControllerAuthIdentityHash();
@@ -1244,9 +1244,17 @@ namespace ExtendInput.Controller
                                 //ControllerAttribute = ControllerSubType.GetAttribute<ControllerSubTypeAttribute>();
                                 //if (ControllerAttribute.AllowMacSave)
                                 //    StoredDataHandler.SetMacData(SerialNumber, ControllerSubType.ToString());
+                            }*/
+                            switch (ControllerSubType)
+                            {
+                                case DS4SubType.Unknown:
+                                case DS4SubType.UnknownDS4V1:
+                                case DS4SubType.UnknownDS4V2:
+                                    IdentityHash = GetControllerAuthIdentityHash();
+                                    ControllerSubType = GetControllerInitialTypeCode((UInt16)_device.VendorId, (UInt16)_device.ProductId, HaveSeenNonZeroRawTemp, IdentityHash);
+                                    break;
                             }
-                            ControllerSubType = GetControllerInitialTypeCode((UInt16)_device.VendorId, (UInt16)_device.ProductId, HaveSeenNonZeroRawTemp, IdentityHash);
-                            ChangeControllerSubType(ControllerSubType);
+                        ChangeControllerSubType(ControllerSubType);
 
                             ControllerMetadataUpdate?.Invoke(this);
                         }
