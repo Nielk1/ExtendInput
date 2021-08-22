@@ -24,13 +24,39 @@
         svg .disable-o {
             stroke: red;
         }
+
+        .controller_icon,
+        .connection_icon {
+            width: auto;
+            height: 32px;
+            padding-right: 5px;
+        }
+
+        #controllers {
+            float: left;
+            width: 400px;
+            height: 100vh;
+            overflow-y: scroll;
+            position: fixed;
+        }
+        #state_data {
+            padding-left: 400px;
+            margin-left: 5px;
+            margin-right: 5px;
+        }
+        .activate_controller::after {
+            content: "Activate";
+        }
+        .controller-active .activate_controller::after {
+            content: "Deactivate";
+        }
     </style>
 
     <title>Hello, world!</title>
 </head>
 <body>
-    <div class="container">
-        <div class="row" id="controllers"></div>
+    <div class="fluid-container">
+        <div class="" id="controllers"></div>
         <div class="row" id="state_data"></div>
     </div>
 
@@ -39,7 +65,7 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
-
+    <script src="https://unpkg.com/masonry-layout@4/dist/masonry.pkgd.min.js"></script>
 
     <script>
         /*const socket = new WebSocket("ws://" + location.host + "/terminal");
@@ -76,6 +102,7 @@
                     if (ControllerPollAjax != null) ControllerPollAjax.abort();
                     ControllerActive = false;
                     $controllers.find('.card.border-primary').removeClass('border-primary');
+                    $('body').removeClass('controller-active');
                 } else {
                     $(evt.target).parent().addClass('border-primary');
                     //$(evt.target).parent().parent().after('<div id="controller_state" class="col-sm-6 col-lg-4 pb-4"/><div class="card"><div class="card-body">TEST</div></div></div>');
@@ -83,6 +110,7 @@
                     $.post("/activate_controller", $(evt.target).data('id'), function (data) {
                         if (data) {
                             ControllerActive = true;
+                            $('body').addClass('controller-active');
                             PollControllerFunc();
                         } else {
                             //$('#controller_state').remove();
@@ -104,6 +132,12 @@
                 return true;
             });
 
+            function DrawButtonSvg(name, x, y) {
+                return '<ellipse class="' + name + '_click" ry="29" rx="29" cy="' + y + '" cx="' + x + '" stroke="#ccc" fill="none" stroke-width="3" />' +
+                    '<ellipse class="" ry="25" rx="25" cy="' + y + '" cx="' + x + '" stroke="#000" fill="#fff" />' +
+                    '<ellipse class="' + name + '_data" ry="0" rx="0" cy="' + y + '" cx="' + x + '" stroke="#000" fill="#333" />';
+            }
+
             function PollControllerFunc() {
                 if (ControllerPollAjax != null) ControllerPollAjax.abort();
                 if (ControllerActive) {
@@ -117,7 +151,8 @@
                             var control = data.controls[control_id];
 
                             if (existing.length == 0) {
-                                var wrapper = $('<div class="col-sm-6 col-md-4 pb-4 col-lg-3"/>');
+                                //var wrapper = $('<div class="col-sm-6 col-md-4 col-lg-3 pb-4"/>');
+                                var wrapper = $('<div class="col-sm-12 col-md-12 col-lg-6 col-xl-4 pb-4"/>');
                                 wrapper.attr('id', 'state_' + control_id);
                                 wrapper.append('<div class="card"><div class="pb-3"><h5 class="card-title text-center">' + control_id + '</h5><div class="control_type card-title text-center small" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + control.Type + '</div><div class="card-text control-value" style="white-space:pre;"></div></div></div>');
                             } else {
@@ -138,9 +173,13 @@
                                                 '<svg id="control_render_' + control_id + '" width="182" height="182" xmlns="http://www.w3.org/2000/svg">' +
                                                 '<g>' +
                                                 '<ellipse class="btn_n" ry="30" rx="30" cy="151" cx="091" stroke="#000" fill="#fff" />' +
+                                                //DrawButtonSvg("btn_n", 091, 151) +
                                                 '<ellipse class="btn_e" ry="30" rx="30" cy="091" cx="151" stroke="#000" fill="#fff" />' +
+                                                //DrawButtonSvg("btn_n", 151, 091) +
                                                 '<ellipse class="btn_s" ry="30" rx="30" cy="031" cx="091" stroke="#000" fill="#fff" />' +
+                                                //DrawButtonSvg("btn_n", 091, 031) +
                                                 '<ellipse class="btn_w" ry="30" rx="30" cy="091" cx="031" stroke="#000" fill="#fff" />' +
+                                                //DrawButtonSvg("btn_n", 031, 091) +
                                                 '</g>' +
                                                 '</svg>');
                                         }
@@ -223,13 +262,15 @@
                                                 '<svg id="control_render_' + control_id + '" width="182" height="62" xmlns="http://www.w3.org/2000/svg">' +
                                                 '<g>' +
 
-                                                '<ellipse class="btn_r_click" ry="29" rx="29" cy="31" cx="151" stroke="#ccc" fill="none" stroke-width="3" />' +
-                                                '<ellipse class="" ry="25" rx="25" cy="31" cx="151" stroke="#000" fill="#fff" />' +
-                                                '<ellipse class="btn_r_data" ry="0" rx="0" cy="31" cx="151" stroke="#000" fill="#333" />' +
+                                                //'<ellipse class="btn_r_click" ry="29" rx="29" cy="31" cx="151" stroke="#ccc" fill="none" stroke-width="3" />' +
+                                                //'<ellipse class="" ry="25" rx="25" cy="31" cx="151" stroke="#000" fill="#fff" />' +
+                                                //'<ellipse class="btn_r_data" ry="0" rx="0" cy="31" cx="151" stroke="#000" fill="#333" />' +
+                                                DrawButtonSvg("btn_r", 151, 31) +
 
-                                                '<ellipse class="btn_l_click" ry="29" rx="29" cy="31" cx="031" stroke="#ccc" fill="none" stroke-width="3" />' +
-                                                '<ellipse class="" ry="25" rx="25" cy="31" cx="031" stroke="#000" fill="#fff" />' +
-                                                '<ellipse class="btn_l_data" ry="0" rx="0" cy="31" cx="031" stroke="#000" fill="#333" />' +
+                                                //'<ellipse class="btn_l_click" ry="29" rx="29" cy="31" cx="031" stroke="#ccc" fill="none" stroke-width="3" />' +
+                                                //'<ellipse class="" ry="25" rx="25" cy="31" cx="031" stroke="#000" fill="#fff" />' +
+                                                //'<ellipse class="btn_l_data" ry="0" rx="0" cy="31" cx="031" stroke="#000" fill="#333" />' +
+                                                DrawButtonSvg("btn_l", 31, 31) +
 
                                                 '</g>' +
                                                 '</svg>');
@@ -369,24 +410,68 @@
                     $controllers.children().each((i, elem) => knownChildren[elem.id] = true);
                     for (const controller_id in data.Controllers) {
                         var controller = data.Controllers[controller_id];
+
+                        var ConnectionIcon = null;
+                        for (var idx in controller.ConnectionTypeCode) {
+                            var code = controller.ConnectionTypeCode[idx];
+                            if (data.IconImages[code] != null) {
+                                ConnectionIcon = data.IconImages[code];
+                                break;
+                            }
+                        }
+
+                        var ControllerIcon = null;
+                        var ControllerImage = null;
+                        for (var idx in controller.ControllerTypeCode) {
+                            var code = controller.ControllerTypeCode[idx];
+                            if (ControllerIcon == null && data.IconImages[code] != null) {
+                                ControllerIcon = data.IconImages[code];
+                            }
+                            if (ControllerImage == null && data.ControllerImages[code] != null) {
+                                ControllerImage = data.ControllerImages[code];
+                            }
+                            if (ControllerIcon != null && ControllerImage != null)
+                                break;
+                        }
+
                         var existing = $controllers.children('#controller_' + controller_id);
                         if (existing.length == 0) {
-                            var wrapper = $('<div class="controller col-md-6 col-lg-4 pb-4"/>');
+                            //var wrapper = $('<div class="controller col-md-6 col-lg-4 pb-4"/>');
+                            var wrapper = $('<div class="controller col-12 pb-4"/>');
                             wrapper.attr('id', 'controller_' + controller_id);
                             var cardWrapper = $('<div class="card" />');
-                            if (data.ControllerImages[controller_id] != null) {
-                                var cardImage = $('<img class="card-img-top controller_image" />');
-                                cardImage.attr("src", "/images/controller/" + data.ControllerImages[controller_id]);
+                            if (ControllerImage != null) {
+                                var cardImage = $('<img class="controller_image" />');
+                                cardImage.attr("src", "/images/controller/" + ControllerImage);
                                 cardImage.attr("alt", controller.Name);
                                 cardWrapper.append(cardImage);
                             } else {
-                                var cardImage = $('<img class="card-img-top controller_image" />');
+                                var cardImage = $('<img class="controller_image" />');
                                 cardImage.attr("src", "/images/controller/placeholder.png");
                                 cardImage.attr("alt", controller.Name);
                                 cardWrapper.append(cardImage);
                             }
 
-                            cardWrapper.append('<div class="card-body"><h5 class="card-title"></h5><p class="card-text" style="white-space:pre;"></p></div>');
+                            cardWrapper.append('<div class="card-body"><h5 class="card-title"><img class="connection_icon" /><img class="controller_icon" /><span class="controller_name"></span></h5><p class="card-text" style="white-space:pre;"></p></div>');
+
+                            if (ControllerIcon != null) {
+                                var cardImage = cardWrapper.find('.controller_icon');
+                                cardImage.attr("src", "/images/icons/" + ControllerIcon);
+                                cardImage.attr("alt", controller.Name);
+                            } else {
+                                var cardImage = cardWrapper.find('.controller_icon');
+                                cardImage.attr("src", "/images/icons/DEVICE_UNKNOWN.png");
+                                cardImage.attr("alt", controller.Name);
+                            }
+                            if (ConnectionIcon != null) {
+                                var cardImage = cardWrapper.find('.connection_icon');
+                                cardImage.attr("src", "/images/icons/" + ConnectionIcon);
+                                cardImage.attr("alt", controller.Name);
+                            } else {
+                                var cardImage = cardWrapper.find('.connection_icon');
+                                cardImage.attr("src", "/images/icons/DEVICE_UNKNOWN.png");
+                                cardImage.attr("alt", controller.Name);
+                            }
 
                             if (controller.HasSelectableAlternatives) {
                                 var menu = $('<div class="list-group small alternate_controller_list" />');
@@ -402,7 +487,7 @@
                                 cardWrapper.append(alternateBody);
                             }
 
-                            cardWrapper.append('<a href="#" class="btn btn-primary btn-lg btn-block activate_controller" role="button" data-id="' + controller_id + '">Activate</a>');
+                            cardWrapper.append('<a href="#" class="btn btn-primary btn-lg btn-block activate_controller" role="button" data-id="' + controller_id + '"></a>');
                             wrapper.append(cardWrapper);
                         } else {
                             wrapper = existing;
@@ -418,13 +503,32 @@
                                 }
                             }
 
-                            if (data.ControllerImages[controller_id] != null) {
+                            if (ControllerImage != null) {
                                 var cardImage = wrapper.find('.controller_image');
-                                cardImage.attr("src", "/images/controller/" + data.ControllerImages[controller_id]);
+                                cardImage.attr("src", "/images/controller/" + ControllerImage);
                                 cardImage.attr("alt", controller.Name);
                             } else {
                                 var cardImage = wrapper.find('.controller_image');
                                 cardImage.attr("src", "/images/controller/placeholder.png");
+                                cardImage.attr("alt", controller.Name);
+                            }
+
+                            if (ControllerIcon != null) {
+                                var cardImage = wrapper.find('.controller_icon');
+                                cardImage.attr("src", "/images/icon/" + ControllerIcon);
+                                cardImage.attr("alt", controller.Name);
+                            } else {
+                                var cardImage = wrapper.find('.controller_icon');
+                                cardImage.attr("src", "/images/icon/DEVICE_UNKNOWN.png");
+                                cardImage.attr("alt", controller.Name);
+                            }
+                            if (ConnectionIcon != null) {
+                                var cardImage = wrapper.find('.connection_icon');
+                                cardImage.attr("src", "/images/icon/" + ConnectionIcon);
+                                cardImage.attr("alt", controller.Name);
+                            } else {
+                                var cardImage = wrapper.find('.connection_icon');
+                                cardImage.attr("src", "/images/icon/DEVICE_UNKNOWN.png");
                                 cardImage.attr("alt", controller.Name);
                             }
                         }
@@ -438,7 +542,7 @@
                         }
 
 
-                        wrapper.find('.card-title').text(controller.Name);
+                        wrapper.find('.controller_name').text(controller.Name);
                         if (controller.NameDetails != null) {
                             wrapper.find('.card-text').text(controller.NameDetails.join('\r\n'));
                         } else {

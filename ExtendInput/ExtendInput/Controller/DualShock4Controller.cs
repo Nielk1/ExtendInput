@@ -822,7 +822,7 @@ namespace ExtendInput.Controller
                 try
                 {
                     // get MAC of controller via Dongle
-                    bool success = _device.ReadFeatureData(out FeatureBuffer, 0x12);
+                    bool success = _device.ReadFeatureData(out FeatureBuffer, ConnectionType == EConnectionType.Bluetooth ? (byte)0x09 : (byte)0x12);
                     if (success)
                     {
                         Serial = string.Join(":", FeatureBuffer.Skip(1).Take(6).Reverse().Select(dr => $"{dr:X2}").ToArray());

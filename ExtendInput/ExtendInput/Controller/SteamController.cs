@@ -3,7 +3,6 @@ using ExtendInput.DeviceProvider;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -298,28 +297,31 @@ namespace ExtendInput.Controller
             }
             if (string.IsNullOrWhiteSpace(SerialNumber))
             {
-                StartSnThread();
+                StartSerialNumberCheck();
             }
         }
 
-        private void StartSnThread(bool start = true)
+        private void StartSerialNumberCheck(bool ControllerAdd = true)
         {
             // if poison exists, switch it to true
             if (UpdateLocalDataPoison != null) UpdateLocalDataPoison.Value = true;
 
-            if (start)
+            if (ControllerAdd)
             {
                 switch (ControllerType)
                 {
                     case EControllerType.Gordon:
                         {
-                            Thread.Sleep(1000); // always wait to give time for Steam to do its thing first
                             UpdateLocalDataPoison = new Wrapper<bool>(false);
                             GetSerialNumberThread = new Thread(GetSerialThread);
                             GetSerialNumberThread.Start(UpdateLocalDataPoison);
                         }
                         break;
                 }
+            }
+            else
+            {
+                SerialNumber = null;
             }
         }
 
@@ -517,9 +519,11 @@ namespace ExtendInput.Controller
         }
 
 
-        const int FEATURE_READ_TRIES = 60;//50;
-        const int FEATURE_WRITE_WAIT_MS = 100;//1;
-        const int FEATURE_READ_WAIT_MS = 100;//1;
+        const int DONGLE_FEATURE_WRITE_TRIES = 60;//50;
+        const int DONGLE_FEATURE_WRITE_WAIT_MS = 100;//1;
+        const int BLE_FEATURE_READ_WAIT_MS = 100;//1;
+        const int BLE_FEATURE_READ_TRIES = 8;
+        const byte BLE_REPORT_NUMBER = 0x03;
         enum FeatureReportIDs : byte
         {
             GetStringAttribute = 0xAE,
@@ -539,22 +543,30 @@ namespace ExtendInput.Controller
             reportData[3] = (byte)Type;
 
             bool result = false;
-            for (int i = 0; i < FEATURE_READ_TRIES; i++)
+            /*for (int i = 1; i <= WIRELESS_FEATURE_READ_TRIES; i++)
             {
+                if (i == WIRELESS_FEATURE_READ_TRIES) break;
                 result = _device.WriteFeatureData(reportData);
                 if (result) break;
+                //if (ConnectionType == EConnectionType.USB) break;
                 if (i == 9) break;
-                Thread.Sleep(FEATURE_WRITE_WAIT_MS);
-            }
+                Thread.Sleep(WIRELESS_FEATURE_WRITE_WAIT_MS);
+            }*/
+            result = WriteFeatureReport(reportData, 4);
             if (!result) return false;
 
-            for (int i = 0; i < 10; i++)
+            reportData = new byte[65];
+            result = ReadFeatureReport(out reportData);
+            /*for (int i = 1; i <= WIRELESS_FEATURE_WRITE_TRIES; i++)
             {
+                if (i == WIRELESS_FEATURE_WRITE_TRIES) break;
                 result = _device.ReadFeatureData(out reportData);
                 if (result) break;
-                if (i == 9) break;
-                Thread.Sleep(FEATURE_READ_WAIT_MS);
-            }
+                //if (ConnectionType == EConnectionType.USB) break;
+                Thread.Sleep(WIRELESS_FEATURE_READ_WAIT_MS);
+            }*/
+            if (!result) return false;
+
             if (reportData[1] == (byte)FeatureReportIDs.GetStringAttribute)
             {
                 if (reportData[3] == (byte)Type)
@@ -571,69 +583,149 @@ namespace ExtendInput.Controller
             return false;
         }
 
-#if Serial
-        public bool UpdateSerial()
+        const int MAX_REPORT_SEGMENT_PAYLOAD_SIZE = 18;
+        const int MAX_REPORT_SEGMENT_SIZE = (MAX_REPORT_SEGMENT_PAYLOAD_SIZE + 2);
+        const byte REPORT_SEGMENT_DATA_FLAG = 0x80;
+        const byte REPORT_SEGMENT_LAST_FLAG = 0x40;
+        private byte GetSegmentHeader(byte nSegmentNumber, bool bLastPacket)
         {
-            // Avoiding trying to talk to the controller if it hasn't been around for 10 seconds.
-            // This will allow steam time to talk to the controller as otherwise we steal Steam's feature requests.
-            if (ConnectedTime.AddSeconds(10) > DateTime.UtcNow)
-                return false;
+            byte header = REPORT_SEGMENT_DATA_FLAG;
+            header |= nSegmentNumber;
+            if (bLastPacket)
+                header |= REPORT_SEGMENT_LAST_FLAG;
 
-            byte[] reportData = new byte[65];
-            reportData[1] = 0xAE; // 0xAE = get serial
-            reportData[2] = 0x15; // 0x15 = length of data to be written
-            reportData[3] = 0x01;
-
-            //Thread.Sleep(1000); // why do we need this? race condition?
-            //var result = _device.WriteFeatureData(reportData);
-            //if (!result) return false;
-            //Thread.Sleep(1000); // why do we need this? race condition?
-            var reply = GetFeatureReport(reportData);
-
-            //byte[] reply;
-            //bool success = _device.ReadFeatureData(out reply, 0);
-
-            if (reply == null || reply[1] != 0xae || reply[4] == 0)
-            {
-                Serial = null;
-                ControllerNameUpdated?.Invoke();
-                return false;
-            }
-            //Serial = System.Text.Encoding.UTF8.GetString(reply.Skip(4).Take(10).ToArray());
-            string NewSerial = System.Text.Encoding.UTF8.GetString(reply.Skip(4).Take(reply[4]).ToArray());
-            NewSerial = NewSerial.Split('\0')[0];
-            if (NewSerial.Length > 0) Serial = NewSerial;
-            ControllerNameUpdated?.Invoke();
-            return true;
+            return header;
         }
-        private void ClearSerial()
+        private bool WriteFeatureReport(byte[] Buffer, int Length)
         {
-            if (Serial != null)
+            switch (ConnectionType)
             {
-                Serial = null;
-                ControllerNameUpdated?.Invoke();
-            }
-        }
+                case EConnectionType.Bluetooth:
+                    {
+                        byte nSegmentNumber = 0;
+                        byte[] uPacketBuffer = new byte[MAX_REPORT_SEGMENT_SIZE];
 
-        private void UpdateMetadata()
-        {
-            //if (ConnectionType == EConnectionType.Bluetooth) return; // not sure how to do this on BT, might be normal?
-            //if (ControllerType == EControllerType.Chell) return; // does Chell support this?
+                        // Skip report number in data
+                        int ReadOffset = 1;
+                        Length--;
 
-            switch (ConState)
-            {
-                case InternalConState.Unknown:
-                case InternalConState.Connected:
-                    if (Serial == null)
-                        UpdateSerial();
+                        bool retVal = false;
+
+                        while (Length > 0)
+                        {
+                            int nBytesInPacket = Length > MAX_REPORT_SEGMENT_PAYLOAD_SIZE ? MAX_REPORT_SEGMENT_PAYLOAD_SIZE : Length;
+
+                            Length -= nBytesInPacket;
+
+                            // Construct packet
+                            uPacketBuffer[0] = BLE_REPORT_NUMBER;
+                            uPacketBuffer[1] = GetSegmentHeader(nSegmentNumber, Length == 0);
+                            Array.Copy(Buffer, ReadOffset, uPacketBuffer, 2, nBytesInPacket);
+
+                            ReadOffset += nBytesInPacket;
+                            nSegmentNumber++;
+
+                            retVal = _device.WriteFeatureData(uPacketBuffer);
+                        }
+                        return retVal;
+                    }
                     break;
-                case InternalConState.Disconnected:
-                    ClearSerial();
+                case EConnectionType.Dongle:
+                    {
+                        bool retVal = false;
+                        for (int i = 1; i <= DONGLE_FEATURE_WRITE_TRIES; i++)
+                        {
+                            if (i == DONGLE_FEATURE_WRITE_TRIES) break;
+                            retVal = _device.WriteFeatureData(Buffer);
+                            if (retVal) break;
+                            Thread.Sleep(DONGLE_FEATURE_WRITE_WAIT_MS);
+                        }
+                        return retVal;
+                    }
                     break;
             }
-
+            return _device.WriteFeatureData(Buffer);
         }
-#endif
+
+        private bool ReadFeatureReport(out byte[] Buffer)
+        {
+            if (ConnectionType == EConnectionType.Bluetooth)
+            {
+                bool Success = false;
+
+                byte[] AssembledBuffer = new byte[MAX_REPORT_SEGMENT_PAYLOAD_SIZE * 8 + 1];
+                int m_unCurrentMsgIndex = 0;
+                byte NextSegmentId = 0;
+
+                int RetryCounter = 0;
+                //byte[] uSegmentBuffer = new byte[MAX_REPORT_SEGMENT_SIZE];
+                byte[] ReportBuffer = new byte[65]; // need 65 or windows fails to read it because it tries the wrong size
+                while (RetryCounter < BLE_FEATURE_READ_TRIES)
+                {
+                    //uSegmentBuffer[0] = BLE_REPORT_NUMBER;
+                    Success = _device.ReadFeatureDataCustom(ref ReportBuffer, BLE_REPORT_NUMBER);
+
+                    // all offsets +1 due to strange double-ID thing going on
+                    ReportBuffer = ReportBuffer.Skip(1).ToArray();
+
+                    if (!Success)
+                    {
+                        RetryCounter++;
+                        Thread.Sleep(BLE_FEATURE_READ_WAIT_MS);
+                        continue;
+                    }
+
+                    byte ucHeader = ReportBuffer[1 + 0];
+                    if ((ucHeader & k_nSegmentHasDataFlag) != k_nSegmentHasDataFlag)
+                    {
+                        Buffer = null;
+                        return false; // steam itself actually asserts in this case
+                    }
+
+                    if (!IsSegmentNumberValid(ucHeader, NextSegmentId))
+                    {
+                        Buffer = null;
+                        return false; // steam itself actually asserts in this case
+                    }
+
+                    if (ReportBuffer[0] != BLE_REPORT_NUMBER)
+                        continue; // this report isn't for us
+
+                    if ((ReportBuffer[1] & REPORT_SEGMENT_DATA_FLAG) == 0)
+                    {
+                        RetryCounter++;
+                        continue;
+                    }
+
+                    RetryCounter = 0; // reset retry counter as we got a segment
+
+                    // TODO nLength may be wrong due to the double reportID inclusion
+                    // TODO unlike normal report, final segment appears to have no data, confirm this and if true don't process data of last packet
+                    {
+                        int nLength = k_nMaxSegmentSize - 1;
+                        Array.Copy(ReportBuffer, 1 + 1, AssembledBuffer, m_unCurrentMsgIndex, nLength);
+                        m_unCurrentMsgIndex += nLength;
+                        ++NextSegmentId;
+                    }
+
+                    // TODO check if 65 is the max buffer size or if BLE's segemented packets are taken advantage of to send more than 64 bytes of data
+                    if ((ucHeader & k_nLastSegmentFlag) == k_nLastSegmentFlag)
+                    {
+                        // Last packet
+                        Buffer = new byte[65];
+                        Buffer[0] = BLE_REPORT_NUMBER;
+                        Array.Copy(AssembledBuffer, 0, Buffer, 1, Math.Min(64, AssembledBuffer.Length));
+                        return true;
+                    }
+                }
+                Buffer = null;
+                return false;
+            }
+
+            Buffer = new byte[65];
+            return _device.ReadFeatureDataCustom(ref Buffer);
+        }
+
 
         public bool CheckSensorDataStuck()
         {
@@ -675,6 +767,9 @@ namespace ExtendInput.Controller
                         // report ID here is 3, do check what it is for the other connection types
                         case EConnectionType.Bluetooth:
                             {
+                                if (reportData[0] != BLE_REPORT_NUMBER)
+                                    return; // this report isn't for us
+
                                 //Console.WriteLine($"Unknown Packet {reportData.Length}\t{BitConverter.ToString(reportData)}");
 
                                 byte ucHeader = reportData[1 + 0];
@@ -828,7 +923,7 @@ namespace ExtendInput.Controller
                                                 if (ConState != InternalConState.Connected)
                                                 {
                                                     ConState = InternalConState.Connected;
-                                                    StartSnThread();
+                                                    StartSerialNumberCheck();
                                                     ControllerMetadataUpdate?.Invoke(this);
                                                 }
                                                 ConnectedTime = DateTime.UtcNow;
@@ -965,7 +1060,7 @@ namespace ExtendInput.Controller
                                             if (ConState != InternalConState.Connected)
                                             {
                                                 ConState = InternalConState.Connected;
-                                                StartSnThread();
+                                                StartSerialNumberCheck();
                                                 ControllerMetadataUpdate?.Invoke(this);
                                             }
                                             ConnectedTime = DateTime.UtcNow;
@@ -997,13 +1092,12 @@ namespace ExtendInput.Controller
                                                 case ConnectionState.CONNECT:
                                                     ConState = InternalConState.Connected;
                                                     ConnectedTime = DateTime.UtcNow;
-                                                    StartSnThread();
+                                                    StartSerialNumberCheck();
                                                     ControllerMetadataUpdate?.Invoke(this);
                                                     break;
                                                 case ConnectionState.DISCONNECT:
                                                     ConState = InternalConState.Disconnected;
-                                                    SerialNumber = null;
-                                                    StartSnThread(false);
+                                                    StartSerialNumberCheck(false);
                                                     ControllerMetadataUpdate?.Invoke(this);
                                                     break;
                                             }
@@ -1073,6 +1167,10 @@ namespace ExtendInput.Controller
         }
 
         private bool IsSegmentNumberValid(byte ucHeader)
+        {
+            return ((ucHeader & k_nSegmentNumberMask) == m_unNextSegmentNumber);
+        }
+        private bool IsSegmentNumberValid(byte ucHeader, byte m_unNextSegmentNumber)
         {
             return ((ucHeader & k_nSegmentNumberMask) == m_unNextSegmentNumber);
         }

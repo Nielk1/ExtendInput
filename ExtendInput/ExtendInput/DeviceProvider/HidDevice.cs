@@ -73,7 +73,22 @@ namespace ExtendInput.DeviceProvider
             try
             {
                 data[0] = reportId;
-                byte[] buffer = new byte[data.Length];
+                //byte[] buffer = new byte[data.Length];
+                GetStream().GetFeature(data);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public bool ReadFeatureDataCustom(ref byte[] data, byte reportId = 0)
+        {
+            try
+            {
+                data[0] = reportId;
+                //byte[] buffer = new byte[data.Length];
                 GetStream().GetFeature(data);
                 return true;
             }

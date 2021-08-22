@@ -93,6 +93,7 @@ namespace ExtendInputControllerTester
                 //.WithModule(new ActionModule("/", HttpVerbs.Post, SawVideo));
                 //.WithStaticFolder("/", "index.html", true)
                 .WithStaticFolder("/images/controller", "../../images/controller", true)
+                .WithStaticFolder("/images/icon", "../../images/icon", true)
                 //.WithModule(new FileModule("/images/controller", provider))
                 .WithModule(new ActionModule("/poll_controller", HttpVerbs.Get, PollController))
                 .WithModule(new ActionModule("/poll_other", HttpVerbs.Get, PollOther))
@@ -145,20 +146,48 @@ namespace ExtendInputControllerTester
             try
             {
                 Dictionary<string, string> ControllerImages = new Dictionary<string, string>();
+                Dictionary<string, string> IconImages = new Dictionary<string, string>();
                 foreach (string ControllerID in Controllers.Keys)
                 {
                     foreach (string ControllerTypeCode in Controllers[ControllerID].ControllerTypeCode)
                     {
-                        string FileName = Path.Combine(@"..\..\images\controller", ControllerTypeCode);
-                        if (File.Exists(FileName + ".png")) { ControllerImages[ControllerID] = ControllerTypeCode + ".png"; break; }
-                        if (File.Exists(FileName + ".jpg")) { ControllerImages[ControllerID] = ControllerTypeCode + ".jpg"; break; }
-                        if (File.Exists(FileName + ".jpeg")) { ControllerImages[ControllerID] = ControllerTypeCode + ".jpeg"; break; }
+                        /*{
+                            string FileName = Path.Combine(@"..\..\images\controller", ControllerTypeCode);
+                            if (File.Exists(FileName + ".png")) { ControllerImages[ControllerID] = ControllerTypeCode + ".png"; break; }
+                            if (File.Exists(FileName + ".jpg")) { ControllerImages[ControllerID] = ControllerTypeCode + ".jpg"; break; }
+                            if (File.Exists(FileName + ".jpeg")) { ControllerImages[ControllerID] = ControllerTypeCode + ".jpeg"; break; }
+                        }*/
+                        if (!ControllerImages.ContainsKey(ControllerTypeCode))
+                        {
+                            string FileName = Path.Combine(@"..\..\images\controller", ControllerTypeCode);
+                            if (File.Exists(FileName + ".png")) { ControllerImages[ControllerTypeCode] = ControllerTypeCode + ".png"; break; }
+                            if (File.Exists(FileName + ".jpg")) { ControllerImages[ControllerTypeCode] = ControllerTypeCode + ".jpg"; break; }
+                            if (File.Exists(FileName + ".jpeg")) { ControllerImages[ControllerTypeCode] = ControllerTypeCode + ".jpeg"; break; }
+                        }
+                        if (!IconImages.ContainsKey(ControllerTypeCode))
+                        {
+                            string FileName = Path.Combine(@"..\..\images\icon", ControllerTypeCode);
+                            if (File.Exists(FileName + ".png")) { IconImages[ControllerTypeCode] = ControllerTypeCode + ".png"; break; }
+                            if (File.Exists(FileName + ".jpg")) { IconImages[ControllerTypeCode] = ControllerTypeCode + ".jpg"; break; }
+                            if (File.Exists(FileName + ".jpeg")) { IconImages[ControllerTypeCode] = ControllerTypeCode + ".jpeg"; break; }
+                        }
+                    }
+                    foreach (string ConnectionTypeCode in Controllers[ControllerID].ConnectionTypeCode)
+                    {
+                        if (!IconImages.ContainsKey(ConnectionTypeCode))
+                        {
+                            string FileName = Path.Combine(@"..\..\images\icon", ConnectionTypeCode);
+                            if (File.Exists(FileName + ".png")) { IconImages[ConnectionTypeCode] = ConnectionTypeCode + ".png"; break; }
+                            if (File.Exists(FileName + ".jpg")) { IconImages[ConnectionTypeCode] = ConnectionTypeCode + ".jpg"; break; }
+                            if (File.Exists(FileName + ".jpeg")) { IconImages[ConnectionTypeCode] = ConnectionTypeCode + ".jpeg"; break; }
+                        }
                     }
                 }
 
                 await context.SendDataAsync(new {
                     Controllers = Controllers,
                     ControllerImages = ControllerImages,
+                    IconImages = IconImages,
                 });
             }
             finally
