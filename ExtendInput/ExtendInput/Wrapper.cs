@@ -1,4 +1,4 @@
-﻿namespace ExtendInput.Controller
+﻿namespace ExtendInput
 {
     internal class Wrapper<T>
     {
