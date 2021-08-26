@@ -51,6 +51,7 @@ namespace ExtendInput.Controller
 
 
         public bool HasMotion => false;
+        public bool IsPresent => true;
 
         int Initalized;
         public XInputController(XInputDevice device)

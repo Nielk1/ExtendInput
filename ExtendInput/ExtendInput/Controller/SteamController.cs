@@ -97,6 +97,19 @@ namespace ExtendInput.Controller
         public Dictionary<string, string> Alternates => null;
 
         public bool HasMotion => true;
+        public bool IsPresent
+        {
+            get
+            {
+                switch (ConnectionType)
+                {
+                    case EConnectionType.USB: return true;
+                    case EConnectionType.Bluetooth: return true;
+                    case EConnectionType.Dongle: return ConState != InternalConState.Disconnected;
+                    default: return false;
+                }
+            }
+        }
 
         public bool SensorsEnabled;
         private HidDevice _device;

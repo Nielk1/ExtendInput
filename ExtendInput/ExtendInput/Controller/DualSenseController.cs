@@ -50,6 +50,8 @@ namespace ExtendInput.Controller
 
         public bool HasMotion => true;
 
+        public bool IsPresent => true;
+
         public ControllerState GetState()
         {
             return State;
