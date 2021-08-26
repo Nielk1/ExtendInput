@@ -11,6 +11,8 @@ namespace ExtendInput.Controller
 {
     public class SteamController : IController
     {
+        public bool EnableMotion { get; set; } // temporary hack for VSCView
+
         public const int VendorId = 0x28DE; // 10462
         public const int ProductIdDongle = 0x1142; // 4418
         public const int ProductIdWired = 0x1102; // 4354
@@ -399,6 +401,13 @@ namespace ExtendInput.Controller
 
             PollingState = EPollingState.Active;
             _device.StartReading();
+
+            if (EnableMotion)
+                new Thread(() =>
+                {
+                    Thread.Sleep(5000);
+                    EnableGyroSensors();
+                }).Start();
         }
 
         /*public void HalfInitalize()
@@ -437,6 +446,9 @@ namespace ExtendInput.Controller
         {
             if (PollingState == EPollingState.Inactive) return;
             if (PollingState == EPollingState.SlowPoll) return;
+
+            //if (EnableMotion)
+                ResetGyroSensors();
 
             // dongles switch back to slow poll instead of going inactive
             if (ConnectionType == EConnectionType.Dongle)
@@ -481,7 +493,8 @@ namespace ExtendInput.Controller
                 reportData[1] = 0x87; // 0x87 = register write command
                 reportData[2] = 0x03; // 0x03 = length of data to be written (data + 1 empty bit)
                 reportData[3] = 0x30; // 0x30 = register of Gyro data
-                reportData[4] = 0x10 | 0x08 | 0x04; // enable raw Gyro, raw Accel, and Quaternion data
+                //reportData[4] = 0x10 | 0x08 | 0x04; // enable raw Gyro, raw Accel, and Quaternion data
+                reportData[4] = 0x10 | 0x04;
                 Debug.WriteLine("Attempting to reenable MPU accelerometer sensor");
                 var result = _device.WriteFeatureData(reportData);
                 //var result = GetFeatureReport(reportData) != null;
