@@ -159,7 +159,7 @@ namespace ExtendInput.DevPKey.Native
         public struct DEVPROPKEY
         {
             public Guid fmtid;
-            public ulong pid;
+            public UInt32 pid;
         }
 
 
