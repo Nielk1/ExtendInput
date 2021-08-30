@@ -690,6 +690,10 @@ namespace ExtendInput.Controller
             if (_device.VendorId == VENDOR_SONY && _device.ProductId == PRODUCT_SONY_DONGLE)
                 return null;
 
+            // this reads on USB but gets back all 0x00s so there's no point, also it makes us hang on a vigem controller.
+            if (ConnectionType == EConnectionType.USB)
+                return null;
+
             byte[] RawData = new byte[0x100 + 0x10 + 0x100 + 0x100 + 0x100];
             for (; ; )
             {
