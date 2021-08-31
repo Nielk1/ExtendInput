@@ -48,7 +48,7 @@ namespace ExtendInput.DeviceProvider
     public struct GenericBytesReport : IReport
     {
         public REPORT_TYPE ReportTypeCode => REPORT_TYPE.GENB;
-        public UInt64 Code;
+        public UInt64 Code; // TODO: consider making this much smaller or removing it
         public byte[] ReportBytes;
 
         public string CodeString
@@ -59,6 +59,7 @@ namespace ExtendInput.DeviceProvider
             }
             set
             {
+                // TODO make this correct for 8 characters
                 Code = BitConverter.ToUInt64(Encoding.ASCII.GetBytes(value), 0);
             }
         }

@@ -11,9 +11,9 @@ namespace ExtendInput.DeviceProvider
 {
     public class SixtyBeatAudioDevice : IDevice
     {
-        public string DevicePath { get { return $"SixtyBeatAudioDevice"; } }// internalDevice.DevicePath; } }
-        public int ProductId { get { return 0; } }//internalDevice.ProductID; } }
-        public int VendorId { get { return 0; } }//internalDevice.VendorID; } }
+        public string DevicePath { get { return $"SixtyBeatAudioDevice"; } }
+        public int ProductId { get { return 0; } }
+        public int VendorId { get { return 0; } }
 
         public Dictionary<string, dynamic> Properties { get; private set; }
 
@@ -25,12 +25,6 @@ namespace ExtendInput.DeviceProvider
         const int BUFFER = 40; // sample rate of the sound card
         readonly int BUFFERSIZE = (int)Math.Pow(2, 11); // must be a multiple of 2
 
-
-
-
-
-        Int16 word_26C5E = 0;
-        int dword_26BC8 = 0;
 
 
         byte _MergedGlobals_currentValue = 0;
@@ -89,17 +83,11 @@ namespace ExtendInput.DeviceProvider
             previousValues = new RingBuffer<Int16>(BUFFER);
             previousAbsValues = new RingBuffer<Int16>(BUFFER);
 
-            //WaveIn wi = new WaveIn();
             WaveInEvent wi = new WaveInEvent();
             wi.DeviceNumber = audioDeviceNumber;
             wi.WaveFormat = new NAudio.Wave.WaveFormat(RATE, 1);
             wi.BufferMilliseconds = (int)((double)BUFFERSIZE / (double)RATE * 1000.0);
             wi.DataAvailable += new EventHandler<WaveInEventArgs>(AudioDataAvailable);
-            //bwp = new BufferedWaveProvider(wi.WaveFormat);
-            //bwp.BufferLength = BUFFERSIZE * 2;
-            //bwp.DiscardOnBufferOverflow = true;
-
-            //writer = new WaveFileWriter("test.wav", new WaveFormat(RATE, 1));
 
             try
             {
@@ -126,14 +114,9 @@ namespace ExtendInput.DeviceProvider
                     WaveInEventArgs dat;
                     lock (QueueWaveEvents)
                         dat = QueueWaveEvents.Dequeue();
-                    //for (int i = 2; i < dat.BytesRecorded; i += 4)
                     for (int i = 0; i < dat.BytesRecorded; i += 2)
                     {
-                        //try
-                        {
-                            handleValue(BitConverter.ToInt16(dat.Buffer, i));
-                        }
-                        //catch { }
+                        handleValue(BitConverter.ToInt16(dat.Buffer, i));
                     }
                 }
             }
@@ -152,18 +135,15 @@ namespace ExtendInput.DeviceProvider
 
         void handleValue(Int16 amplitude)
         {
-            //if (DEBUG_CALL_LOG)
-            //    Console.WriteLine($"handleValue({amplitude}) <");
-
             amplitude = FirstPassFilter(amplitude);
 
             previousValues.Push(amplitude);
 
-            // correct clipping at 255 or -256 using a parabala to synthesize the lost peak/vally
+            // correct clipping at 255 or -256 using a parabola to synthesize the lost peak/vally
             if (previousValues[BUFFER - 16] == 255 || previousValues[BUFFER - 16] == -256)
             {
-                int weightedPrevious = previousValues[BUFFER - 16 - 1]; // prev[15] - (prev[BUFFER-16] - prev[15]) * (iter+1)
-                int divisor = 0; // terations * (iterations + 1)
+                int weightedPrevious = previousValues[BUFFER - 16 - 1];
+                int divisor = 0;
                 int iterations = 0;
                 for (; iterations < 6; iterations++)
                 {
@@ -178,7 +158,7 @@ namespace ExtendInput.DeviceProvider
                 }
                 if (iterations > 2)
                 {
-                    float a = (float)(previousValues[BUFFER - 16 + 1 + iterations] - weightedPrevious) / (float)divisor; // (prev[17+iter] - prev[BUFFER-16] * (iter+1) + prev[15] * iter) / (iter * (iter+1)) 
+                    float a = (float)(previousValues[BUFFER - 16 + 1 + iterations] - weightedPrevious) / (float)divisor;
                     float b = (float)(previousValues[BUFFER - 16] - previousValues[BUFFER - 16 - 1]) - a;
                     float c = (float)previousValues[BUFFER - 16 - 1];
                     for (int v13 = iterations, v9Index = 16 - 1, x = 2; v13 > 3; v13--, v9Index++, x++)
@@ -218,18 +198,9 @@ namespace ExtendInput.DeviceProvider
             Int16 rangedValue = (Int16)Math.Min(Math.Max(previousValues[BUFFER - 16] - rangeMiddle, Int16.MinValue), Int16.MaxValue);
 
             if (maxAbsInWindow < 101)
-            //if (maxAbsInWindow < 101 || (countsBufferIndex > 0 && countsBuffer[countsBufferIndex-1] > 1000))
-            //if (maxAbsInWindow < 101 || (countsBufferIndex > 0 && countsBuffer[countsBufferIndex-1] > 100))
             {
-                //if (countsBufferIndex != 0)
                 if (countsBufferIndex > 0)
                 {
-                    //if (_MergedGlobals_countsSinceLastTransition > 1000)
-                    //int TotalWidth = countsBuffer.Take(countsBufferIndex).Sum();
-                    //if (TotalWidth > 6000)
-                    //    Console.WriteLine(TotalWidth);
-
-
                     // process counts data with various possible threshholds
                     rx_buffer_len = 0;
                     currentBitIndex = 0;
@@ -257,99 +228,18 @@ namespace ExtendInput.DeviceProvider
                             }
                         }
                     }
-                    /*if(!self_checksumOK && countsBufferIndex > 50)
-                    {
-                        for (int countsOffset = 0; countsOffset < countsBufferIndex - 20; countsOffset++)
-                        {
-                            rx_buffer_len = 0;
-                            currentBitIndex = 0;
-                            currentByte = 0;
-                            if (!processCountsWithThreshold(63, countsOffset))
-                            {
-                                for (int v60_ = 1; v60_ < 10; v60_++) // shouldn't this start at 1 as the above already tried?
-                                {
-                                    rx_buffer_len = 0;
-                                    currentBitIndex = 0;
-                                    currentByte = 0;
-                                    if (processCountsWithThreshold(63 + v60_, countsOffset))
-                                    {
-                                        if (self_checksumOK)
-                                            break;
-                                    }
-                                    rx_buffer_len = 0;
-                                    currentBitIndex = 0;
-                                    currentByte = 0;
-                                    if (processCountsWithThreshold(63 - v60_, countsOffset))
-                                    {
-                                        if (self_checksumOK)
-                                            break;
-                                    }
-                                }
-                            }
-                        }
-                    }*/
-                    // if we failed a checksum, we might have bailed on parsing the data early, so let's push that unprocessed byte
-                    /*if (!self_checksumOK)
-                    {
-                        if (currentBitIndex > 0)
-                        {
-                            _MergedGlobals__rx_buffer[rx_buffer_len] = currentByte;
-                            for(int i= rx_buffer_len; i < 8; i++)
-                            {
-                                _MergedGlobals__rx_buffer[i] = 0x00;
-                            }
-                        }
-                        verifyChecksum();
-                    }*/
-
-                    /*if (countsBufferIndex > 20 && rx_buffer_len >= 6)
-                    {
-                        //Console.ForegroundColor = self_checksumOK ? ConsoleColor.Green : ConsoleColor.Red;
-                        //Console.Write($"{countsBufferIndex.ToString().PadLeft(3)}");
-                        //for (int i = 0; i < countsBufferIndex; i++)
-                        //{
-                        //    Console.Write($"{countsBuffer[i].ToString().PadLeft(2)} ");
-                        //}
-                        //Console.WriteLine();
-                        //Console.ResetColor();
-
-                        if (self_checksumOK)
-                            Console.ForegroundColor = ConsoleColor.Green;
-
-                        Console.Write($"{rx_buffer_len}:{currentBitIndex}:");
-
-                        string last = string.Empty;
-                        for (int iC = 0; iC < countsBufferIndex; iC++)
-                        {
-                            string current = (countsBuffer[iC] >= 64) ? "L-" : (last == "S" ? "s" : "S");
-                            if (current == "s" && last != "S")
-                                Console.ForegroundColor = ConsoleColor.Red;
-                            if (current == "L-" && last == "S")
-                                Console.ForegroundColor = ConsoleColor.Red;
-                            Console.Write(current);
-                            last = current;
-                        }
-                        Console.ResetColor();
-                        Console.WriteLine();
-                    }*/
 
                     if (self_checksumOK)
                     {
-                        //Console.WriteLine(TimeSinceGood);
-                        //TimeSinceGood = 0;
-
                         ++self_checksumSuccessCount;
-                        //finishedPacket();
                     }
                     else if ((uint)countsBufferIndex > 20)
                     {
                         ++self_checksumErrorCount;
-                        //Console.Title = $"Checksum Success: {self_checksumSuccessCount}    Checksum Errors: {self_checksumErrorCount}    self_checksumErrorCount, Error Ratio: {(1.0f * self_checksumErrorCount / (self_checksumErrorCount + self_checksumSuccessCount))}";
                     }
                     countsBufferIndex = 0;
                 }
-                //return;
-            }//else
+            }
             if (rangedValue > 1)
             {
                 _MergedGlobals_currentValue = 1;
@@ -370,9 +260,7 @@ namespace ExtendInput.DeviceProvider
                             _MergedGlobals_countsSinceLastTransition = stepsAgoCrossedZero;
                         countsBuffer[countsBufferIndex] = _MergedGlobals_countsSinceLastTransition;
 
-                        //TimeSinceGood = TimeSinceGood + (uint)_MergedGlobals_countsSinceLastTransition;
-
-                        // nielk1 attempt to fix noise by merging overly-short inversion, another method might be detecting slope instead of time
+                        // attempt to fix noise by merging overly-short inversion, another method might be detecting slope instead of time
                         if (countsBufferIndex > 4 && _MergedGlobals_countsSinceLastTransition < 35)
                         {
                             int total = countsBuffer[countsBufferIndex - 0] + countsBuffer[countsBufferIndex - 1] + countsBuffer[countsBufferIndex - 2];
@@ -499,7 +387,7 @@ namespace ExtendInput.DeviceProvider
                     Console.ResetColor();
                     //finishedPacket();
                     DeviceReportEvent threadSafeEvent = DeviceReport;
-                    threadSafeEvent?.Invoke(new GenericBytesReport() { CodeString = "SXTYBEAT", ReportBytes = _MergedGlobals__rx_buffer });
+                    threadSafeEvent?.Invoke(new GenericBytesReport() { CodeString = "SXTYBEAT", ReportBytes = _MergedGlobals__rx_buffer }); // TODO: consider a `60BT` report type instead
 
                     //Console.WriteLine();
                 }
