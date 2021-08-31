@@ -109,12 +109,27 @@ namespace ExtendInput.Controller
         private const string ATOM_CONNECTION_DONGLE = "CONNECTION_DONGLE";
         private const string ATOM_CONNECTION_DS4_DONGLE = "CONNECTION_DONGLE_DS4";
         private const string ATOM_CONNECTION_UNKKNOWN = "CONNECTION_UNKNOWN";
+        private const string ATOM_CONNECTION_VIRTUAL = "CONNECTION_VIRTUAL";
+        private const string ATOM_CONNECTION_VIRTUAL_VIGEM = "CONNECTION_VIRTUAL_VIGEM";
+        private const string ATOM_CONNECTION_VIRTUAL_REWASD = "CONNECTION_VIRTUAL_REWASD";
+        private const string ATOM_CONNECTION_VIRTUAL_UNKNOWN = "CONNECTION_VIRTUAL_UNKNOWN";
 
         private readonly string[] _CONNECTION_WIRE = new string[] { ATOM_CONNECTION_USB_WIRE, ATOM_CONNECTION_WIRE };
         private readonly string[] _CONNECTION_BT = new string[] { ATOM_CONNECTION_BT };
         private readonly string[] _CONNECTION_DONGLE = new string[] { ATOM_CONNECTION_DS4_DONGLE, ATOM_CONNECTION_DONGLE };
+        private readonly string[] _CONNECTION_VIRTUAL_VIGEM = new string[] { ATOM_CONNECTION_VIRTUAL_VIGEM, ATOM_CONNECTION_VIRTUAL };
+        private readonly string[] _CONNECTION_VIRTUAL_REWASD = new string[] { ATOM_CONNECTION_VIRTUAL_REWASD, ATOM_CONNECTION_VIRTUAL };
+        private readonly string[] _CONNECTION_VIRTUAL_UNKNOWN = new string[] { ATOM_CONNECTION_VIRTUAL_UNKNOWN, ATOM_CONNECTION_VIRTUAL };
         private readonly string[] _CONNECTION_UNKKNOWN = new string[] { ATOM_CONNECTION_UNKKNOWN };
         #endregion String Definitions
+
+        public enum DS4VirtualType
+        {
+            NotVirtual,
+            ViGEm,
+            reWASD,
+            Unknown,
+        }
 
         enum DS4SubType
         {
@@ -146,7 +161,28 @@ namespace ExtendInput.Controller
                 USB_VID: VENDOR_SONY, USB_PID: PRODUCT_SONY_DS4V2,
                 BT_VID: VENDOR_SONY, BT_PID: PRODUCT_SONY_DS4V2)]
             SonyDS4V2,
-            
+
+            [ControllerSubType(
+                Token: new string[] { "DEVICE_DS4_VIGEM", "DEVICE_DS4", "DEVICE_GAMEPAD" },
+                PhysicalWidth: 50,
+                PhysicalHeight: 25,
+                Name: "Virtual DualShock for ViGEm")]
+            VirtualDS4Vigem,
+
+            [ControllerSubType(
+                Token: new string[] { "DEVICE_DS4_REWASD", "DEVICE_DS4", "DEVICE_GAMEPAD" },
+                PhysicalWidth: 50,
+                PhysicalHeight: 25,
+                Name: "Virtual DualShock for reWASD")]
+            VirtualDS4ReWasd,
+
+            [ControllerSubType(
+                Token: new string[] { "DEVICE_DS4_VIRTUAL", "DEVICE_DS4", "DEVICE_GAMEPAD" },
+                PhysicalWidth: 50,
+                PhysicalHeight: 25,
+                Name: "Unknown Virtual DualShock")]
+            VirtualDS4Unknown,
+
             [ControllerSubType(
                 Token: new string[] { "DEVICE_DS4V1", "DEVICE_DS4", "DEVICE_GAMEPAD" },
                 Name: "Sony DUALSHOCK®4 Controller V1 (Possible Unoffical)",
@@ -395,6 +431,7 @@ namespace ExtendInput.Controller
         private string SerialNumber = null;
 
         public EConnectionType ConnectionType { get; private set; }
+        public DS4VirtualType VirtualType { get; private set; }
         public EPollingState PollingState { get; private set; }
 
         //private ControllerSubTypeAttribute NO8952Attr = DS4SubType.No8952.GetAttribute<ControllerSubTypeAttribute>();
@@ -418,6 +455,14 @@ namespace ExtendInput.Controller
                     case EConnectionType.USB:       return _CONNECTION_WIRE;
                     case EConnectionType.Bluetooth: return _CONNECTION_BT;
                     case EConnectionType.Dongle:    return _CONNECTION_DONGLE;
+                    case EConnectionType.Virtual:
+                        switch (VirtualType)
+                        {
+                            case DS4VirtualType.ViGEm:   return _CONNECTION_VIRTUAL_VIGEM;
+                            case DS4VirtualType.reWASD:  return _CONNECTION_VIRTUAL_REWASD;
+                            case DS4VirtualType.Unknown: return _CONNECTION_VIRTUAL_UNKNOWN;
+                        }
+                        return _CONNECTION_UNKKNOWN;
                     default:                        return _CONNECTION_UNKKNOWN;
                 }
             }
@@ -550,9 +595,10 @@ namespace ExtendInput.Controller
 
 
 
-        public DualShock4Controller(HidDevice device, EConnectionType ConnectionType = EConnectionType.Unknown)
+        public DualShock4Controller(HidDevice device, EConnectionType ConnectionType = EConnectionType.Unknown, DS4VirtualType VirtualType = DS4VirtualType.Unknown)
         {
             this.ConnectionType = ConnectionType;
+            this.VirtualType = VirtualType;
 
             _device = device;
 
@@ -753,6 +799,19 @@ namespace ExtendInput.Controller
                 if (VID == 0x0000 && PID == 0x0000)
                     return DS4SubType.None;
                 FromDongle = true;
+            }
+
+            if (ConnectionType == EConnectionType.Virtual)
+            {
+                switch(VirtualType)
+                {
+                    case DS4VirtualType.NotVirtual:
+                        ConnectionType = EConnectionType.Unknown; // obviously we're not virtual
+                        break;
+                    case DS4VirtualType.ViGEm: return DS4SubType.VirtualDS4Vigem;
+                    case DS4VirtualType.reWASD: return DS4SubType.VirtualDS4ReWasd;
+                    case DS4VirtualType.Unknown: return DS4SubType.VirtualDS4Unknown;
+                }
             }
 
             List<Tuple<int, DS4SubType>> Candidates = new List<Tuple<int, DS4SubType>>();

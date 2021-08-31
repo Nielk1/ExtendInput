@@ -11,6 +11,7 @@ namespace ExtendInput.Controller
         USB,
         Bluetooth,
         Dongle,
+        Virtual,
     }
     public enum EPollingState
     {

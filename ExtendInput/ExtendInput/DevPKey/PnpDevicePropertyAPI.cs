@@ -24,9 +24,8 @@ namespace ExtendInput.DevPKey
         }
 
 
-        public static string GetDeviceProperty(string deviceInstanceId, Native.PnpDevicePropertyAPINative.DEVPROPKEY prop)
+        public static byte[] GetDeviceProperty(string deviceInstanceId, Native.PnpDevicePropertyAPINative.DEVPROPKEY prop)
         {
-            string result = string.Empty;
             Native.PnpDevicePropertyAPINative.SP_DEVINFO_DATA deviceInfoData = new Native.PnpDevicePropertyAPINative.SP_DEVINFO_DATA();
             deviceInfoData.cbSize = System.Runtime.InteropServices.Marshal.SizeOf(deviceInfoData);
             var dataBuffer = new byte[4096];
@@ -38,19 +37,23 @@ namespace ExtendInput.DevPKey
             IntPtr deviceInfoSet = Native.PnpDevicePropertyAPINative.SetupDiGetClassDevs(ref hidGuid, deviceInstanceId, 0, Native.PnpDevicePropertyAPINative.DIGCF_PRESENT | Native.PnpDevicePropertyAPINative.DIGCF_DEVICEINTERFACE);
             //IntPtr deviceInfoSet = Native.PnpDevicePropertyAPINative.SetupDiGetClassDevs(IntPtr.Zero, deviceInstanceId, 0, Native.PnpDevicePropertyAPINative.DIGCF_PRESENT | Native.PnpDevicePropertyAPINative.DIGCF_DEVICEINTERFACE | Native.PnpDevicePropertyAPINative.DIGCF_ALLCLASSES);
             /*bool tempval = */
-            Native.PnpDevicePropertyAPINative.SetupDiEnumDeviceInfo(deviceInfoSet, 0, ref deviceInfoData);
-            if (Native.PnpDevicePropertyAPINative.SetupDiGetDeviceProperty(deviceInfoSet, ref deviceInfoData, ref prop, ref propertyType,
-                    dataBuffer, dataBuffer.Length, ref requiredSize, 0))
+            try
             {
-                result = dataBuffer.ToUTF16String();
+                Native.PnpDevicePropertyAPINative.SetupDiEnumDeviceInfo(deviceInfoSet, 0, ref deviceInfoData);
+                if (Native.PnpDevicePropertyAPINative.SetupDiGetDeviceProperty(deviceInfoSet, ref deviceInfoData, ref prop, ref propertyType, dataBuffer, dataBuffer.Length, ref requiredSize, 0))
+                {
+                    return dataBuffer.Take(requiredSize).ToArray();
+                }
+            }
+            finally
+            {
+                if (deviceInfoSet.ToInt64() != Native.PnpDevicePropertyAPINative.INVALID_HANDLE_VALUE)
+                {
+                    Native.PnpDevicePropertyAPINative.SetupDiDestroyDeviceInfoList(deviceInfoSet);
+                }
             }
 
-            if (deviceInfoSet.ToInt64() != Native.PnpDevicePropertyAPINative.INVALID_HANDLE_VALUE)
-            {
-                Native.PnpDevicePropertyAPINative.SetupDiDestroyDeviceInfoList(deviceInfoSet);
-            }
-
-            return result;
+            return null;
         }
 
         public static Dictionary<Native.PnpDevicePropertyAPINative.DEVPROPKEY, string> GetDeviceProperties(string deviceInstanceId)
@@ -117,36 +120,29 @@ namespace ExtendInput.DevPKey
         }
 
 
-        public CheckVirtualInfo CheckForVirtualDevice(string deviceInstanceId)
+        public static Int32? GetDeviceUINumber(string deviceInstanceId)
         {
-            string temp = GetDeviceProperty(deviceInstanceId,
-                Native.PnpDevicePropertyAPINative.DEVPKEY_Device_UINumber);
+            byte[] temp = GetDeviceProperty(deviceInstanceId, Native.PnpDevicePropertyAPINative.DEVPKEY_Device_UINumber);
 
-            CheckVirtualInfo info = new CheckVirtualInfo()
-            {
-                PropertyValue = temp,
-                DeviceInstanceId = deviceInstanceId,
-            };
-            return info;
+            if (temp == null)
+                return null;
+
+            return BitConverter.ToInt32(temp, 0);
         }
 
-        public class CheckVirtualInfo : EventArgs
+        public static Guid? GetDeviceContainerId(string deviceInstanceId)
         {
-            private string deviceInstanceId;
-            public string DeviceInstanceId
-            {
-                get => deviceInstanceId;
-                set => deviceInstanceId = value;
-            }
+            byte[] temp = GetDeviceProperty(deviceInstanceId, Native.PnpDevicePropertyAPINative.DEVPKEY_Device_ContainerId);
 
-            private string propertyValue;
-            public string PropertyValue { get => propertyValue; set => propertyValue = value; }
+            if (temp == null)
+                return null;
 
-            public CheckVirtualInfo() : base()
-            {
-            }
+            // should never happen as this is based on our buffer
+            if (temp.Length != 16)
+                return null;
+
+            return new Guid(temp);
         }
-
 
 
         public static bool GetParentDeviceInstanceId(string DeviceInstanceId, out string ParentDeviceInstanceId)
@@ -174,7 +170,7 @@ namespace ExtendInput.DevPKey
                 return false;
             }
 
-            IntPtr ptrInstanceBuf = Marshal.AllocHGlobal(nBytes * 2); // Note: Buffer is *2 size just because it might use Unicode (and normally does)
+            IntPtr ptrInstanceBuf = Marshal.AllocHGlobal(nBytes * 2); // Note: Buffer is *2 size just because it might use Unicode (and normally does).
             try
             {
                 apiResult = Native.PnpDevicePropertyAPINative.CM_Get_Device_ID(parent, ptrInstanceBuf, nBytes);

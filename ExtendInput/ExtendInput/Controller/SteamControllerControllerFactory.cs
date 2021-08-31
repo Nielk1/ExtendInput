@@ -9,7 +9,8 @@ namespace ExtendInput.Controller
 {
     public class SteamControllerControllerFactory : IControllerFactory
     {
-        Dictionary<string, WeakReference<SemaphoreSlim>> SharedDongleLocks = new Dictionary<string, WeakReference<SemaphoreSlim>>();
+        //Dictionary<string, WeakReference<SemaphoreSlim>> SharedDongleLocks = new Dictionary<string, WeakReference<SemaphoreSlim>>();
+        Dictionary<Guid, WeakReference<SemaphoreSlim>> SharedDongleLocks = new Dictionary<Guid, WeakReference<SemaphoreSlim>>();
 
         public IController NewDevice(IDevice device)
         {
@@ -59,27 +60,20 @@ namespace ExtendInput.Controller
                 if (ConType == EConnectionType.Dongle)
                 {
                     string deviceInstanceId = DevPKey.PnpDevicePropertyAPI.devicePathToInstanceId(_device.DevicePath);
-
-                    while (DevPKey.PnpDevicePropertyAPI.GetParentDeviceInstanceId(deviceInstanceId, out deviceInstanceId))
-                        if (string.IsNullOrWhiteSpace(deviceInstanceId) || !deviceInstanceId.Contains("&MI_"))
-                            break;
-
-                    if (deviceInstanceId != null && !deviceInstanceId.StartsWith($"USB\\VID_{SteamController.VendorId:X4}&PID_{SteamController.ProductIdDongle:X4}\\"))
-                        deviceInstanceId = null;
-
-                    deviceInstanceId = deviceInstanceId?.ToUpperInvariant();
-
-                    if (deviceInstanceId != null)
+                    Guid? ContrainerID = DevPKey.PnpDevicePropertyAPI.GetDeviceContainerId(deviceInstanceId);
+                    if (ContrainerID.HasValue)
                         lock (SharedDongleLocks)
                         {
-                            if (!SharedDongleLocks.ContainsKey(deviceInstanceId) || !SharedDongleLocks[deviceInstanceId].TryGetTarget(out SharedDongleLock))
+                            if (!SharedDongleLocks.ContainsKey(ContrainerID.Value) || !SharedDongleLocks[ContrainerID.Value].TryGetTarget(out SharedDongleLock))
                             {
                                 SharedDongleLock = new SemaphoreSlim(1);
-                                SharedDongleLocks.Add(deviceInstanceId, new WeakReference<SemaphoreSlim>(SharedDongleLock));
+                                SharedDongleLocks.Add(ContrainerID.Value, new WeakReference<SemaphoreSlim>(SharedDongleLock));
                             }
 
+                            Console.WriteLine(ContrainerID.Value.ToString());
+
                             // clear any dead refs
-                            foreach (string key in SharedDongleLocks.Keys.ToList()) // ToList to clone the key list so we can modify it
+                            foreach (Guid key in SharedDongleLocks.Keys.ToList()) // ToList to clone the key list so we can modify it
                                 if (!SharedDongleLocks[key].TryGetTarget(out _))
                                     SharedDongleLocks.Remove(key);
                         }
