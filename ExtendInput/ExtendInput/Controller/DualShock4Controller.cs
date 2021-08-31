@@ -689,7 +689,7 @@ namespace ExtendInput.Controller
                     _REPORT_STATE_1, 0xC0, 0x20,
                     (byte)(ControllerAttribute.BT_UseLedBitForRumble ? 0x02 : 0x01), 0x00, 0x00,
                     0xff, 0xff,
-                    0x00, 0x00, // LED must be black when doing LEDInstead
+                    0x00, 0x00, // LED must be black when doing BT_UseLedBitForRumble
                     0x00, 0x0f, 0x0f,
 
                     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
