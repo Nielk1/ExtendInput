@@ -37,14 +37,38 @@ namespace ExtendInput.Controller
                 return _device.UniqueKey;
             }
         }
-        public string[] ConnectionTypeCode { get; private set; }
+        public string[] ConnectionTypeCode
+        {
+            get
+            {
+                switch (this.ConnectionType)
+                {
+                    case EConnectionType.USB:
+                        return new string[] { "CONNECTION_WIRE_USB", "CONNECTION_WIRE" };
+                        break;
+                    case EConnectionType.Bluetooth:
+                        return new string[] { "CONNECTION_BT" };
+                        break;
+                    case EConnectionType.Dongle:
+                        return new string[] { "CONNECTION_DONGLE_SC", "CONNECTION_DONGLE" };
+                        break;
+                    default:
+                        return new string[] { "CONNECTION_UNKNOWN" };
+                        break;
+                }
+            }
+        }
         public string[] ControllerTypeCode
         {
             get
             {
-                switch(ConState)
+                if (ConnectionType == EConnectionType.Dongle)
                 {
-                    case InternalConState.Disconnected: return new string[] { "DEVICE_NONE" };
+                    switch (ConState)
+                    {
+                        case InternalConState.Disconnected: return new string[] { "DEVICE_NONE" };
+                        case InternalConState.Unknown: return new string[] { "DEVICE_UNKNOWN" };
+                    }
                 }
 
                 switch(ControllerType)
@@ -87,6 +111,7 @@ namespace ExtendInput.Controller
                     switch (ConState)
                     {
                         case InternalConState.Unknown:
+                            return new string[] { $"Unknown State" };
                         case InternalConState.Disconnected:
                             return new string[] { $"No Controller" };
                     }
@@ -99,6 +124,21 @@ namespace ExtendInput.Controller
         public Dictionary<string, string> Alternates => null;
 
         public bool HasMotion => true;
+
+        public bool IsReady
+        {
+            get
+            {
+                switch (ConnectionType)
+                {
+                    case EConnectionType.USB: return true;
+                    case EConnectionType.Bluetooth: return true;
+                    case EConnectionType.Dongle: return ConState != InternalConState.Unknown;
+                    default: return false;
+                }
+            }
+        }
+
         public bool IsPresent
         {
             get
@@ -107,7 +147,7 @@ namespace ExtendInput.Controller
                 {
                     case EConnectionType.USB: return true;
                     case EConnectionType.Bluetooth: return true;
-                    case EConnectionType.Dongle: return ConState != InternalConState.Disconnected;
+                    case EConnectionType.Dongle: return ConState == InternalConState.Connected;
                     default: return false;
                 }
             }
@@ -281,23 +321,6 @@ namespace ExtendInput.Controller
             if (type == EControllerType.Chell)
                 State.Controls["grid_center"] = new ControlButtonGrid(2, 2);
             State.Controls["motion"] = new ControlMotion();
-
-
-            switch (this.ConnectionType)
-            {
-                case EConnectionType.USB:
-                    ConnectionTypeCode = new string[] { "CONNECTION_WIRE_USB", "CONNECTION_WIRE" };
-                    break;
-                case EConnectionType.Bluetooth:
-                    ConnectionTypeCode = new string[] { "CONNECTION_BT" };
-                    break;
-                case EConnectionType.Dongle:
-                    ConnectionTypeCode = new string[] { "CONNECTION_DONGLE_SC", "CONNECTION_DONGLE" };
-                    break;
-                default:
-                    ConnectionTypeCode = new string[] { "CONNECTION_UNKNOWN" };
-                    break;
-            }
 
             //Initalized = 0;
 
