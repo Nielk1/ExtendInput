@@ -175,7 +175,7 @@ namespace ExtendInput.DeviceProvider
                                 byte[] data = _stream.Read();
 
                                 DeviceReportEvent threadSafeEvent = DeviceReport;
-                                threadSafeEvent?.Invoke(data);
+                                threadSafeEvent?.Invoke(new HidReport() { ReportId = data[0], ReportType = HidReportType.Input, ReportBytes = data.Skip(1).ToArray() });
                             }
                         }
                         catch (System.TimeoutException)
@@ -209,7 +209,7 @@ namespace ExtendInput.DeviceProvider
         public event DeviceReportEvent DeviceReport;
     }
 
-    public delegate void DeviceReportEvent(byte[] report);
+    public delegate void DeviceReportEvent(IReport report);
 
     public enum DeviceMode
     {

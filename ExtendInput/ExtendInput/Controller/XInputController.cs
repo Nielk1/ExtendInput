@@ -57,7 +57,7 @@ namespace ExtendInput.Controller
         public XInputController(XInputDevice device)
         {
             ConnectionTypeCode = new string[] { "CONNECTION_UNKNOWN" };
-            ControllerTypeCode = new string[] { "DEVICEXBOX", "DEVICEGAMEPAD" };
+            ControllerTypeCode = new string[] { "DEVICE_XBOX", "DEVICE_GAMEPAD" };
 
             State.Controls["quad_left"] = new ControlDPad();
             State.Controls["quad_right"] = new ControlButtonQuad();
@@ -82,9 +82,12 @@ namespace ExtendInput.Controller
             return State;
         }
 
-        private void OnReport(byte[] reportData)
+        private void OnReport(IReport rawReportData)
         {
             if (Initalized < 1) return;
+            //if (!(reportData is XInputReport)) return;
+            if (rawReportData.ReportTypeCode != REPORT_TYPE.XINP) return;
+            XInputReport reportData = (XInputReport)rawReportData;
 
             if (0 == Interlocked.Exchange(ref reportUsageLock, 1))
             {
@@ -93,22 +96,21 @@ namespace ExtendInput.Controller
                     // Clone the current state before altering it since the OldState is likely a shared reference
                     ControllerState StateInFlight = (ControllerState)State.Clone();
 
-                    (StateInFlight.Controls["stick_left"] as ControlStick).X = BitConverter.ToInt16(reportData, 4) * 1.0f / Int16.MaxValue;
-                    (StateInFlight.Controls["stick_left"] as ControlStick).Y = BitConverter.ToInt16(reportData, 6) * -1.0f / Int16.MaxValue;
-                    (StateInFlight.Controls["stick_right"] as ControlStick).X = BitConverter.ToInt16(reportData, 8) * 1.0f / Int16.MaxValue;
-                    (StateInFlight.Controls["stick_right"] as ControlStick).Y = BitConverter.ToInt16(reportData, 10) * -1.0f / Int16.MaxValue;
+                    (StateInFlight.Controls["stick_left" ] as ControlStick).X = reportData.sThumbLX *  1.0f / Int16.MaxValue;
+                    (StateInFlight.Controls["stick_left" ] as ControlStick).Y = reportData.sThumbLY * -1.0f / Int16.MaxValue;
+                    (StateInFlight.Controls["stick_right"] as ControlStick).X = reportData.sThumbRX *  1.0f / Int16.MaxValue;
+                    (StateInFlight.Controls["stick_right"] as ControlStick).Y = reportData.sThumbRY * -1.0f / Int16.MaxValue;
 
-                    UInt16 buttons = BitConverter.ToUInt16(reportData, 0);
 
-                    (StateInFlight.Controls["quad_right"] as ControlButtonQuad).ButtonN = (buttons & 0x8000) == 0x8000;
-                    (StateInFlight.Controls["quad_right"] as ControlButtonQuad).ButtonE = (buttons & 0x2000) == 0x2000;
-                    (StateInFlight.Controls["quad_right"] as ControlButtonQuad).ButtonS = (buttons & 0x1000) == 0x1000;
-                    (StateInFlight.Controls["quad_right"] as ControlButtonQuad).ButtonW = (buttons & 0x4000) == 0x4000;
+                    (StateInFlight.Controls["quad_right"] as ControlButtonQuad).ButtonN = (reportData.wButtons & 0x8000) == 0x8000;
+                    (StateInFlight.Controls["quad_right"] as ControlButtonQuad).ButtonE = (reportData.wButtons & 0x2000) == 0x2000;
+                    (StateInFlight.Controls["quad_right"] as ControlButtonQuad).ButtonS = (reportData.wButtons & 0x1000) == 0x1000;
+                    (StateInFlight.Controls["quad_right"] as ControlButtonQuad).ButtonW = (reportData.wButtons & 0x4000) == 0x4000;
 
-                    bool DPadUp = (buttons & 0x0001) == 0x0001;
-                    bool DPadDown = (buttons & 0x0002) == 0x0002;
-                    bool DPadLeft = (buttons & 0x0004) == 0x0004;
-                    bool DPadRight = (buttons & 0x0008) == 0x0008;
+                    bool DPadUp    = (reportData.wButtons & 0x0001) == 0x0001;
+                    bool DPadDown  = (reportData.wButtons & 0x0002) == 0x0002;
+                    bool DPadLeft  = (reportData.wButtons & 0x0004) == 0x0004;
+                    bool DPadRight = (reportData.wButtons & 0x0008) == 0x0008;
 
                     if (DPadUp && DPadDown)
                         DPadUp = DPadDown = false;
@@ -163,16 +165,16 @@ namespace ExtendInput.Controller
                     }
 
 
-                    (StateInFlight.Controls["stick_right"] as ControlStick).Click = (buttons & 0x0080) == 0x0080;
-                    (StateInFlight.Controls["stick_left"] as ControlStick).Click = (buttons & 0x0040) == 0x0040;
-                    (StateInFlight.Controls["menu"] as ControlButtonPair).Right.Button0 = (buttons & 0x0010) == 0x0010;
-                    (StateInFlight.Controls["menu"] as ControlButtonPair).Left.Button0 = (buttons & 0x0020) == 0x0020;
-                    (StateInFlight.Controls["bumpers"] as ControlButtonPair).Right.Button0 = (buttons & 0x0200) == 0x0200;
-                    (StateInFlight.Controls["bumpers"] as ControlButtonPair).Left.Button0 = (buttons & 0x0100) == 0x0100;
+                    (StateInFlight.Controls["stick_right"] as ControlStick).Click = (reportData.wButtons & 0x0080) == 0x0080;
+                    (StateInFlight.Controls["stick_left" ] as ControlStick).Click = (reportData.wButtons & 0x0040) == 0x0040;
+                    (StateInFlight.Controls["menu"       ] as ControlButtonPair).Right.Button0 = (reportData.wButtons & 0x0010) == 0x0010;
+                    (StateInFlight.Controls["menu"       ] as ControlButtonPair).Left.Button0  = (reportData.wButtons & 0x0020) == 0x0020;
+                    (StateInFlight.Controls["bumpers"    ] as ControlButtonPair).Right.Button0 = (reportData.wButtons & 0x0200) == 0x0200;
+                    (StateInFlight.Controls["bumpers"    ] as ControlButtonPair).Left.Button0  = (reportData.wButtons & 0x0100) == 0x0100;
 
                     //(State.Controls["home"] as ControlButton).Button0 = (buttons & 0x1) == 0x1;
-                    (StateInFlight.Controls["triggers"] as ControlTriggerPair).Left.Analog = (float)reportData[2] / byte.MaxValue;
-                    (StateInFlight.Controls["triggers"] as ControlTriggerPair).Right.Analog = (float)reportData[3] / byte.MaxValue;
+                    (StateInFlight.Controls["triggers"] as ControlTriggerPair).Left.Analog  = (float)reportData.bLeftTrigger  / byte.MaxValue;
+                    (StateInFlight.Controls["triggers"] as ControlTriggerPair).Right.Analog = (float)reportData.bRightTrigger / byte.MaxValue;
 
                     // bring OldState in line with new State
                     State = StateInFlight;

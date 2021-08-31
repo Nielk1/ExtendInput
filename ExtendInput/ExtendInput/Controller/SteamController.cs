@@ -768,14 +768,16 @@ namespace ExtendInput.Controller
             );
         }
 
-        private void OnReport(byte[] reportData)
+        private void OnReport(IReport rawReportData)
         {
             if (PollingState == EPollingState.Inactive) return;
 
-            int reportID = reportData[0];
+            //if (!(reportData is HidReport)) return;
+            if (rawReportData.ReportTypeCode != REPORT_TYPE.HID) return;
+            HidReport reportData = (HidReport)rawReportData;
 
             // If we happen to receive any keyboard or mouse reports just skip them and keep reading
-            if (reportID == k_nKeyboardReportNumber || reportID == k_nMouseReportNumber)
+            if (reportData.ReportId == k_nKeyboardReportNumber || reportData.ReportId == k_nMouseReportNumber)
                 return;
 
             if (0 == Interlocked.Exchange(ref reportUsageLock, 1))
@@ -793,12 +795,12 @@ namespace ExtendInput.Controller
                         // report ID here is 3, do check what it is for the other connection types
                         case EConnectionType.Bluetooth:
                             {
-                                if (reportData[0] != BLE_REPORT_NUMBER)
+                                if (reportData.ReportId != BLE_REPORT_NUMBER)
                                     return; // this report isn't for us
 
                                 //Console.WriteLine($"Unknown Packet {reportData.Length}\t{BitConverter.ToString(reportData)}");
 
-                                byte ucHeader = reportData[1 + 0];
+                                byte ucHeader = reportData.ReportBytes[0];
                                 if ((ucHeader & k_nSegmentHasDataFlag) != k_nSegmentHasDataFlag)
                                     return; // steam itself actually asserts in this case
 
@@ -816,7 +818,7 @@ namespace ExtendInput.Controller
 
                                 {
                                     int nLength = k_nMaxSegmentSize - 1;
-                                    Array.Copy(reportData, 1 + 1, m_rgubBuffer, m_unCurrentMsgIndex, nLength);
+                                    Array.Copy(reportData.ReportBytes, 1, m_rgubBuffer, m_unCurrentMsgIndex, nLength);
                                     m_unCurrentMsgIndex += nLength;
                                     ++m_unNextSegmentNumber;
                                 }
@@ -971,7 +973,7 @@ namespace ExtendInput.Controller
                                         case EBLEPacketReportNums.BLEReportStatus:
                                             break;
                                         default:
-                                            Console.WriteLine($"Unknown Packet {reportID}\t{BitConverter.ToString(m_rgubBuffer)}");
+                                            Console.WriteLine($"Unknown Packet {reportData.ReportId}\t{BitConverter.ToString(m_rgubBuffer)}");
                                             break;
                                     }
 
@@ -981,10 +983,10 @@ namespace ExtendInput.Controller
                             break;
                         default:
                             {
-                                byte Unknown1 = reportData[1 + 0]; // always 0x01?
-                                byte Unknown2 = reportData[1 + 1]; // always 0x00?
-                                VSCEventType EventType = (VSCEventType)reportData[1 + 2];
-                                //reportData[1 + 3] // length
+                                byte Unknown1 = reportData.ReportBytes[0]; // always 0x01?
+                                byte Unknown2 = reportData.ReportBytes[1]; // always 0x00?
+                                VSCEventType EventType = (VSCEventType)reportData.ReportBytes[2];
+                                //reportData.ReportBytes[3] // length
 
                                 switch (EventType)
                                 {
@@ -993,9 +995,9 @@ namespace ExtendInput.Controller
                                     case VSCEventType.CONTROL_UPDATE:
                                         {
 
-                                            UInt32 PacketIndex = BitConverter.ToUInt32(reportData, 1 + 4);
+                                            UInt32 PacketIndex = BitConverter.ToUInt32(reportData.ReportBytes, 4);
 
-                                            Array.Copy(reportData, 1 + 8 + 0, RawState.ulButtons, 0, 3);
+                                            Array.Copy(reportData.ReportBytes, 8 + 0, RawState.ulButtons, 0, 3);
 
                                             bool LeftAnalogMultiplexMode = (RawState.ulButtons[2] & 128) == 128;
                                             bool LeftStickClick = (RawState.ulButtons[2] & 64) == 64;
@@ -1007,15 +1009,15 @@ namespace ExtendInput.Controller
                                             bool ThumbOrLeftPadPress = (RawState.ulButtons[2] & 2) == 2; // what is this even for?
                                             //(StateInFlight.Controls["grip"] as ControlButtonPair).Right.Button0 = (RawState.ulButtons[2] & 1) == 1;
 
-                                            RawState.sTriggerL = reportData[1 + 8 + 3];
-                                            RawState.sTriggerR = reportData[1 + 8 + 4];
+                                            RawState.sTriggerL = reportData.ReportBytes[8 + 3];
+                                            RawState.sTriggerR = reportData.ReportBytes[8 + 4];
 
                                             if (LeftAnalogMultiplexMode)
                                             {
                                                 if (LeftPadTouch)
                                                 {
-                                                    int X = BitConverter.ToInt16(reportData, 1 + 8 + 8);
-                                                    int Y = BitConverter.ToInt16(reportData, 1 + 8 + 10);
+                                                    int X = BitConverter.ToInt16(reportData.ReportBytes, 8 + 8);
+                                                    int Y = BitConverter.ToInt16(reportData.ReportBytes, 8 + 10);
 
                                                     RotateXY(-PadAngle, ref X, ref Y);
 
@@ -1026,16 +1028,16 @@ namespace ExtendInput.Controller
                                                 }
                                                 else
                                                 {
-                                                    RawState.sLeftStickX = BitConverter.ToInt16(reportData, 1 + 8 + 8);
-                                                    RawState.sLeftStickY = BitConverter.ToInt16(reportData, 1 + 8 + 10);
+                                                    RawState.sLeftStickX = BitConverter.ToInt16(reportData.ReportBytes, 8 + 8);
+                                                    RawState.sLeftStickY = BitConverter.ToInt16(reportData.ReportBytes, 8 + 10);
                                                 }
                                             }
                                             else
                                             {
                                                 if (LeftPadTouch)
                                                 {
-                                                    int X = BitConverter.ToInt16(reportData, 1 + 8 + 8);
-                                                    int Y = BitConverter.ToInt16(reportData, 1 + 8 + 10);
+                                                    int X = BitConverter.ToInt16(reportData.ReportBytes, 8 + 8);
+                                                    int Y = BitConverter.ToInt16(reportData.ReportBytes, 8 + 10);
 
                                                     RotateXY(-PadAngle, ref X, ref Y);
 
@@ -1048,8 +1050,8 @@ namespace ExtendInput.Controller
                                                     RawState.sLeftPadX = 0;
                                                     RawState.sLeftPadY = 0;
 
-                                                    RawState.sLeftStickX = BitConverter.ToInt16(reportData, 1 + 8 + 8);
-                                                    RawState.sLeftStickY = BitConverter.ToInt16(reportData, 1 + 8 + 10);
+                                                    RawState.sLeftStickX = BitConverter.ToInt16(reportData.ReportBytes, 8 + 8);
+                                                    RawState.sLeftStickY = BitConverter.ToInt16(reportData.ReportBytes, 8 + 10);
                                                 }
 
                                                 RawState.LeftTouchChange = true;
@@ -1059,8 +1061,8 @@ namespace ExtendInput.Controller
 
                                             //if (RightPadTouch) // we're trying to fix the pad jumping to center by not sending new coords if the pad is not touched
                                             {
-                                                int X = BitConverter.ToInt16(reportData, 1 + 8 + 12);
-                                                int Y = BitConverter.ToInt16(reportData, 1 + 8 + 14);
+                                                int X = BitConverter.ToInt16(reportData.ReportBytes, 8 + 12);
+                                                int Y = BitConverter.ToInt16(reportData.ReportBytes, 8 + 14);
 
                                                 RotateXY(PadAngle, ref X, ref Y);
 
@@ -1070,16 +1072,16 @@ namespace ExtendInput.Controller
 
                                             //RawState.RightTouchChange = true;
 
-                                            RawState.sAccelX = BitConverter.ToInt16(reportData, 1 + 8 + 20);
-                                            RawState.sAccelY = BitConverter.ToInt16(reportData, 1 + 8 + 22);
-                                            RawState.sAccelZ = BitConverter.ToInt16(reportData, 1 + 8 + 24);
-                                            RawState.sGyroX = BitConverter.ToInt16(reportData, 1 + 8 + 26);
-                                            RawState.sGyroY = BitConverter.ToInt16(reportData, 1 + 8 + 28);
-                                            RawState.sGyroZ = BitConverter.ToInt16(reportData, 1 + 8 + 30);
-                                            RawState.sGyroQuatW = BitConverter.ToInt16(reportData, 1 + 8 + 32);
-                                            RawState.sGyroQuatX = BitConverter.ToInt16(reportData, 1 + 8 + 34);
-                                            RawState.sGyroQuatY = BitConverter.ToInt16(reportData, 1 + 8 + 36);
-                                            RawState.sGyroQuatZ = BitConverter.ToInt16(reportData, 1 + 8 + 38);
+                                            RawState.sAccelX = BitConverter.ToInt16(reportData.ReportBytes, 8 + 20);
+                                            RawState.sAccelY = BitConverter.ToInt16(reportData.ReportBytes, 8 + 22);
+                                            RawState.sAccelZ = BitConverter.ToInt16(reportData.ReportBytes, 8 + 24);
+                                            RawState.sGyroX = BitConverter.ToInt16(reportData.ReportBytes, 8 + 26);
+                                            RawState.sGyroY = BitConverter.ToInt16(reportData.ReportBytes, 8 + 28);
+                                            RawState.sGyroZ = BitConverter.ToInt16(reportData.ReportBytes, 8 + 30);
+                                            RawState.sGyroQuatW = BitConverter.ToInt16(reportData.ReportBytes, 8 + 32);
+                                            RawState.sGyroQuatX = BitConverter.ToInt16(reportData.ReportBytes, 8 + 34);
+                                            RawState.sGyroQuatY = BitConverter.ToInt16(reportData.ReportBytes, 8 + 36);
+                                            RawState.sGyroQuatZ = BitConverter.ToInt16(reportData.ReportBytes, 8 + 38);
 
                                             ControllerState StateInFlight = ProcessStateBytes();
 
@@ -1108,10 +1110,10 @@ namespace ExtendInput.Controller
 
                                     case VSCEventType.CONNECTION_DETAIL:
                                         {
-                                            //reportData[1 + 3] // 0x01?
+                                            //reportData.ReportBytes[3] // 0x01?
 
                                             // Connection detail. 0x01 for disconnect, 0x02 for connect, 0x03 for pairing request.
-                                            ConnectionState ConnectionStateV = (ConnectionState)reportData[1 + 4];
+                                            ConnectionState ConnectionStateV = (ConnectionState)reportData.ReportBytes[4];
 
                                             switch (ConnectionStateV)
                                             {
@@ -1132,21 +1134,21 @@ namespace ExtendInput.Controller
 
                                     case VSCEventType.BATTERY_UPDATE:
                                         {
-                                            //reportData[1 + 3] // 0x0B?
+                                            //reportData.ReportBytes[3] // 0x0B?
 
-                                            UInt32 PacketIndex = BitConverter.ToUInt32(reportData, 1 + 4);
+                                            UInt32 PacketIndex = BitConverter.ToUInt32(reportData.ReportBytes, 4);
 
                                             // only works if controller is configured to send this data
 
                                             // millivolts
-                                            UInt16 BatteryVoltage = BitConverter.ToUInt16(reportData, 1 + 8);
+                                            UInt16 BatteryVoltage = BitConverter.ToUInt16(reportData.ReportBytes, 8);
                                             //BitConverter.ToUInt16(reportData, 1 + 10); // UNKNOWN, stuck at 100
                                         }
                                         break;
 
                                     default:
                                         {
-                                            Console.WriteLine($"Unknown Packet Type {(int)EventType:D3} of length {reportData.Length}\t{BitConverter.ToString(reportData)}");
+                                            Console.WriteLine($"Unknown Packet Type {(int)EventType:D3} of length {reportData.ReportBytes.Length}\t{reportData.ReportId:X2}:{BitConverter.ToString(reportData.ReportBytes)}");
                                         }
                                         break;
                                 }

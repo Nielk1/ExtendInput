@@ -499,7 +499,7 @@ namespace ExtendInput.DeviceProvider
                     Console.ResetColor();
                     //finishedPacket();
                     DeviceReportEvent threadSafeEvent = DeviceReport;
-                    threadSafeEvent?.Invoke(_MergedGlobals__rx_buffer);
+                    threadSafeEvent?.Invoke(new GenericBytesReport() { CodeString = "SXTYBEAT", ReportBytes = _MergedGlobals__rx_buffer });
 
                     //Console.WriteLine();
                 }
@@ -583,7 +583,7 @@ namespace ExtendInput.DeviceProvider
             return this.UniqueKey == other.UniqueKey;
         }
 
-        public event DeviceReportEvent ControllerNameUpdated;
+        //public event DeviceReportEvent ControllerNameUpdated;
 
 
         public event DeviceReportEvent DeviceReport;

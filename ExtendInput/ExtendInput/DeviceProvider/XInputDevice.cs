@@ -112,21 +112,15 @@ namespace ExtendInput.DeviceProvider
 
                             DeviceReportEvent threadSafeEvent = DeviceReport;
 
-                            byte[] RawData = new byte[12];
-                            RawData[0] = (byte)(ushort)State.Gamepad.Buttons;
-                            RawData[1] = (byte)((ushort)State.Gamepad.Buttons >> 8);
-                            RawData[2] = State.Gamepad.LeftTrigger;
-                            RawData[3] = State.Gamepad.RightTrigger;
-                            RawData[4] = (byte)State.Gamepad.LeftThumbX;
-                            RawData[5] = (byte)(State.Gamepad.LeftThumbX >> 8);
-                            RawData[6] = (byte)State.Gamepad.LeftThumbY;
-                            RawData[7] = (byte)(State.Gamepad.LeftThumbY >> 8);
-                            RawData[8] = (byte)State.Gamepad.RightThumbX;
-                            RawData[9] = (byte)(State.Gamepad.RightThumbX >> 8);
-                            RawData[10] = (byte)State.Gamepad.RightThumbY;
-                            RawData[11] = (byte)(State.Gamepad.RightThumbY >> 8);
-
-                            threadSafeEvent?.Invoke(RawData);
+                            threadSafeEvent?.Invoke(new XInputReport() {
+                                wButtons = (UInt16)State.Gamepad.Buttons,
+                                bLeftTrigger = State.Gamepad.LeftTrigger,
+                                bRightTrigger = State.Gamepad.RightTrigger,
+                                sThumbLX = State.Gamepad.LeftThumbX,
+                                sThumbLY = State.Gamepad.LeftThumbY,
+                                sThumbRX = State.Gamepad.RightThumbX,
+                                sThumbRY = State.Gamepad.RightThumbY,
+                            });
 
                             Thread.Sleep(1000 / 60);
                         }
