@@ -152,6 +152,7 @@ namespace ExtendInput.Controller
                 }
             }
         }
+        public bool IsVirtual => false;
 
         public bool SensorsEnabled;
         private HidDevice _device;

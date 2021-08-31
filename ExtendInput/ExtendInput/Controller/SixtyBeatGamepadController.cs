@@ -44,7 +44,9 @@ namespace ExtendInput.Controller
         }
 
         public bool HasMotion => false;
+        public bool IsReady => true;
         public bool IsPresent => true;
+        public bool IsVirtual => false;
 
         int Initalized;
         public SixtyBeatGamepadController(SixtyBeatAudioDevice device)

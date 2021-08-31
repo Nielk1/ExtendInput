@@ -79,7 +79,9 @@ namespace ExtendInput.Controller
         IDevice DeviceHackRef { get; }
         bool HasMotion { get; }
 
+        bool IsReady { get; }
         bool IsPresent { get; }
+        bool IsVirtual { get; }
 
         void DeInitalize();
         ControllerState GetState();

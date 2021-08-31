@@ -50,7 +50,9 @@ namespace ExtendInput.Controller
 
         public bool HasMotion => true;
 
+        public bool IsReady => true;
         public bool IsPresent => true;
+        public bool IsVirtual => false;
 
         public ControllerState GetState()
         {

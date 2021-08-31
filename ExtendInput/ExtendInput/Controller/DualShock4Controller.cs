@@ -569,6 +569,19 @@ namespace ExtendInput.Controller
         private ReaderWriterLockSlim StateMutationLock = new ReaderWriterLockSlim();
 
         public bool HasMotion => true;
+        public bool IsReady
+        {
+            get
+            {
+                switch (ConnectionType)
+                {
+                    case EConnectionType.USB: return true;
+                    case EConnectionType.Bluetooth: return true;
+                    case EConnectionType.Dongle: return ControllerSubType != DS4SubType.Unknown; // not sure about this one
+                    default: return false;
+                }
+            }
+        }
         public bool IsPresent
         {
             get
@@ -582,6 +595,7 @@ namespace ExtendInput.Controller
                 }
             }
         }
+        public bool IsVirtual => ConnectionType == EConnectionType.Virtual;
         public ControllerState GetState()
         {
             return State;
