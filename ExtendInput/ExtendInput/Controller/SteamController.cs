@@ -134,6 +134,7 @@ namespace ExtendInput.Controller
                     case EConnectionType.USB: return true;
                     case EConnectionType.Bluetooth: return true;
                     case EConnectionType.Dongle: return ConState != InternalConState.Unknown;
+                    case EConnectionType.Virtual: return true;
                     default: return false;
                 }
             }
@@ -148,6 +149,7 @@ namespace ExtendInput.Controller
                     case EConnectionType.USB: return true;
                     case EConnectionType.Bluetooth: return true;
                     case EConnectionType.Dongle: return ConState == InternalConState.Connected;
+                    case EConnectionType.Virtual: return true;
                     default: return false;
                 }
             }

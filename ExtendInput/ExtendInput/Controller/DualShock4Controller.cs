@@ -578,6 +578,7 @@ namespace ExtendInput.Controller
                     case EConnectionType.USB: return true;
                     case EConnectionType.Bluetooth: return true;
                     case EConnectionType.Dongle: return ControllerSubType != DS4SubType.Unknown; // not sure about this one
+                    case EConnectionType.Virtual: return true;
                     default: return false;
                 }
             }
@@ -591,6 +592,7 @@ namespace ExtendInput.Controller
                     case EConnectionType.USB: return true;
                     case EConnectionType.Bluetooth: return true;
                     case EConnectionType.Dongle: return ControllerSubType != DS4SubType.None;
+                    case EConnectionType.Virtual: return true;
                     default: return false;
                 }
             }
