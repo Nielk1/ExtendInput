@@ -13,7 +13,8 @@ namespace ExtendInput.DevPKey
         {
             string deviceInstanceId = devicePath;
             deviceInstanceId = deviceInstanceId.Remove(0, deviceInstanceId.LastIndexOf("?\\") + 2);
-            deviceInstanceId = deviceInstanceId.Remove(deviceInstanceId.LastIndexOf('{'));
+            //if (deviceInstanceId.LastIndexOf('{') > -1)
+                deviceInstanceId = deviceInstanceId.Remove(deviceInstanceId.LastIndexOf('{'));
             deviceInstanceId = deviceInstanceId.Replace('#', '\\');
             if (deviceInstanceId.EndsWith("\\"))
             {
@@ -65,10 +66,11 @@ namespace ExtendInput.DevPKey
             ulong propertyType = 0;
             var requiredSize = 0;
 
-            Guid hidGuid = new Guid();
-            Native.PnpDevicePropertyAPINative.HidD_GetHidGuid(ref hidGuid);
-            IntPtr deviceInfoSet = Native.PnpDevicePropertyAPINative.SetupDiGetClassDevs(ref hidGuid, deviceInstanceId, 0, Native.PnpDevicePropertyAPINative.DIGCF_PRESENT | Native.PnpDevicePropertyAPINative.DIGCF_DEVICEINTERFACE);
-            //IntPtr deviceInfoSet = Native.PnpDevicePropertyAPINative.SetupDiGetClassDevs(IntPtr.Zero, deviceInstanceId, 0, Native.PnpDevicePropertyAPINative.DIGCF_PRESENT | Native.PnpDevicePropertyAPINative.DIGCF_DEVICEINTERFACE | Native.PnpDevicePropertyAPINative.DIGCF_ALLCLASSES);
+            //Guid hidGuid = new Guid();
+            //Native.PnpDevicePropertyAPINative.HidD_GetHidGuid(ref hidGuid);
+            //IntPtr deviceInfoSet = Native.PnpDevicePropertyAPINative.SetupDiGetClassDevs(ref hidGuid, deviceInstanceId, 0, Native.PnpDevicePropertyAPINative.DIGCF_PRESENT | Native.PnpDevicePropertyAPINative.DIGCF_DEVICEINTERFACE);
+            //IntPtr deviceInfoSet = Native.PnpDevicePropertyAPINative.SetupDiGetClassDevs(IntPtr.Zero, deviceInstanceId, 0, Native.PnpDevicePropertyAPINative.DIGCF_PRESENT | Native.PnpDevicePropertyAPINative.DIGCF_DEVICEINTERFACE);
+            IntPtr deviceInfoSet = Native.PnpDevicePropertyAPINative.SetupDiGetClassDevs(IntPtr.Zero, deviceInstanceId, 0, Native.PnpDevicePropertyAPINative.DIGCF_PRESENT | Native.PnpDevicePropertyAPINative.DIGCF_DEVICEINTERFACE | Native.PnpDevicePropertyAPINative.DIGCF_ALLCLASSES);
             //int memberIndex = 0;
             Dictionary<Native.PnpDevicePropertyAPINative.DEVPROPKEY, string> results = null;
             Native.PnpDevicePropertyAPINative.SetupDiEnumDeviceInfo(deviceInfoSet, 0, ref deviceInfoData);

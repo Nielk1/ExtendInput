@@ -452,7 +452,7 @@
                                 cardWrapper.append(cardImage);
                             }
 
-                            cardWrapper.append('<div class="card-body"><h5 class="card-title"><img class="connection_icon" /><img class="controller_icon" /><span class="controller_name"></span></h5><p class="card-text" style="white-space:pre;"></p></div>');
+                            cardWrapper.append('<div class="card-body"><h5 class="card-title"><img class="connection_icon" /><img class="controller_icon" /><span class="controller_name"></span></h5><p class="card-text controller_name_details" style="white-space:pre;"></p><p class="card-text controller_connection_unique_id" style="white-space:pre;"></p><p class="card-text controller_device_unique_id" style="white-space:pre;"></p></div>');
 
                             if (ControllerIcon != null) {
                                 var cardImage = cardWrapper.find('.controller_icon');
@@ -544,9 +544,19 @@
 
                         wrapper.find('.controller_name').text(controller.Name);
                         if (controller.NameDetails != null) {
-                            wrapper.find('.card-text').text(controller.NameDetails.join('\r\n'));
+                            wrapper.find('.controller_name_details').text(controller.NameDetails.join('\r\n'));
                         } else {
-                            wrapper.find('.card-text').text('');
+                            wrapper.find('.controller_name_details').text('');
+                        }
+                        if (controller.ConnectionUniqueID != null) {
+                            wrapper.find('.controller_connection_unique_id').text("Connection:\r\n" + controller.ConnectionUniqueID);
+                        } else {
+                            wrapper.find('.controller_connection_unique_id').text('');
+                        }
+                        if (controller.DeviceUniqueID != null) {
+                            wrapper.find('.controller_device_unique_id').text("Device:\r\n" + controller.DeviceUniqueID);
+                        } else {
+                            wrapper.find('.controller_device_unique_id').text('');
                         }
 
                         if (existing.length == 0) {

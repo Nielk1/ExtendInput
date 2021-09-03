@@ -28,13 +28,20 @@ namespace ExtendInput.Controller
 
         const float PadAngle = 0.261799f; // 15 deg in radians
 
-        public string UniqueID
+        public string ConnectionUniqueID
         {
             get
             {
                 //if (!string.IsNullOrWhiteSpace(SerialNumber))
                 //    return SerialNumber;
                 return _device.UniqueKey;
+            }
+        }
+        public string DeviceUniqueID
+        {
+            get
+            {
+                return SerialNumber;
             }
         }
         public string[] ConnectionTypeCode

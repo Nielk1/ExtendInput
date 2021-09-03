@@ -61,13 +61,21 @@ namespace ExtendInput.Controller
 
         public EConnectionType ConnectionType { get; private set; }
 
-        public string UniqueID
+        public string ConnectionUniqueID
         {
             get
             {
                 //if (!string.IsNullOrWhiteSpace(SerialNumber))
                 //    return SerialNumber;
                 return _device.UniqueKey;
+            }
+        }
+
+        public string DeviceUniqueID
+        {
+            get
+            {
+                return null;
             }
         }
 

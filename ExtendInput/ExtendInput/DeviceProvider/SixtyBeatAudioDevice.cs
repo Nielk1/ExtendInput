@@ -76,13 +76,32 @@ namespace ExtendInput.DeviceProvider
         static byte currentByte = 0;
         static int currentBitIndex = 0;
 
-        public SixtyBeatAudioDevice(int audioDeviceNumber = 0)
+        public SixtyBeatAudioDevice(string deviceId)
         {
+            var enumerator = new NAudio.CoreAudioApi.MMDeviceEnumerator();
+            //cycle through all audio devices
+            int audioDeviceNumber = -1;
+            for (int i = 0; i < WaveIn.DeviceCount; i++)
+            {
+                // these happen to enumate the same order
+                NAudio.CoreAudioApi.MMDevice dev = enumerator.EnumerateAudioEndPoints(NAudio.CoreAudioApi.DataFlow.Capture, NAudio.CoreAudioApi.DeviceState.Active)[i];
+                //Guid scratch = (Guid)(dev.Properties[new NAudio.CoreAudioApi.PropertyKey(DevPKey.Native.PnpDevicePropertyAPINative.DEVPKEY_Device_ContainerId.fmtid, (int)DevPKey.Native.PnpDevicePropertyAPINative.DEVPKEY_Device_ContainerId.pid)].Value);
+                //blder.AppendLine($"{i}\t{scratch}\t{dev}");
+
+                string ItemDeviceID = dev.Properties[new NAudio.CoreAudioApi.PropertyKey(DevPKey.Native.PnpDevicePropertyAPINative.DEVPKEY_Audio_InstanceId.fmtid, (int)DevPKey.Native.PnpDevicePropertyAPINative.DEVPKEY_Audio_InstanceId.pid)].Value.ToString();
+                //Dictionary<DevPKey.Native.PnpDevicePropertyAPINative.DEVPROPKEY, string> properties = DevPKey.PnpDevicePropertyAPI.GetDeviceProperties(DeviceID);
+                if (ItemDeviceID == deviceId)
+                {
+                    audioDeviceNumber = i;
+                    break;
+                }
+            }
+
             Properties = new Dictionary<string, dynamic>();
 
             previousValues = new RingBuffer<Int16>(BUFFER);
             previousAbsValues = new RingBuffer<Int16>(BUFFER);
-
+            
             WaveInEvent wi = new WaveInEvent();
             wi.DeviceNumber = audioDeviceNumber;
             wi.WaveFormat = new NAudio.Wave.WaveFormat(RATE, 1);
@@ -208,12 +227,12 @@ namespace ExtendInput.DeviceProvider
                     self_checksumOK = false;
                     if (!processCountsWithThreshold(63))
                     {
-                        for (int v60_ = 1; v60_ < 10; v60_++) // shouldn't this start at 1 as the above already tried?
+                        for (int i = 1; i < 10; i++) // shouldn't this start at 1 as the above already tried?
                         {
                             rx_buffer_len = 0;
                             currentBitIndex = 0;
                             currentByte = 0;
-                            if (processCountsWithThreshold(63 + v60_))
+                            if (processCountsWithThreshold(63 + i))
                             {
                                 if (self_checksumOK)
                                     break;
@@ -221,7 +240,7 @@ namespace ExtendInput.DeviceProvider
                             rx_buffer_len = 0;
                             currentBitIndex = 0;
                             currentByte = 0;
-                            if (processCountsWithThreshold(63 - v60_))
+                            if (processCountsWithThreshold(63 - i))
                             {
                                 if (self_checksumOK)
                                     break;

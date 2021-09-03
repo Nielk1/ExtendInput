@@ -74,13 +74,32 @@ namespace ExtendInput.Controller
         string Name { get; }
         string[] NameDetails { get; }
 
-        string UniqueID { get; }
+        /// <summary>
+        /// Connection ID, set my OS, may have source prefixed
+        /// </summary>
+        string ConnectionUniqueID { get; }
+
+        /// <summary>
+        /// Device ID, based on MAC or Serial Number, may be null or change
+        /// </summary>
+        string DeviceUniqueID { get; }
 
         IDevice DeviceHackRef { get; }
         bool HasMotion { get; }
 
+        /// <summary>
+        /// Is the device ready to be used?
+        /// </summary>
         bool IsReady { get; }
+
+        /// <summary>
+        /// Is the device present? A dongle with no device connected is not present.
+        /// </summary>
         bool IsPresent { get; }
+
+        /// <summary>
+        /// Is the device virtual? Virtual devices have no hardware and are used to artificially output controller input.
+        /// </summary>
         bool IsVirtual { get; }
 
         void DeInitalize();

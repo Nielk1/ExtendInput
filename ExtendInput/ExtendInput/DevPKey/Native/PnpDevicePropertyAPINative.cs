@@ -17,9 +17,8 @@ namespace ExtendInput.DevPKey.Native
         public static DEVPROPKEY DEVPKEY_Device_Siblings              = new DEVPROPKEY { fmtid = new Guid(0x4340a6c5, 0x93fa, 0x4706, 0x97, 0x2c, 0x7b, 0x64, 0x80, 0x08, 0xa5, 0xa7), pid =  10 };
         public static DEVPROPKEY DEVPKEY_Device_InstanceId            = new DEVPROPKEY { fmtid = new Guid(0x78c34fc8, 0x104a, 0x4aca, 0x9e, 0xa4, 0x52, 0x4d, 0x52, 0x99, 0x6e, 0x57), pid = 256 };
         public static DEVPROPKEY DEVPKEY_Device_ContainerId           = new DEVPROPKEY { fmtid = new Guid(0x8c7ed206, 0x3f8a, 0x4827, 0xb3, 0xab, 0xae, 0x9e, 0x1f, 0xae, 0xfc, 0x6c), pid =   2 };
-
-
-
+        
+        public static DEVPROPKEY DEVPKEY_Audio_InstanceId             = new DEVPROPKEY { fmtid = new Guid(0x9c119480, 0xddc2, 0x4954, 0xa1, 0x50, 0x5b, 0xd2, 0x40, 0xd4, 0x54, 0xad), pid =   2 };
 
 
         public const int FILE_FLAG_OVERLAPPED = 0x40000000;

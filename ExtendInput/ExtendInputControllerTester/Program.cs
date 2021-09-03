@@ -49,7 +49,7 @@ namespace ExtendInputControllerTester
         {
             ControllersLock.Wait();
             {
-                string md5 = CreateMD5(controller.UniqueID);
+                string md5 = CreateMD5(controller.ConnectionUniqueID);
                 //Write_ControllerAdded(controller);
                 controller.ControllerMetadataUpdate += DeviceManager_ControllerMetadataUpdate;
                 Controllers[md5] = controller;

@@ -436,13 +436,20 @@ namespace ExtendInput.Controller
 
         //private ControllerSubTypeAttribute NO8952Attr = DS4SubType.No8952.GetAttribute<ControllerSubTypeAttribute>();
 
-        public string UniqueID
+        public string ConnectionUniqueID
         {
             get
             {
                 //if(!string.IsNullOrWhiteSpace(SerialNumber))
                 //    return SerialNumber;
                 return _device.UniqueKey;
+            }
+        }
+        public string DeviceUniqueID
+        {
+            get
+            {
+                return SerialNumber;
             }
         }
 

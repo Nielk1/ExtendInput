@@ -12,7 +12,7 @@ namespace ExtendInput.Controller
     {
         public EConnectionType ConnectionType => EConnectionType.Unknown;
 
-        public string UniqueID
+        public string ConnectionUniqueID
         {
             get
             {
@@ -21,6 +21,14 @@ namespace ExtendInput.Controller
                 return _device.UniqueKey;
             }
         }
+        public string DeviceUniqueID
+        {
+            get
+            {
+                return null;
+            }
+        }
+
         public string[] ConnectionTypeCode { get; private set; }
         public string[] ControllerTypeCode { get; private set; }
         public string Name
