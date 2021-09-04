@@ -20,6 +20,8 @@ namespace ExtendInput.DeviceProvider
         public Dictionary<string, dynamic> Properties { get; private set; }
 
 
+        private string DeviceID;
+
         private bool IsOpen = false;
 
 
@@ -99,6 +101,8 @@ namespace ExtendInput.DeviceProvider
             lock (ExistingDevices)
                 return ExistingDevices.Contains(deviceId);
         }
+
+        private WaveInEvent wi;
         public SixtyBeatAudioDevice(string deviceId)
         {
             var enumerator = new NAudio.CoreAudioApi.MMDeviceEnumerator();
@@ -116,6 +120,7 @@ namespace ExtendInput.DeviceProvider
                 if (ItemDeviceID == deviceId)
                 {
                     audioDeviceNumber = i;
+                    this.DeviceID = ItemDeviceID;
                     break;
                 }
             }
@@ -125,26 +130,51 @@ namespace ExtendInput.DeviceProvider
             previousValues = new RingBuffer<Int16>(BUFFER);
             previousAbsValues = new RingBuffer<Int16>(BUFFER);
             
-            WaveInEvent wi = new WaveInEvent();
+            wi = new WaveInEvent();
             wi.DeviceNumber = audioDeviceNumber;
             wi.WaveFormat = new NAudio.Wave.WaveFormat(RATE, 1);
             wi.BufferMilliseconds = (int)((double)BUFFERSIZE / (double)RATE * 1000.0);
             wi.DataAvailable += new EventHandler<WaveInEventArgs>(AudioDataAvailable);
-
-            try
+        }
+        public bool StartReading()
+        {
+            lock (wi)
             {
-                wi.StartRecording();
-            }
-            catch
-            {
-                string msg = "Could not record from audio device!\n\n";
-                msg += "Is your microphone plugged in?\n";
-                msg += "Is it set as your default recording device?";
-                Console.WriteLine(msg);
+                try
+                {
+                    wi.StartRecording();
+                    return true;
+                }
+                catch (InvalidOperationException ex)
+                {
+                    if (ex.Message == "Already recording")
+                    {
+                        try
+                        {
+                            Thread.Sleep(100);
+                            wi.StartRecording();
+                            return true;
+                        }
+                        catch
+                        {
+                            return false;
+                        }
+                    }
+                    return false;
+                }
+                catch
+                {
+                    return false;
+                }
             }
         }
+        public void CloseDevice()
+        {
+            lock (wi)
+                wi.StopRecording();
+        }
 
-        void AudioDataAvailable(object sender, WaveInEventArgs e)
+        private void AudioDataAvailable(object sender, WaveInEventArgs e)
         {
             if (e.BytesRecorded > 0)
             {
@@ -164,7 +194,7 @@ namespace ExtendInput.DeviceProvider
             }
         }
 
-        Int16 FirstPassFilter(Int16 amplitude)
+        private Int16 FirstPassFilter(Int16 amplitude)
         {
             // possbly a 2-wide box filter
             Int16 currentAmplitude = amplitude;
@@ -175,7 +205,7 @@ namespace ExtendInput.DeviceProvider
             return amplitude;
         }
 
-        void handleValue(Int16 amplitude)
+        private void handleValue(Int16 amplitude)
         {
             amplitude = FirstPassFilter(amplitude);
 
@@ -323,7 +353,7 @@ namespace ExtendInput.DeviceProvider
             }
         }
 
-        bool processCountsWithThreshold(int threshold, int countsOffset = 0)
+        private bool processCountsWithThreshold(int threshold, int countsOffset = 0)
         {
             bool flipFlop = false;
             bool doingFlip = false;
@@ -358,7 +388,7 @@ namespace ExtendInput.DeviceProvider
             return true;
         }
 
-        bool handleBit(bool bit)
+        private bool handleBit(bool bit)
         {
             int bit_ = bit ? 1 : 0;
             /*{
@@ -385,7 +415,7 @@ namespace ExtendInput.DeviceProvider
             return false;
         }
 
-        bool verifyChecksum()
+        private bool verifyChecksum()
         {
             self_checksumOK = false;
             if (rx_buffer_len > 6)
@@ -417,16 +447,6 @@ namespace ExtendInput.DeviceProvider
                 self_checksumOK = self_receivedChecksum == self_expectedChecksum;
 
                 {
-                    Console.ForegroundColor = self_checksumOK ? ConsoleColor.Green : ConsoleColor.Red;
-                    Console.Write($"{currentBitIndex}:{self_receivedChecksum:X2}:{self_expectedChecksum:X2}:");
-                    for (int i = 0; i < _MergedGlobals__rx_buffer.Length; i++)
-                    {
-                        //Console.Write($"{_MergedGlobals__rx_buffer[i]:X2} ");
-                        Console.Write(Convert.ToString(_MergedGlobals__rx_buffer[i], 2).PadLeft(8, '0'));
-                        Console.Write(" ");
-                        //fs.Write(BitConverter.GetBytes(_MergedGlobals__rx_buffer[i]), 0, sizeof(Int16));
-                    }
-                    Console.ResetColor();
                     //finishedPacket();
                     DeviceReportEvent threadSafeEvent = DeviceReport;
                     threadSafeEvent?.Invoke(new GenericBytesReport() { CodeString = "SXTYBEAT", ReportBytes = _MergedGlobals__rx_buffer }); // TODO: consider a `60BT` report type instead
@@ -438,7 +458,7 @@ namespace ExtendInput.DeviceProvider
             return self_checksumOK;
         }
 
-        byte bitreverse(byte a1)
+        private byte bitreverse(byte a1)
         {
             byte v1 = a1;
             byte v2 = (byte)(a1 & 1);
@@ -506,7 +526,7 @@ namespace ExtendInput.DeviceProvider
             return string.Empty;// internalDevice.GetSerialNumber();
         }
 
-        public string UniqueKey => $"{this.GetType().UnderlyingSystemType.GUID} {this.DevicePath}";
+        public string UniqueKey => $"SixtyBeatAudioDevice {this.DeviceID}";
 
         bool IEquatable<IDevice>.Equals(IDevice other)
         {

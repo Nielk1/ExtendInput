@@ -14,6 +14,8 @@ using ExtendInput.Controls;
 using Newtonsoft.Json.Linq;
 using EmbedIO.Files;
 using System.Web;
+using ExtendInput.DeviceProvider;
+using Newtonsoft.Json;
 
 namespace ExtendInputControllerTester
 {
@@ -97,6 +99,7 @@ namespace ExtendInputControllerTester
                 //.WithModule(new FileModule("/images/controller", provider))
                 .WithModule(new ActionModule("/poll_controller", HttpVerbs.Get, PollController))
                 .WithModule(new ActionModule("/poll_other", HttpVerbs.Get, PollOther))
+                .WithModule(new ActionModule("/manual_device", HttpVerbs.Post, ManualDevice))
                 .WithModule(new ActionModule("/activate_controller", HttpVerbs.Post, ActivateController))
                 .WithModule(new ActionModule("/alternate_controller", HttpVerbs.Post, AlternateController))
                 .WithModule(new ActionModule("/", HttpVerbs.Get, ctx => ctx.SendStringAsync(File.ReadAllText("../../index.html"), "text/html", Encoding.UTF8)));
@@ -181,16 +184,68 @@ namespace ExtendInputControllerTester
                     }
                 }
 
+                Dictionary<string, string> ManualDevices = new Dictionary<string, string>();
+                foreach (IDeviceProvider provider in DeviceManager.GetManualDeviceProviders())
+                {
+                    string Name = (Attribute.GetCustomAttribute(provider.GetType(), typeof(DeviceProviderAttribute)) as DeviceProviderAttribute)?.TypeString;
+                    string Code = (Attribute.GetCustomAttribute(provider.GetType(), typeof(DeviceProviderAttribute)) as DeviceProviderAttribute)?.TypeCode;
+                    //ToolStripMenuItem itm = new ToolStripMenuItem(Name ?? provider.ToString(), null, LoadManualDevice);
+                    //itm.DropDown.AutoClose = false;
+                    //itm.Tag = new ManualSelectionMetadata() { ParentMenuItem = itm, Provider = provider, DontClose = true, };
+                    //tsmiManualControllers.DropDownItems.Add(itm);
+                    ManualDevices[Code] = Name;
+                }
+
                 await context.SendDataAsync(new {
                     Controllers = Controllers,
                     ControllerImages = ControllerImages,
                     IconImages = IconImages,
+                    ManualDevices = ManualDevices,
                 });
             }
             finally
             {
                 ControllersLock.Release();
             }
+        }
+
+        private static async Task ManualDevice(IHttpContext context)
+        {
+            //await ControllersLock.WaitAsync();
+            try
+            {
+                string raw = await context.GetRequestBodyAsStringAsync();
+                ManualData data = JsonConvert.DeserializeObject<ManualData>(raw);
+
+                foreach (IDeviceProvider provider in DeviceManager.GetManualDeviceProviders())
+                {
+                    string Name = (Attribute.GetCustomAttribute(provider.GetType(), typeof(DeviceProviderAttribute)) as DeviceProviderAttribute)?.TypeString;
+                    string Code = (Attribute.GetCustomAttribute(provider.GetType(), typeof(DeviceProviderAttribute)) as DeviceProviderAttribute)?.TypeCode;
+
+                    if (Code == data.Code)
+                    {
+                        IDeviceManualTriggerContext retVal = provider.ManualTrigger(data.Data);
+                        await context.SendDataAsync(new ManualDataOut() { Code = Code, Data = retVal });
+                        return;
+                    }
+                }
+            }
+            finally
+            {
+                //ControllersLock.Release();
+            }
+        }
+
+        class ManualData
+        {
+            public string Code { get; set; }
+            public DeviceManualTriggerContextOption Data { get; set; }
+        }
+
+        class ManualDataOut
+        {
+            public string Code { get; set; }
+            public IDeviceManualTriggerContext Data { get; set; }
         }
 
         private static async Task AlternateController(IHttpContext context)

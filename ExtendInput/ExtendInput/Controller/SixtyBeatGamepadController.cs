@@ -55,11 +55,11 @@ namespace ExtendInput.Controller
         public bool IsPresent => true;
         public bool IsVirtual => false;
 
-        int Initalized;
+        bool Initalized;
         public SixtyBeatGamepadController(SixtyBeatAudioDevice device)
         {
-            ConnectionTypeCode = new string[] { "CONNECTION_UNKNOWN" };
-            ControllerTypeCode = new string[] { "DEVICE_GAMEPAD" };
+            ConnectionTypeCode = new string[] { "CONNECTION_WIRE_35MM_PHONE_TRRS", "CONNECTION_WIRE" };
+            ControllerTypeCode = new string[] { "DEVICE_SIXTYBEAT_GAMEPAD", "DEVICE_GAMEPAD" };
 
             State.Controls["quad_left"] = new ControlButtonQuad();
             State.Controls["quad_right"] = new ControlButtonQuad();
@@ -71,7 +71,7 @@ namespace ExtendInput.Controller
             State.Controls["stick_right"] = new ControlStick(HasClick: true);
 
             _device = device;
-            Initalized = 0;
+            Initalized = false;
 
             _device.DeviceReport += OnReport;
         }
@@ -158,36 +158,27 @@ namespace ExtendInput.Controller
             
         }
 
+        private object InitalizeLock = new object();
         public void Initalize()
         {
-            if (Initalized > 1) return;
-
-            HalfInitalize();
-
-            Initalized = 2;
-            //_device.StartReading();
-        }
-
-        public void HalfInitalize()
-        {
-            if (Initalized > 0) return;
-
-            Initalized = 1;
-
-            if (ConnectionType == EConnectionType.Dongle)
+            lock (InitalizeLock)
             {
-                //_device.StartReading();
+                if (Initalized) return;
+
+                if (_device.StartReading())
+                    Initalized = true;
             }
         }
 
         public void DeInitalize()
         {
-            if (Initalized == 0) return;
+            lock (InitalizeLock)
+            {
+                if (!Initalized) return;
 
-            //_device.StopReading();
-
-            Initalized = 0;
-            //_device.CloseDevice();
+                _device.CloseDevice();
+                Initalized = false;
+            }
         }
 
         public void SetActiveAlternateController(string ControllerID) { }

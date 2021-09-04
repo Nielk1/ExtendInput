@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace ExtendInput.DeviceProvider
 {
-    [DeviceProvider(TypeString = "XInput", SupportsAutomaticDetection = true, SupportsManualyQuery = true, RequiresManualConfiguration = false)]
+    [DeviceProvider(TypeString = "XInput", TypeCode = "XINPUT", SupportsAutomaticDetection = true, SupportsManualyQuery = true, RequiresManualConfiguration = false)]
     public class XInputDeviceProvider : IDeviceProvider
     {
         private const int MAX_SLOT = 4;

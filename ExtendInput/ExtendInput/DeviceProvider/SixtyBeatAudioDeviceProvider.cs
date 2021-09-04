@@ -10,7 +10,7 @@ using System.Text;
 
 namespace ExtendInput.DeviceProvider
 {
-    [DeviceProvider(TypeString = "60beat Audio", SupportsAutomaticDetection = false, SupportsManualyQuery = true, RequiresManualConfiguration = true)]
+    [DeviceProvider(TypeString = "60beat Audio", TypeCode = "60BA", SupportsAutomaticDetection = false, SupportsManualyQuery = true, RequiresManualConfiguration = true)]
     public class SixtyBeatAudioDeviceProvider : IDeviceProvider
     {
 

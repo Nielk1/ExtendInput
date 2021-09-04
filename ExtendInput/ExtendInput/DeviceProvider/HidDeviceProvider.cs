@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace ExtendInput.DeviceProvider
 {
-    [DeviceProvider(TypeString = "HID", SupportsAutomaticDetection = true, SupportsManualyQuery = true, RequiresManualConfiguration = false)]
+    [DeviceProvider(TypeString = "HID", TypeCode = "HID", SupportsAutomaticDetection = true, SupportsManualyQuery = true, RequiresManualConfiguration = false)]
     public class HidDeviceProvider : IDeviceProvider
     {
         public event DeviceChangeEventHandler DeviceAdded;
@@ -105,6 +105,7 @@ namespace ExtendInput.DeviceProvider
     public class DeviceProviderAttribute : Attribute
     {
         public string TypeString { get; set; }
+        public string TypeCode { get; set; }
         public bool SupportsAutomaticDetection { get; set; }
         public bool SupportsManualyQuery { get; set; }
         public bool RequiresManualConfiguration { get; set; }

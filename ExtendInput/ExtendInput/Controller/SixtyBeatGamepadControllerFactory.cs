@@ -18,7 +18,6 @@ namespace ExtendInput.Controller
 
             {
                 SixtyBeatGamepadController ctrl = new SixtyBeatGamepadController(_device);
-                ctrl.HalfInitalize();
                 return ctrl;
             }
         }
