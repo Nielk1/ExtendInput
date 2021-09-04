@@ -86,8 +86,9 @@ namespace ExtendInput.DeviceProvider
             HidSharp.DeviceList.Local.Changed
         }*/
 
-        public void ManualTrigger()
+        public IDeviceManualTriggerContext ManualTrigger(DeviceManualTriggerContextOption Option)
         {
+            throw new NotImplementedException();
         }
 
     }
@@ -99,7 +100,7 @@ namespace ExtendInput.DeviceProvider
         event DeviceChangeEventHandler DeviceRemoved;
 
         void ScanNow();
-        void ManualTrigger();
+        IDeviceManualTriggerContext ManualTrigger(DeviceManualTriggerContextOption Option);
     }
     public class DeviceProviderAttribute : Attribute
     {

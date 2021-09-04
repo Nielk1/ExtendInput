@@ -11,6 +11,8 @@ namespace ExtendInput.DeviceProvider
 {
     public class SixtyBeatAudioDevice : IDevice
     {
+        private static HashSet<string> ExistingDevices = new HashSet<string>();
+
         public string DevicePath { get { return $"SixtyBeatAudioDevice"; } }
         public int ProductId { get { return 0; } }
         public int VendorId { get { return 0; } }
@@ -33,6 +35,7 @@ namespace ExtendInput.DeviceProvider
         Int16 previousAmplitude = 0;
         Int16 previousPreviousAmplitude = 0;
         Int16 _MergedGlobals_previousValue = 0;
+
         // 2 byte
         int rx_buffer_len = 0;
         int countsBufferIndex = 0;
@@ -70,12 +73,32 @@ namespace ExtendInput.DeviceProvider
 
         Queue<WaveInEventArgs> QueueWaveEvents = new Queue<WaveInEventArgs>();
 
-        static RingBuffer<Int16> previousValues;
-        static RingBuffer<Int16> previousAbsValues;
+        RingBuffer<Int16> previousValues;
+        RingBuffer<Int16> previousAbsValues;
 
-        static byte currentByte = 0;
-        static int currentBitIndex = 0;
+        byte currentByte = 0;
+        int currentBitIndex = 0;
 
+
+        public static SixtyBeatAudioDevice Create(string deviceId)
+        {
+            lock (ExistingDevices)
+            {
+                if (ExistingDevices.Contains(deviceId))
+                    return null;
+
+                SixtyBeatAudioDevice device = new SixtyBeatAudioDevice(deviceId);
+                if (device != null)
+                    ExistingDevices.Add(deviceId);
+
+                return device;
+            }
+        }
+        public static bool DeviceKnown(string deviceId)
+        {
+            lock (ExistingDevices)
+                return ExistingDevices.Contains(deviceId);
+        }
         public SixtyBeatAudioDevice(string deviceId)
         {
             var enumerator = new NAudio.CoreAudioApi.MMDeviceEnumerator();
@@ -415,7 +438,7 @@ namespace ExtendInput.DeviceProvider
             return self_checksumOK;
         }
 
-        static byte bitreverse(byte a1)
+        byte bitreverse(byte a1)
         {
             byte v1 = a1;
             byte v2 = (byte)(a1 & 1);

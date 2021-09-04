@@ -55,8 +55,9 @@ namespace ExtendInput.DeviceProvider
             }
         }
 
-        public void ManualTrigger()
+        public IDeviceManualTriggerContext ManualTrigger(DeviceManualTriggerContextOption Option)
         {
+            throw new NotImplementedException();
         }
     }
 }
