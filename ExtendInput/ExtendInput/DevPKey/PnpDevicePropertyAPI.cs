@@ -90,7 +90,7 @@ namespace ExtendInput.DevPKey
                             {
                                 try
                                 {
-                                    string result = dataBuffer.Take(requiredSize).ToArray().ToUTF16String();
+                                    string result = Encoding.Unicode.GetString(dataBuffer.Take(requiredSize).TakeWhile(dr => dr != '\0').ToArray());
                                     if (result.Length > 4)
                                     {
                                         results.Add(arrItem, result);
