@@ -682,6 +682,7 @@ namespace ExtendInput.Controller
         public void DeInitalize()
         {
             if (PollingState == EPollingState.Inactive) return;
+            if (PollingState == EPollingState.RunOnce) return;
             if (PollingState == EPollingState.SlowPoll) return;
 
             // dongles switch back to slow poll instead of going inactive
