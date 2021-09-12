@@ -31,6 +31,11 @@ namespace ExtendInput.Controller
         RunOnce,
 
         /// <summary>
+        /// This device will poll until it gathers needed information, then stop
+        /// </summary>
+        RunUntilReady,
+
+        /// <summary>
         /// Device is active and being polled constantly
         /// </summary>
         Active,
