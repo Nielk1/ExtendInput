@@ -108,6 +108,8 @@
                 $state_data.empty();
                 //$('#controller_state').remove();
                 if (ControllerActive) {
+                    $.post("/activate_controller", null, function (data) {});
+
                     if (ControllerPollAjax != null) ControllerPollAjax.abort();
                     ControllerActive = false;
                     $controllers.find('.card.border-primary').removeClass('border-primary');

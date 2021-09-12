@@ -16,6 +16,7 @@ using EmbedIO.Files;
 using System.Web;
 using ExtendInput.DeviceProvider;
 using Newtonsoft.Json;
+using Swan.Logging;
 
 namespace ExtendInputControllerTester
 {
@@ -31,6 +32,7 @@ namespace ExtendInputControllerTester
             string urlX = "http://localhost:9697/";
             //string urlX = "http://192.168.0.201:9697/";
             WebServer server = CreateWebServer(urlX);
+            Swan.Logging.Logger.UnregisterLogger<ConsoleLogger>();
             server.RunAsync();
 
             DeviceManager = new DeviceManager();
@@ -280,7 +282,7 @@ namespace ExtendInputControllerTester
 
                 string ControllerID = await context.GetRequestBodyAsStringAsync();
 
-                if (Controllers.ContainsKey(ControllerID))
+                if (!string.IsNullOrWhiteSpace(ControllerID) && Controllers.ContainsKey(ControllerID))
                 {
                     activeController = Controllers[ControllerID];
                     await context.SendDataAsync(true);
