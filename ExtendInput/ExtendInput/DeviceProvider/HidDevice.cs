@@ -32,8 +32,16 @@ namespace ExtendInput.DeviceProvider
             Properties["MaxInputReportLength"] = internalDevice.GetMaxInputReportLength();
             Properties["MaxOutputReportLength"] = internalDevice.GetMaxOutputReportLength();
 
-            Properties["Manufacturer"] = internalDevice.GetManufacturer();
-            Properties["ProductName"] = internalDevice.GetProductName();
+            try
+            {
+                Properties["Manufacturer"] = internalDevice.GetManufacturer();
+            }
+            catch { }
+            try
+            {
+                Properties["ProductName"] = internalDevice.GetProductName();
+            }
+            catch { }
 
             this.internalDevice = internalDevice;
         }
