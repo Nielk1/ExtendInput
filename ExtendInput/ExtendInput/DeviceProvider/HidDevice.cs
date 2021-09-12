@@ -12,6 +12,7 @@ namespace ExtendInput.DeviceProvider
         public string DevicePath { get { return internalDevice.DevicePath; } }
         public int ProductId { get { return internalDevice.ProductID; } }
         public int VendorId { get { return internalDevice.VendorID; } }
+        public int RevisionNumber { get { return internalDevice.ReleaseNumberBcd; } }
 
         public Dictionary<string, dynamic> Properties { get; private set; }
 
@@ -30,6 +31,9 @@ namespace ExtendInput.DeviceProvider
             Properties["MaxFeatureReportLength"] = internalDevice.GetMaxFeatureReportLength();
             Properties["MaxInputReportLength"] = internalDevice.GetMaxInputReportLength();
             Properties["MaxOutputReportLength"] = internalDevice.GetMaxOutputReportLength();
+
+            Properties["Manufacturer"] = internalDevice.GetManufacturer();
+            Properties["ProductName"] = internalDevice.GetProductName();
 
             this.internalDevice = internalDevice;
         }
