@@ -44,11 +44,11 @@ namespace ExtendInput.Controller
         public const int PRODUCT_FLYDIGI_DONGLE_1 = 0x2410;
         public const int PRODUCT_FLYDIGI_DONGLE_2 = 0x2411;
         public const int PRODUCT_FLYDIGI_DONGLE_3 = 0x2411;
-        public const int PRODUCT_FLYDIGI_APEX2 = 0x2411;
+        public const int PRODUCT_FLYDIGI_USB = 0x2411;
         public const int REVISION_FLYDIGI_DONGLE_1 = 0x0303;
         public const int REVISION_FLYDIGI_DONGLE_2 = 0x0303;
         public const int REVISION_FLYDIGI_DONGLE_3 = 0x0401;
-        public const int REVISION_FLYDIGI_APEX2 = 0x0303;
+        public const int REVISION_FLYDIGI_USB = 0x0303;
 
         #region String Definitions
         private const string ATOM_CONNECTION_WIRE = "CONNECTION_WIRE";
@@ -176,10 +176,13 @@ namespace ExtendInput.Controller
         }
         private FlyDigiSubType ControllerSubType = FlyDigiSubType.None;
         private ControllerSubTypeAttribute ControllerAttribute = null;
+        private byte? DetectedDeviceId = null;
         private bool ControlsCreated = false;
 
         private HidDevice _device;
         int reportUsageLock = 0;
+
+        private const int _SLOW_POLL_MS = 1000;
 
         public event ControllerNameUpdateEvent ControllerMetadataUpdate;
         public event ControllerStateUpdateEvent ControllerStateUpdate;
@@ -303,7 +306,32 @@ namespace ExtendInput.Controller
 
             ResetControllerInfo();
 
-            PollingState = EPollingState.RunOnce;
+            // Dongle capable of controller type detection
+            if (_device.VendorId == VENDOR_FLYDIGI)
+            {
+                if ((_device.ProductId == PRODUCT_FLYDIGI_DONGLE_1 && _device.RevisionNumber == REVISION_FLYDIGI_DONGLE_1) // 1 dot dongle
+                 || (_device.ProductId == PRODUCT_FLYDIGI_DONGLE_2 && _device.RevisionNumber == REVISION_FLYDIGI_DONGLE_2) // 2 dot dongle
+                 || (_device.ProductId == PRODUCT_FLYDIGI_DONGLE_3 && _device.RevisionNumber == REVISION_FLYDIGI_DONGLE_3)) // 3 dot dongle
+                {
+                    this.ConnectionType = EConnectionType.Dongle;
+                }
+                else if ((_device.ProductId == PRODUCT_FLYDIGI_USB && _device.RevisionNumber == REVISION_FLYDIGI_USB))
+                {
+                    this.ConnectionType = EConnectionType.USB;
+                }
+
+                if ((_device.ProductId == PRODUCT_FLYDIGI_DONGLE_2 && _device.RevisionNumber == REVISION_FLYDIGI_DONGLE_2) // 2 dot dongle
+                 || (_device.ProductId == PRODUCT_FLYDIGI_DONGLE_3 && _device.RevisionNumber == REVISION_FLYDIGI_DONGLE_3) // 3 dot dongle
+                 || (_device.ProductId == PRODUCT_FLYDIGI_USB && _device.RevisionNumber == REVISION_FLYDIGI_USB)) // controller that supports USB
+                {
+                    this.PollingState = EPollingState.RunUntilReady; // we need to read until we get device info
+                    getDeviceInfoInAndroid();
+                }
+                else
+                {
+                    this.PollingState = EPollingState.RunOnce; // we are either a controller or a dumb 
+                }
+            }
             _device.StartReading();
         }
         public void Dispose()
@@ -322,6 +350,8 @@ namespace ExtendInput.Controller
         {
             if (PollingState == EPollingState.Inactive) return;
             if (PollingState == EPollingState.SlowPoll) return;
+            //if (PollingState == EPollingState.RunOnce) return;
+            if (PollingState == EPollingState.RunUntilReady) return;
 
             // dongles switch back to slow poll instead of going inactive
             if (ConnectionType == EConnectionType.Dongle)
@@ -354,143 +384,198 @@ namespace ExtendInput.Controller
                 {
                     if (reportData.ReportId == 0x04)
                     {
-                        if (reportData.ReportBytes[0] == 0xFE)
+                        switch (reportData.ReportBytes[0])
                         {
-                            StateMutationLock.EnterReadLock();
-                            try
-                            {
-                                // Clone the current state before altering it since the OldState is likely a shared reference
-                                ControllerState StateInFlight = (ControllerState)State.Clone();
-
-                                byte ControllerID = reportData.ReportBytes[27];
-
-                                bool buttonC = (reportData.ReportBytes[6] & 0x01) == 0x01;
-                                bool buttonZ = (reportData.ReportBytes[6] & 0x02) == 0x02;
-                                bool buttonM1 = (reportData.ReportBytes[6] & 0x04) == 0x04;
-                                bool buttonM2 = (reportData.ReportBytes[6] & 0x08) == 0x08;
-                                bool buttonM3 = (reportData.ReportBytes[6] & 0x10) == 0x10;
-                                bool buttonM4 = (reportData.ReportBytes[6] & 0x20) == 0x20;
-                                bool buttonM5 = (reportData.ReportBytes[6] & 0x40) == 0x40;
-                                bool buttonM6 = (reportData.ReportBytes[6] & 0x80) == 0x80;
-                                bool buttonPair = (reportData.ReportBytes[7] & 0x01) == 0x01;
-                                bool buttonHome = (reportData.ReportBytes[7] & 0x08) == 0x08;
-                                bool buttonBack = (reportData.ReportBytes[7] & 0x10) == 0x10;
-                                ////////////////////////////////////////////////////
-                                bool buttonUp = (reportData.ReportBytes[8] & 0x01) == 0x01;
-                                bool buttonRight = (reportData.ReportBytes[8] & 0x02) == 0x02;
-                                bool buttonDown = (reportData.ReportBytes[8] & 0x04) == 0x04;
-                                bool buttonLeft = (reportData.ReportBytes[8] & 0x08) == 0x08;
-                                ////////////////////////////////////////////////////
-                                bool buttonA = (reportData.ReportBytes[8] & 0x10) == 0x10;
-                                bool buttonB = (reportData.ReportBytes[8] & 0x20) == 0x20;
-                                bool buttonSelect = (reportData.ReportBytes[8] & 0x40) == 0x40;
-                                bool buttonX = (reportData.ReportBytes[8] & 0x80) == 0x80;
-                                bool buttonY = (reportData.ReportBytes[9] & 0x01) == 0x01;
-                                bool buttonStart = (reportData.ReportBytes[9] & 0x02) == 0x02;
-                                bool buttonL1 = (reportData.ReportBytes[9] & 0x04) == 0x04;
-                                bool buttonR1 = (reportData.ReportBytes[9] & 0x08) == 0x08;
-                                bool buttonL2 = (reportData.ReportBytes[9] & 0x10) == 0x10;
-                                bool buttonR2 = (reportData.ReportBytes[9] & 0x20) == 0x20;
-                                bool buttonL3 = (reportData.ReportBytes[9] & 0x40) == 0x40;
-                                bool buttonR3 = (reportData.ReportBytes[9] & 0x80) == 0x80;
-                                ////////////////////////////////////////////////////
-                                byte LStickX = reportData.ReportBytes[16];
-                                byte LStickY = reportData.ReportBytes[18];
-                                byte RStickX = reportData.ReportBytes[20];
-                                byte RStickY = reportData.ReportBytes[21];
-                                byte SStickX = reportData.ReportBytes[22];
-                                byte SStickY = reportData.ReportBytes[23];
-                                ////////////////////////////////////////////////////
-                                byte WheelX = reportData.ReportBytes[16]; // or trigger
-                                byte WheelY = reportData.ReportBytes[18]; // or trigger
-                                byte StickRX = reportData.ReportBytes[20];
-                                byte StickRY = reportData.ReportBytes[21];
-
-                                /*if ((ControllerID == 0x01 && _device.Attributes.ProductId == ProductId_X8_Apex1) || (settings.NoApex2 ?? false)) // is APEX1 reportID and is APEX1 VID
+                            case 0xFE:
                                 {
-                                    ds4Controller.SetSliderValue(DualShock4Slider.LeftTrigger, report.Data[22]);
-                                    ds4Controller.SetSliderValue(DualShock4Slider.RightTrigger, report.Data[23]);
+                                    StateMutationLock.EnterReadLock();
+                                    try
+                                    {
+                                        // Clone the current state before altering it since the OldState is likely a shared reference
+                                        ControllerState StateInFlight = (ControllerState)State.Clone();
+
+                                        byte ControllerID = reportData.ReportBytes[27];
+
+                                        bool buttonC = (reportData.ReportBytes[6] & 0x01) == 0x01;
+                                        bool buttonZ = (reportData.ReportBytes[6] & 0x02) == 0x02;
+                                        bool buttonM1 = (reportData.ReportBytes[6] & 0x04) == 0x04;
+                                        bool buttonM2 = (reportData.ReportBytes[6] & 0x08) == 0x08;
+                                        bool buttonM3 = (reportData.ReportBytes[6] & 0x10) == 0x10;
+                                        bool buttonM4 = (reportData.ReportBytes[6] & 0x20) == 0x20;
+                                        bool buttonM5 = (reportData.ReportBytes[6] & 0x40) == 0x40;
+                                        bool buttonM6 = (reportData.ReportBytes[6] & 0x80) == 0x80;
+                                        bool buttonPair = (reportData.ReportBytes[7] & 0x01) == 0x01;
+                                        bool buttonHome = (reportData.ReportBytes[7] & 0x08) == 0x08;
+                                        bool buttonBack = (reportData.ReportBytes[7] & 0x10) == 0x10;
+                                        ////////////////////////////////////////////////////
+                                        bool buttonUp = (reportData.ReportBytes[8] & 0x01) == 0x01;
+                                        bool buttonRight = (reportData.ReportBytes[8] & 0x02) == 0x02;
+                                        bool buttonDown = (reportData.ReportBytes[8] & 0x04) == 0x04;
+                                        bool buttonLeft = (reportData.ReportBytes[8] & 0x08) == 0x08;
+                                        ////////////////////////////////////////////////////
+                                        bool buttonA = (reportData.ReportBytes[8] & 0x10) == 0x10;
+                                        bool buttonB = (reportData.ReportBytes[8] & 0x20) == 0x20;
+                                        bool buttonSelect = (reportData.ReportBytes[8] & 0x40) == 0x40;
+                                        bool buttonX = (reportData.ReportBytes[8] & 0x80) == 0x80;
+                                        bool buttonY = (reportData.ReportBytes[9] & 0x01) == 0x01;
+                                        bool buttonStart = (reportData.ReportBytes[9] & 0x02) == 0x02;
+                                        bool buttonL1 = (reportData.ReportBytes[9] & 0x04) == 0x04;
+                                        bool buttonR1 = (reportData.ReportBytes[9] & 0x08) == 0x08;
+                                        bool buttonL2 = (reportData.ReportBytes[9] & 0x10) == 0x10;
+                                        bool buttonR2 = (reportData.ReportBytes[9] & 0x20) == 0x20;
+                                        bool buttonL3 = (reportData.ReportBytes[9] & 0x40) == 0x40;
+                                        bool buttonR3 = (reportData.ReportBytes[9] & 0x80) == 0x80;
+                                        ////////////////////////////////////////////////////
+                                        byte LStickX = reportData.ReportBytes[16];
+                                        byte LStickY = reportData.ReportBytes[18];
+                                        byte RStickX = reportData.ReportBytes[20];
+                                        byte RStickY = reportData.ReportBytes[21];
+                                        byte SStickX = reportData.ReportBytes[22];
+                                        byte SStickY = reportData.ReportBytes[23];
+                                        ////////////////////////////////////////////////////
+                                        byte WheelX = reportData.ReportBytes[16]; // or trigger
+                                        byte WheelY = reportData.ReportBytes[18]; // or trigger
+                                        byte StickRX = reportData.ReportBytes[20];
+                                        byte StickRY = reportData.ReportBytes[21];
+
+                                        /*if ((ControllerID == 0x01 && _device.Attributes.ProductId == ProductId_X8_Apex1) || (settings.NoApex2 ?? false)) // is APEX1 reportID and is APEX1 VID
+                                        {
+                                            ds4Controller.SetSliderValue(DualShock4Slider.LeftTrigger, report.Data[22]);
+                                            ds4Controller.SetSliderValue(DualShock4Slider.RightTrigger, report.Data[23]);
+                                        }
+                                        else
+                                        {
+                                            ds4Controller.SetSliderValue(DualShock4Slider.LeftTrigger, (byte)(buttonL2 ? 0xff : 0x00));
+                                            ds4Controller.SetSliderValue(DualShock4Slider.RightTrigger, (byte)(buttonR2 ? 0xff : 0x00));
+                                        }*/
+
+                                        int padH = 0;
+                                        int padV = 0;
+                                        if (buttonUp) padV++;
+                                        if (buttonDown) padV--;
+                                        if (buttonRight) padH++;
+                                        if (buttonLeft) padH--;
+                                        /*
+                                        if (padH > 0)
+                                            if (padV > 0)
+                                                //ds4Controller.SetDPadDirection(DualShock4DPadDirection.Northeast);
+                                            else if (padV < 0)
+                                                //ds4Controller.SetDPadDirection(DualShock4DPadDirection.Southeast);
+                                            else
+                                                //ds4Controller.SetDPadDirection(DualShock4DPadDirection.East);
+                                        else if (padH < 0)
+                                            if (padV > 0)
+                                                //ds4Controller.SetDPadDirection(DualShock4DPadDirection.Northwest);
+                                            else if (padV < 0)
+                                                //ds4Controller.SetDPadDirection(DualShock4DPadDirection.Southwest);
+                                            else
+                                                //ds4Controller.SetDPadDirection(DualShock4DPadDirection.West);
+                                        else
+                                            if (padV > 0)
+                                                //ds4Controller.SetDPadDirection(DualShock4DPadDirection.North);
+                                            else if (padV < 0)
+                                            //ds4Controller.SetDPadDirection(DualShock4DPadDirection.South);
+                                            else
+                                                //ds4Controller.SetDPadDirection(DualShock4DPadDirection.None);
+                                        */
+
+                                        // bring OldState in line with new State
+                                        OldState = State;
+                                        State = StateInFlight;
+
+                                        ControllerStateUpdate?.Invoke(this, State);
+
+                                        if (PollingState == EPollingState.RunOnce)
+                                        {
+                                            _device.StopReading();
+                                            PollingState = EPollingState.Inactive;
+                                            _device.CloseDevice();
+                                        }
+                                    }
+                                    finally
+                                    {
+                                        StateMutationLock.ExitReadLock();
+
+                                        //if (ControllerTempDataAppeared)
+                                        //{
+                                        //    if (ControllerSubType == DS4SubType.UnknownDS4V1) ChangeControllerSubType(DS4SubType.SonyDS4V1);
+                                        //    if (ControllerSubType == DS4SubType.UnknownDS4V2) ChangeControllerSubType(DS4SubType.SonyDS4V2);
+                                        //}
+                                        //
+                                        //if (DongleConnectionStatusChanged)
+                                        //    ResetControllerInfo();
+
+                                        Interlocked.Exchange(ref reportUsageLock, 0);
+                                        //Console.WriteLine($"{reportData.ReportId:X2} {BitConverter.ToString(reportData.ReportBytes)}");
+                                        
+                                        Console.WriteLine($"{reportData.ReportId:X2} {BitConverter.ToString(reportData.ReportBytes)}");
+                                    }
                                 }
-                                else
+                                break;
+                            case 0xFF:
                                 {
-                                    ds4Controller.SetSliderValue(DualShock4Slider.LeftTrigger, (byte)(buttonL2 ? 0xff : 0x00));
-                                    ds4Controller.SetSliderValue(DualShock4Slider.RightTrigger, (byte)(buttonR2 ? 0xff : 0x00));
-                                }*/
+                                    if (reportData.ReportBytes[1] == 0xF0)
+                                    {
+                                        if ((reportData.ReportBytes[14] & 0xFF) == 0xEC)
+                                        {
+                                            int FirmwareRevision = reportData.ReportBytes[8] & 0xF;
+                                            int FirmwareBuild = reportData.ReportBytes[8] >> 4;
+                                            int FirmwareMinor = reportData.ReportBytes[9] & 0xF;
+                                            int FirmwareMajor = reportData.ReportBytes[9] >> 4;
+                                            int BatteryReading = reportData.ReportBytes[10];
+                                            int BatteryRangeMin = 0x62;
+                                            int BatteryRangeMax = 0x72;
+                                            if (BatteryReading < BatteryRangeMin)
+                                            {
+                                                BatteryReading = BatteryRangeMin;
+                                            }
+                                            else if (BatteryReading > BatteryRangeMax)
+                                            {
+                                                BatteryReading = BatteryRangeMax;
+                                            }
+                                            // reportData.ReportBytes[10] of 0 means unknown
+                                            int batteryPercent = (int)((float)(BatteryReading - BatteryRangeMin) / (float)(BatteryRangeMax - BatteryRangeMin) * 100f);
+                                            Console.WriteLine("Controller firmware version: V" + FirmwareMajor + "." + FirmwareMinor + "." + FirmwareBuild + "." + FirmwareRevision);
+                                            Console.WriteLine("Controller Power: " + batteryPercent);
 
-                                int padH = 0;
-                                int padV = 0;
-                                if (buttonUp) padV++;
-                                if (buttonDown) padV--;
-                                if (buttonRight) padH++;
-                                if (buttonLeft) padH--;
-                                /*
-                                if (padH > 0)
-                                    if (padV > 0)
-                                        //ds4Controller.SetDPadDirection(DualShock4DPadDirection.Northeast);
-                                    else if (padV < 0)
-                                        //ds4Controller.SetDPadDirection(DualShock4DPadDirection.Southeast);
+                                            DetectedDeviceId = reportData.ReportBytes[2];
+
+                                            if (PollingState == EPollingState.RunUntilReady)
+                                                PollingState = EPollingState.SlowPoll;
+                                            Console.WriteLine($"{reportData.ReportId:X2} {BitConverter.ToString(reportData.ReportBytes)}");
+                                        }
+                                        else
+                                        {
+                                            Console.WriteLine($"{reportData.ReportId:X2} {BitConverter.ToString(reportData.ReportBytes)}");
+                                        }
+                                    }
                                     else
-                                        //ds4Controller.SetDPadDirection(DualShock4DPadDirection.East);
-                                else if (padH < 0)
-                                    if (padV > 0)
-                                        //ds4Controller.SetDPadDirection(DualShock4DPadDirection.Northwest);
-                                    else if (padV < 0)
-                                        //ds4Controller.SetDPadDirection(DualShock4DPadDirection.Southwest);
-                                    else
-                                        //ds4Controller.SetDPadDirection(DualShock4DPadDirection.West);
-                                else
-                                    if (padV > 0)
-                                        //ds4Controller.SetDPadDirection(DualShock4DPadDirection.North);
-                                    else if (padV < 0)
-                                    //ds4Controller.SetDPadDirection(DualShock4DPadDirection.South);
-                                    else
-                                        //ds4Controller.SetDPadDirection(DualShock4DPadDirection.None);
-                                */
-
-                                // bring OldState in line with new State
-                                OldState = State;
-                                State = StateInFlight;
-
-                                ControllerStateUpdate?.Invoke(this, State);
-
-                                if (PollingState == EPollingState.RunOnce)
-                                {
-                                    _device.StopReading();
-                                    PollingState = EPollingState.Inactive;
-                                    _device.CloseDevice();
+                                    {
+                                        Console.WriteLine($"{reportData.ReportId:X2} {BitConverter.ToString(reportData.ReportBytes)}");
+                                    }
                                 }
-                            }
-                            finally
-                            {
-                                StateMutationLock.ExitReadLock();
-
-                                //if (ControllerTempDataAppeared)
-                                //{
-                                //    if (ControllerSubType == DS4SubType.UnknownDS4V1) ChangeControllerSubType(DS4SubType.SonyDS4V1);
-                                //    if (ControllerSubType == DS4SubType.UnknownDS4V2) ChangeControllerSubType(DS4SubType.SonyDS4V2);
-                                //}
-                                //
-                                //if (DongleConnectionStatusChanged)
-                                //    ResetControllerInfo();
-
-                                Interlocked.Exchange(ref reportUsageLock, 0);
-                            }
-                        }
-                        else
-                        {
-                            Debug.WriteLine($"{reportData.ReportId:X2} {BitConverter.ToString(reportData.ReportBytes)}");
+                                break;
+                            default:
+                                Console.WriteLine($"{reportData.ReportId:X2} {BitConverter.ToString(reportData.ReportBytes)}");
+                                break;
                         }
                     }
                     else
                     {
-                        Debug.WriteLine($"{reportData.ReportId:X2} {BitConverter.ToString(reportData.ReportBytes)}");
+                        Console.WriteLine($"{reportData.ReportId:X2} {BitConverter.ToString(reportData.ReportBytes)}");
                     }
                 }
                 finally
                 {
                     Interlocked.Exchange(ref reportUsageLock, 0);
                 }
+
+
+                // TODO: change how this works because we don't want to lock, we need to actually change the polling rate in the device
+                if (PollingState == EPollingState.SlowPoll)
+                    Thread.Sleep(_SLOW_POLL_MS); // if we're a dongle and we're not connected we might only be partially initalized, so slow roll our read
             }
+                        Console.WriteLine($"{reportData.ReportId:X2} {BitConverter.ToString(reportData.ReportBytes)}");
         }
 
         private void getDeviceInfoInAndroid()

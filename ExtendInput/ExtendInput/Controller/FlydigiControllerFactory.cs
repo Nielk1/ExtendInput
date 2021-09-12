@@ -20,7 +20,7 @@ namespace ExtendInput.Controller
                     FlydigiController.PRODUCT_FLYDIGI_DONGLE_1,
                     FlydigiController.PRODUCT_FLYDIGI_DONGLE_2,
                     FlydigiController.PRODUCT_FLYDIGI_DONGLE_3,
-                    FlydigiController.PRODUCT_FLYDIGI_APEX2,
+                    FlydigiController.PRODUCT_FLYDIGI_USB,
                 }.Contains(_device.ProductId))
                     return null;
             }
