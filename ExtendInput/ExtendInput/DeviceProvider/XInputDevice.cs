@@ -143,7 +143,8 @@ namespace ExtendInput.DeviceProvider
             }
         }
 
-        public string UniqueKey => $"XInputDevice {DevPKey.PnpDevicePropertyAPI.devicePathToInstanceId(this.DevicePath)}";
+        //public string UniqueKey => $"XInputDevice {DevPKey.PnpDevicePropertyAPI.devicePathToInstanceId(this.DevicePath)}";
+        public string UniqueKey => $"XInputDevice {this.DevicePath}";
 
         bool IEquatable<IDevice>.Equals(IDevice other)
         {
