@@ -115,7 +115,6 @@
     <Compile Include="Controls\IControl.cs" />
     <Compile Include="Controls\IControlPair.cs" />
     <Compile Include="Crc32.cs" />
-    <Compile Include="DevPKey\Extensions.cs" />
     <Compile Include="DevPKey\Native\PnpDevicePropertyAPINative.cs" />
     <Compile Include="DevPKey\PnpDevicePropertyAPI.cs" />
     <Compile Include="Extensions.cs" />

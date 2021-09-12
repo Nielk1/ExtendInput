@@ -966,12 +966,8 @@ namespace ExtendInput.Controller
                 StateMutationLock.EnterReadLock();
                 try
                 {
-                    // Clone the current state before altering it since the OldState is likely a shared reference
-                    ControllerState StateInFlight = (ControllerState)State.Clone();
-
-                    //OldState = State; // shouldn't this be a clone?
                     //if (_attached == false) { return; }
-
+                    
                     int baseOffset = 0;
                     bool HasStateData = true;
                     if (ConnectionType == EConnectionType.Bluetooth && new byte[] {
@@ -992,6 +988,10 @@ namespace ExtendInput.Controller
 
                     if (HasStateData)
                     {
+                        // Clone the current state before altering it since the OldState is likely a shared reference
+                        ControllerState StateInFlight = (ControllerState)State.Clone();
+                        //OldState = State; // shouldn't this be a clone?
+
                         (StateInFlight.Controls["stick_left"] as ControlStick).X = ControllerMathTools.QuickStickToFloat(reportData.ReportBytes[baseOffset + 0]);
                         (StateInFlight.Controls["stick_left"] as ControlStick).Y = ControllerMathTools.QuickStickToFloat(reportData.ReportBytes[baseOffset + 1]);
 
