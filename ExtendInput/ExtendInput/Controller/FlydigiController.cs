@@ -3,6 +3,7 @@ using ExtendInput.DeviceProvider;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 
 namespace ExtendInput.Controller
@@ -14,7 +15,7 @@ namespace ExtendInput.Controller
         public byte? DeviceIdFromFeature { get; private set; }
         public byte? ReportFESubType { get; private set; } // 2nd data byte
         public byte? FixedValueFromByte28 { get; private set; } // 27th data byte
-        public byte? VersionFromByte30 { get; private set; } // 29th data byte
+        //public byte? VersionFromByte30 { get; private set; } // 29th data byte
         public byte? FixedValueFromByte31 { get; private set; } // 30th data byte
         public int[] ExpectedDongle { get; private set; }
         public ControllerSubTypeAttribute(
@@ -22,7 +23,7 @@ namespace ExtendInput.Controller
             string Name,
             int DeviceIdFromFeature = -1,
             int FixedValueFromByte28 = -1,
-            int VersionFromByte30 = -1,
+            //int VersionFromByte30 = -1,
             int FixedValueFromByte31 = -1,
             int ReportFESubType = -1,
             int[] ExpectedDongle = null)
@@ -31,7 +32,7 @@ namespace ExtendInput.Controller
             this.Name = Name;
             this.DeviceIdFromFeature = DeviceIdFromFeature > -1 ? (byte?)DeviceIdFromFeature : null;
             this.FixedValueFromByte28 = FixedValueFromByte28 > -1 ? (byte?)FixedValueFromByte28 : null;
-            this.VersionFromByte30 = VersionFromByte30 > -1 ? (byte?)VersionFromByte30 : null;
+            //this.VersionFromByte30 = VersionFromByte30 > -1 ? (byte?)VersionFromByte30 : null;
             this.FixedValueFromByte31 = FixedValueFromByte31 > -1 ? (byte?)FixedValueFromByte31 : null;
             this.ReportFESubType = ReportFESubType > -1 ? (byte?)ReportFESubType : null;
             this.ExpectedDongle = ExpectedDongle;
@@ -81,16 +82,16 @@ namespace ExtendInput.Controller
             [ControllerSubType(
                 Token: new string[] { "DEVICE_FLYDIGI_X9" },
                 Name: "Flydigi X9",
-                DeviceIdFromFeature: 0x10,
+                //DeviceIdFromFeature: 0x10,
                 ReportFESubType: 0x55)]
             X9,
 
             [ControllerSubType(
                 Token: new string[] { "DEVICE_FLYDIGI_X8" },
                 Name: "Flydigi X8",
-                DeviceIdFromFeature: 0x11,
+                //DeviceIdFromFeature: 0x11,
                 FixedValueFromByte28: 0x00,
-                VersionFromByte30: 0x32,
+                //VersionFromByte30: 0x32,
                 FixedValueFromByte31: 0x1B,
                 ReportFESubType: 0x66)]
             X8,
@@ -98,9 +99,9 @@ namespace ExtendInput.Controller
             [ControllerSubType(
                 Token: new string[] { "DEVICE_FLYDIGI_APEX" },
                 Name: "Flydigi APEX",
-                DeviceIdFromFeature: 0x12,
+                //DeviceIdFromFeature: 0x12, // removed because we can't get a device ID, if we find we can with a 3dot we will need to put this back but replace nullchecks on it with a new check of a new bool property that says we don't respond on 2dot. We know 1dot doesn't support the query this data is for at all.
                 FixedValueFromByte28: 0x01,
-                VersionFromByte30: 0x32,
+                //VersionFromByte30: 0x32,
                 ExpectedDongle: new int[] { (PRODUCT_FLYDIGI_DONGLE_1 << 8) | REVISION_FLYDIGI_DONGLE_1 })]
             APEX,
 
@@ -109,7 +110,7 @@ namespace ExtendInput.Controller
                 Name: "Flydigi APEX 2",
                 DeviceIdFromFeature: 0x13,
                 FixedValueFromByte28: 0x01,
-                VersionFromByte30: 0x36,
+                //VersionFromByte30: 0x36,
                 ExpectedDongle: new int[] { (PRODUCT_FLYDIGI_DONGLE_2 << 8) | REVISION_FLYDIGI_DONGLE_2 })]
             APEX_2,
 
@@ -176,9 +177,20 @@ namespace ExtendInput.Controller
         }
         private FlyDigiSubType ControllerSubType = FlyDigiSubType.None;
         private ControllerSubTypeAttribute ControllerAttribute = null;
+        private SemaphoreSlim MetadataMutationLock = new SemaphoreSlim(1);
         private byte? DetectedDeviceId = null;
+        private byte? ReportFESubType = null;
+        private byte? FixedValueFromByte28 = null;
+        //private byte? VersionFromByte30 = null;
+        private byte? FixedValueFromByte31 = null;
+        private List<FlyDigiSubType> ManualSelectionList = new List<FlyDigiSubType>();
+
+        private int RequestAndroidInfoTimeGap = 1;
+
         private bool ControlsCreated = false;
+        private bool NoMetaForThisController = false;
         private DateTime LastData;
+        private DateTime? FirstDeviceInfoRequestTime = null;
 
         private HidDevice _device;
         int reportUsageLock = 0;
@@ -288,8 +300,29 @@ namespace ExtendInput.Controller
             return ControllerSubType.GetAttribute<ControllerSubTypeAttribute>()?.Name;
         }
 
-        public bool HasSelectableAlternatives => false;
-        public Dictionary<string, string> Alternates => null;
+        public bool HasSelectableAlternatives
+        {
+            get
+            {
+                lock (ManualSelectionList)
+                {
+                    //Console.WriteLine($"ManualSelectionList.Count = {ManualSelectionList.Count}");
+                    return ManualSelectionList.Count > 0;
+                }
+            }
+        }
+
+        public Dictionary<string, string> Alternates
+        {
+            get
+            {
+                lock (ManualSelectionList)
+                {
+                    //Console.WriteLine("ManualSelectionList.ToDictionary");
+                    return ManualSelectionList.ToDictionary(dr => dr.ToString(), dx => GetNameForSubType(dx));
+                }
+            }
+        }
 
         public IDevice DeviceHackRef => _device;
 
@@ -326,11 +359,28 @@ namespace ExtendInput.Controller
                     {
                         for (; ; )
                         {
-                            if (LastData.AddSeconds(PollingState == EPollingState.SlowPoll ? (_SLOW_POLL_MS + 100) / 1000f : 0.2) < DateTime.UtcNow)
+                            if (ControllerSubType != FlyDigiSubType.None && LastData.AddSeconds(PollingState == EPollingState.SlowPoll ? (_SLOW_POLL_MS + 100) / 1000f : 0.2) < DateTime.UtcNow)
                             {
+                                Console.WriteLine("No report within timeout");
+                                ChangeControllerSubType(FlyDigiSubType.None);
+                                /*
                                 ControllerSubType = FlyDigiSubType.None;
                                 ControllerAttribute = ControllerSubType.GetAttribute<ControllerSubTypeAttribute>();
-                                DetectedDeviceId = null;
+                                MetadataMutationLock.Wait();
+                                try
+                                {
+                                    DetectedDeviceId = null;
+                                    ReportFESubType = null;
+                                    FixedValueFromByte28 = null;
+                                    //VersionFromByte30 = null;
+                                    FixedValueFromByte31 = null;
+                                    NoMetaForThisController = false;
+                                }
+                                finally
+                                {
+                                    MetadataMutationLock.Release();
+                                }
+                                */
                             }
                             if (AbortStatusThread)
                                 return;
@@ -355,18 +405,18 @@ namespace ExtendInput.Controller
                         for (; ; )
                         {
                             getDeviceInfoInAndroid();
-                            for (int i = 0; i < 60; i++)
+                            for (int i = 0; i < RequestAndroidInfoTimeGap; i++)
                             {
                                 if (AbortStatusThread)
                                     return;
                                 Thread.Sleep(1000);
-                                //if (EarlyDeviceRecheck)
-                                //{
-                                //    EarlyDeviceRecheck = false;
-                                //    //Thread.Sleep(1000);
-                                //    break;
-                                //}
                             }
+                            // expand the time gap until we get to once per min
+                            // this allows us to initially more agressively request the android data
+                            // the issue is the dongle sends nothing for some devices, but also can have its report missed due to lag caused by slow-poll
+                            // we try to work around this by stopping slowpoll during the first request, but this doesn't apply to all cases
+                            if (RequestAndroidInfoTimeGap < 60)
+                                RequestAndroidInfoTimeGap++;
                         }
                     });
                     CheckControllerStatusThread.Start();
@@ -436,10 +486,13 @@ namespace ExtendInput.Controller
             LastData = DateTime.UtcNow;
             if (ControllerSubType == FlyDigiSubType.None)
             {
-                ControllerSubType = FlyDigiSubType.Unknown;
-                ControllerAttribute = ControllerSubType.GetAttribute<ControllerSubTypeAttribute>();
-                getDeviceInfoInAndroid();
-                //EarlyDeviceRecheck = true;
+                ChangeControllerSubType(FlyDigiSubType.Unknown);
+                //ControllerSubType = FlyDigiSubType.Unknown;
+                //ControllerAttribute = ControllerSubType.GetAttribute<ControllerSubTypeAttribute>();
+                FirstDeviceInfoRequestTime = DateTime.UtcNow;
+                //getDeviceInfoInAndroid();
+                RequestAndroidInfoTimeGap = 1;
+                ////EarlyDeviceRecheck = true;
             }
 
             //if (!(reportData is HidReport)) return;
@@ -462,7 +515,7 @@ namespace ExtendInput.Controller
                                         // Clone the current state before altering it since the OldState is likely a shared reference
                                         ControllerState StateInFlight = (ControllerState)State.Clone();
 
-                                        byte ControllerID = reportData.ReportBytes[27];
+                                        //byte ControllerID = reportData.ReportBytes[27];
 
                                         bool buttonC = (reportData.ReportBytes[6] & 0x01) == 0x01;
                                         bool buttonZ = (reportData.ReportBytes[6] & 0x02) == 0x02;
@@ -547,6 +600,32 @@ namespace ExtendInput.Controller
                                                 //ds4Controller.SetDPadDirection(DualShock4DPadDirection.None);
                                         */
 
+                                        MetadataMutationLock.Wait();
+                                        try
+                                        {
+                                            byte? OldReportFESubType = ReportFESubType;
+                                            ReportFESubType = reportData.ReportBytes[1];
+
+                                            byte? OldFixedValueFromByte28 = FixedValueFromByte28;
+                                            FixedValueFromByte28 = reportData.ReportBytes[27];
+
+                                            //byte? OldVersionFromByte30 = VersionFromByte30;
+                                            //VersionFromByte30 = reportData.ReportBytes[29];
+
+                                            byte? OldFixedValueFromByte31 = FixedValueFromByte31;
+                                            FixedValueFromByte31 = reportData.ReportBytes[30];
+
+                                            if (OldReportFESubType != ReportFESubType
+                                             || OldFixedValueFromByte28 != FixedValueFromByte28
+                                             //|| OldVersionFromByte30 != VersionFromByte30
+                                             || OldFixedValueFromByte31 != FixedValueFromByte31)
+                                                ResetControllerInfo();
+                                        }
+                                        finally
+                                        {
+                                            MetadataMutationLock.Release();
+                                        }
+
                                         // bring OldState in line with new State
                                         OldState = State;
                                         State = StateInFlight;
@@ -557,7 +636,14 @@ namespace ExtendInput.Controller
                                         {
                                             if (ConnectionType == EConnectionType.Dongle)
                                             {
-                                                PollingState = EPollingState.SlowPoll;
+                                                if (FirstDeviceInfoRequestTime.HasValue && (FirstDeviceInfoRequestTime.Value.AddSeconds(5) < DateTime.UtcNow)) // check if we are a dongle and asked for this data a while ago, but still don't have it
+                                                {
+                                                    Console.WriteLine("Did not get dongle data within timeout");
+                                                    FirstDeviceInfoRequestTime = null;
+                                                    NoMetaForThisController = true;
+                                                    PollingState = EPollingState.SlowPoll;
+                                                    ResetControllerInfo();
+                                                }
                                             }
                                             else
                                             {
@@ -580,11 +666,9 @@ namespace ExtendInput.Controller
                                         //if (DongleConnectionStatusChanged)
                                         //    ResetControllerInfo();
 
-                                        Interlocked.Exchange(ref reportUsageLock, 0);
-
-                                        Console.ForegroundColor = ConsoleColor.Green;
-                                        Console.WriteLine($"{reportData.ReportId:X2} {BitConverter.ToString(reportData.ReportBytes)}");
-                                        Console.ResetColor();
+                                        //Console.ForegroundColor = ConsoleColor.Green;
+                                        //Console.WriteLine($"{reportData.ReportId:X2} {BitConverter.ToString(reportData.ReportBytes)}");
+                                        //Console.ResetColor();
                                     }
                                 }
                                 finally
@@ -598,7 +682,7 @@ namespace ExtendInput.Controller
                         {
                             if (reportData.ReportBytes[1] == 0xF0)
                             {
-                                if ((reportData.ReportBytes[14] & 0xFF) == 0xEC)
+                                if (reportData.ReportBytes[14] == 0xEC)
                                 {
                                     int FirmwareRevision = reportData.ReportBytes[8] & 0xF;
                                     int FirmwareBuild = reportData.ReportBytes[8] >> 4;
@@ -620,10 +704,32 @@ namespace ExtendInput.Controller
                                     Console.WriteLine("Controller firmware version: V" + FirmwareMajor + "." + FirmwareMinor + "." + FirmwareBuild + "." + FirmwareRevision);
                                     Console.WriteLine("Controller Power: " + batteryPercent);
 
-                                    byte? OldDetectedDeviceId = DetectedDeviceId;
-                                    DetectedDeviceId = reportData.ReportBytes[2];
-                                    if (OldDetectedDeviceId != DetectedDeviceId)
-                                        ResetControllerInfo();
+                                    MetadataMutationLock.Wait();
+                                    try
+                                    {
+                                        byte? OldDetectedDeviceId = DetectedDeviceId;
+                                        DetectedDeviceId = reportData.ReportBytes[2];
+                                        if (OldDetectedDeviceId != DetectedDeviceId)
+                                            ResetControllerInfo();
+                                    }
+                                    finally
+                                    {
+                                        MetadataMutationLock.Release();
+                                    }
+
+                                    if (PollingState == EPollingState.RunUntilReady)
+                                    {
+                                        if (ConnectionType == EConnectionType.Dongle)
+                                        {
+                                            PollingState = EPollingState.SlowPoll;
+                                        }
+                                        else
+                                        {
+                                            _device.StopReading();
+                                            PollingState = EPollingState.Inactive;
+                                            _device.CloseDevice();
+                                        }
+                                    }
 
                                     Console.ForegroundColor = ConsoleColor.Blue;
                                     Console.WriteLine($"{reportData.ReportId:X2} {BitConverter.ToString(reportData.ReportBytes)}");
@@ -660,6 +766,10 @@ namespace ExtendInput.Controller
         private void getDeviceInfoInAndroid()
         {
             Console.WriteLine("getDeviceInfoInAndroid");
+
+            if (!NoMetaForThisController && ConnectionType == EConnectionType.Dongle && PollingState == EPollingState.SlowPoll)
+                PollingState = EPollingState.RunUntilReady;
+
             byte[] array = new byte[12];
             array[0] = 5;
             array[1] = 0xEC;
@@ -709,9 +819,10 @@ namespace ExtendInput.Controller
                     StateMutationLock.ExitWriteLock();
                 }
             }
+            UpdateAlternateSubTypes();
             ControllerMetadataUpdate?.Invoke(this);
 
-            {
+            /*{
                 lock (UpdateLocalDataLock)
                 {
                     if (UpdateLocalDataPoison)
@@ -741,18 +852,20 @@ namespace ExtendInput.Controller
 
                     ControllerMetadataUpdate?.Invoke(this);
                 }
-            }
+            }*/
         }
 
         private FlyDigiSubType GetControllerInitialTypeCode(UInt16 VID, UInt16 PID, UInt16 REV)
         {
+            const int EXPECTS_NO_ID = 0x100000;
             /*const int ID_MATCH = 0x100000;
             const int HAS_NO_ID = 0x080000;
             const int BATTERY_STATUS = 0x040000;
             const int HAS_MATCHING_AUTH_HASH = 0x020000;
-            const int HAS_NO_AUTH_HASH = 0x010000;
-            const int TYPE_AUTH = 0x00FFFF;
-
+            const int HAS_NO_AUTH_HASH = 0x010000;*/
+            const int REPORT_BYTES_MATCH = 0x000100;
+            const int TYPE_AUTH = 0x0000FF;
+            /*
             bool FromDongle = false;
             if (_device != null && VID == VENDOR_FLYDIGI && (  (PID == PRODUCT_FLYDIGI_DONGLE_1 && REV == REVISION_FLYDIGI_DONGLE_1)
                                                             || (PID == PRODUCT_FLYDIGI_DONGLE_2 && REV == REVISION_FLYDIGI_DONGLE_2)
@@ -765,21 +878,33 @@ namespace ExtendInput.Controller
                 if (VID == 0x0000 && PID == 0x0000)
                     return FlyDigiSubType.None;
                 FromDongle = true;
-            }
+            }*/
 
             List<Tuple<int, FlyDigiSubType>> Candidates = new List<Tuple<int, FlyDigiSubType>>();
             foreach (FlyDigiSubType subType in Enum.GetValues(typeof(FlyDigiSubType)))
             {
                 int Rank = 0;//(int)subType;
                 ControllerSubTypeAttribute attr = subType.GetAttribute<ControllerSubTypeAttribute>();
-                // controller VID/PID is correct or target doesn't use one
-                if ((ConnectionType == EConnectionType.USB && attr.USB_VID == VID && attr.USB_PID == PID) // USB type matches
-                 || (ConnectionType == EConnectionType.Bluetooth && attr.BT_VID == VID && attr.BT_PID == PID) // BT types matches
-                 || (ConnectionType == EConnectionType.Dongle && attr.BT_VID == VID && attr.BT_PID == PID)) // BT types matches (via dongle)
+                if ((ConnectionType == EConnectionType.USB && VENDOR_FLYDIGI == VID && PRODUCT_FLYDIGI_USB == PID && REVISION_FLYDIGI_USB == REV)
+                 || (ConnectionType == EConnectionType.Dongle && VENDOR_FLYDIGI == VID && PRODUCT_FLYDIGI_DONGLE_2 == PID && REVISION_FLYDIGI_DONGLE_2 == REV)
+                 || (ConnectionType == EConnectionType.Dongle && VENDOR_FLYDIGI == VID && PRODUCT_FLYDIGI_DONGLE_3 == PID && REVISION_FLYDIGI_DONGLE_3 == REV))
                 {
-                    Rank += ID_MATCH;
+                    if (DetectedDeviceId.HasValue)
+                    {
+                        if (attr.DeviceIdFromFeature.HasValue && attr.DeviceIdFromFeature.Value == DetectedDeviceId.Value)
+                        {
+                            return subType;
+                        }
+                    }
+                    else
+                    {
+                        if (!attr.DeviceIdFromFeature.HasValue)
+                        {
+                            Rank += EXPECTS_NO_ID;
+                        }
+                    }
                 }
-                else if (attr.USB_VID == -1 && attr.USB_PID == -1 && attr.BT_VID == -1 && attr.BT_PID == -1)
+                /*else if (attr.USB_VID == -1 && attr.USB_PID == -1 && attr.BT_VID == -1 && attr.BT_PID == -1)
                 {
                     Rank += HAS_NO_ID;
                 }
@@ -812,13 +937,260 @@ namespace ExtendInput.Controller
                             Candidates.Add(new Tuple<int, DS4SubType>(Rank, subType));
                         }
                     }
+                }*/
+                if (subType != FlyDigiSubType.None && subType != FlyDigiSubType.Unknown)
+                {
+                    bool Matches = true;
+                    if (ReportFESubType.HasValue && attr.ReportFESubType.HasValue)
+                        if (ReportFESubType.Value == attr.ReportFESubType.Value)
+                        {
+                            Rank += REPORT_BYTES_MATCH;
+                        }
+                        else
+                        {
+                            Matches = false;
+                        }
+                    if (FixedValueFromByte28.HasValue && attr.FixedValueFromByte28.HasValue)
+                        if (FixedValueFromByte28.Value == attr.FixedValueFromByte28.Value)
+                        {
+                            Rank += REPORT_BYTES_MATCH;
+                        }
+                        else
+                        {
+                            Matches = false;
+                        }
+                    //if (VersionFromByte30.HasValue && attr.VersionFromByte30.HasValue)
+                    //    if (VersionFromByte30.Value == attr.VersionFromByte30.Value)
+                    //    {
+                    //        Rank += REPORT_BYTES_MATCH;
+                    //    }
+                    //    else
+                    //    {
+                    //        Matches = false;
+                    //    }
+                    if (FixedValueFromByte31.HasValue && attr.FixedValueFromByte31.HasValue)
+                        if (FixedValueFromByte31.Value == attr.FixedValueFromByte31.Value)
+                        {
+                            Rank += REPORT_BYTES_MATCH;
+                        }
+                        else
+                        {
+                            Matches = false;
+                        }
+
+                    if (Matches)
+                    {
+                        Rank += TYPE_AUTH - (int)subType;
+                        Candidates.Add(new Tuple<int, FlyDigiSubType>(Rank, subType));
+                    }
                 }
             }
 
-            return Candidates.OrderByDescending(dr => dr.Item1).FirstOrDefault()?.Item2 ?? (FromDongle ? DS4SubType.None : DS4SubType.Unknown);*/
-
-            return FlyDigiSubType.Unknown;
+            return Candidates.OrderByDescending(dr => dr.Item1).FirstOrDefault()?.Item2 ?? FlyDigiSubType.Unknown;
         }
-        public void SetActiveAlternateController(string ControllerID) { }
+        public void SetActiveAlternateController(string ControllerID)
+        {
+            ChangeControllerSubType((FlyDigiSubType)Enum.Parse(typeof(FlyDigiSubType), ControllerID));
+        }
+
+        private void UpdateAlternateSubTypes()
+        {
+            lock (ManualSelectionList)
+            {
+                ManualSelectionList.Clear();
+                Console.WriteLine($"ManualSelectionList.Clear for {ControllerSubType}");
+
+                if (ControllerSubType == FlyDigiSubType.None) return;
+
+                UInt16 VID = (UInt16)_device.VendorId;
+                UInt16 PID = (UInt16)_device.ProductId;
+                UInt16 REV = (UInt16)_device.RevisionNumber;
+
+                /*
+                foreach (FlyDigiSubType subType in Enum.GetValues(typeof(FlyDigiSubType)))
+                {
+                    int Rank = 0;//(int)subType;
+                    ControllerSubTypeAttribute attr = subType.GetAttribute<ControllerSubTypeAttribute>();
+                    if ((ConnectionType == EConnectionType.USB && VENDOR_FLYDIGI == VID && PRODUCT_FLYDIGI_USB == PID && REVISION_FLYDIGI_USB == REV)
+                     || (ConnectionType == EConnectionType.Dongle && VENDOR_FLYDIGI == VID && PRODUCT_FLYDIGI_DONGLE_2 == PID && REVISION_FLYDIGI_DONGLE_2 == REV)
+                     || (ConnectionType == EConnectionType.Dongle && VENDOR_FLYDIGI == VID && PRODUCT_FLYDIGI_DONGLE_3 == PID && REVISION_FLYDIGI_DONGLE_3 == REV))
+                    {
+                        if (DetectedDeviceId.HasValue)
+                        {
+                            if (attr.DeviceIdFromFeature.HasValue && attr.DeviceIdFromFeature.Value == DetectedDeviceId.Value)
+                            {
+                                ManualSelectionList.Clear();
+                                return;
+                            }
+                        }
+                    }
+                    if (subType != FlyDigiSubType.None && subType != FlyDigiSubType.Unknown)
+                    {
+                        bool Matches = true;
+                        if (ReportFESubType.HasValue && attr.ReportFESubType.HasValue)
+                            if (ReportFESubType.Value != attr.ReportFESubType.Value)
+                                Matches = false;
+                        if (FixedValueFromByte28.HasValue && attr.FixedValueFromByte28.HasValue)
+                            if (FixedValueFromByte28.Value != attr.FixedValueFromByte28.Value)
+                                Matches = false;
+                        //if (VersionFromByte30.HasValue && attr.VersionFromByte30.HasValue)
+                        //    if (VersionFromByte30.Value != attr.VersionFromByte30.Value)
+                        //        Matches = false;
+                        if (FixedValueFromByte31.HasValue && attr.FixedValueFromByte31.HasValue)
+                            if (FixedValueFromByte31.Value != attr.FixedValueFromByte31.Value)
+                                Matches = false;
+
+                        if (Matches)
+                        {
+                            ManualSelectionList.Add(subType);
+                            Console.WriteLine($"ManualSelectionList.Add({subType})");
+                        }
+                    }
+                }
+                */
+
+                const int EXPECTS_NO_ID = 0x100000;
+                /*const int ID_MATCH = 0x100000;
+                const int HAS_NO_ID = 0x080000;
+                const int BATTERY_STATUS = 0x040000;
+                const int HAS_MATCHING_AUTH_HASH = 0x020000;
+                const int HAS_NO_AUTH_HASH = 0x010000;*/
+                const int REPORT_BYTES_MATCH = 0x000100;
+                const int TYPE_AUTH = 0x0000FF;
+                /*
+                bool FromDongle = false;
+                if (_device != null && VID == VENDOR_FLYDIGI && (  (PID == PRODUCT_FLYDIGI_DONGLE_1 && REV == REVISION_FLYDIGI_DONGLE_1)
+                                                                || (PID == PRODUCT_FLYDIGI_DONGLE_2 && REV == REVISION_FLYDIGI_DONGLE_2)
+                                                                || (PID == PRODUCT_FLYDIGI_DONGLE_3 && REV == REVISION_FLYDIGI_DONGLE_3))) // we are an offical dongle
+                {
+                    byte[] FeatureBuffer;
+                    _device.ReadFeatureData(out FeatureBuffer, 0xE3);
+                    VID = BitConverter.ToUInt16(FeatureBuffer, 1);
+                    PID = BitConverter.ToUInt16(FeatureBuffer, 3);
+                    if (VID == 0x0000 && PID == 0x0000)
+                        return FlyDigiSubType.None;
+                    FromDongle = true;
+                }*/
+
+                List<Tuple<int, FlyDigiSubType>> Candidates = new List<Tuple<int, FlyDigiSubType>>();
+                foreach (FlyDigiSubType subType in Enum.GetValues(typeof(FlyDigiSubType)))
+                {
+                    int Rank = 0;//(int)subType;
+                    ControllerSubTypeAttribute attr = subType.GetAttribute<ControllerSubTypeAttribute>();
+                    if ((ConnectionType == EConnectionType.USB && VENDOR_FLYDIGI == VID && PRODUCT_FLYDIGI_USB == PID && REVISION_FLYDIGI_USB == REV)
+                     || (ConnectionType == EConnectionType.Dongle && VENDOR_FLYDIGI == VID && PRODUCT_FLYDIGI_DONGLE_2 == PID && REVISION_FLYDIGI_DONGLE_2 == REV)
+                     || (ConnectionType == EConnectionType.Dongle && VENDOR_FLYDIGI == VID && PRODUCT_FLYDIGI_DONGLE_3 == PID && REVISION_FLYDIGI_DONGLE_3 == REV))
+                    {
+                        if (DetectedDeviceId.HasValue)
+                        {
+                            if (attr.DeviceIdFromFeature.HasValue && attr.DeviceIdFromFeature.Value == DetectedDeviceId.Value)
+                            {
+                                ManualSelectionList.Clear();
+                                return;
+                            }
+                        }
+                        else
+                        {
+                            if (!attr.DeviceIdFromFeature.HasValue)
+                            {
+                                Rank += EXPECTS_NO_ID;
+                            }
+                        }
+                    }
+                    if (subType != FlyDigiSubType.None && subType != FlyDigiSubType.Unknown)
+                    {
+                        bool Matches = true;
+                        if (ReportFESubType.HasValue && attr.ReportFESubType.HasValue)
+                            if (ReportFESubType.Value == attr.ReportFESubType.Value)
+                            {
+                                Rank += REPORT_BYTES_MATCH;
+                            }
+                            else
+                            {
+                                Matches = false;
+                            }
+                        if (FixedValueFromByte28.HasValue && attr.FixedValueFromByte28.HasValue)
+                            if (FixedValueFromByte28.Value == attr.FixedValueFromByte28.Value)
+                            {
+                                Rank += REPORT_BYTES_MATCH;
+                            }
+                            else
+                            {
+                                Matches = false;
+                            }
+                        //if (VersionFromByte30.HasValue && attr.VersionFromByte30.HasValue)
+                        //    if (VersionFromByte30.Value == attr.VersionFromByte30.Value)
+                        //    {
+                        //        Rank += REPORT_BYTES_MATCH;
+                        //    }
+                        //    else
+                        //    {
+                        //        Matches = false;
+                        //    }
+                        if (FixedValueFromByte31.HasValue && attr.FixedValueFromByte31.HasValue)
+                            if (FixedValueFromByte31.Value == attr.FixedValueFromByte31.Value)
+                            {
+                                Rank += REPORT_BYTES_MATCH;
+                            }
+                            else
+                            {
+                                Matches = false;
+                            }
+
+                        if (Matches)
+                        {
+                            //Rank += TYPE_AUTH - (int)subType;
+                            Candidates.Add(new Tuple<int, FlyDigiSubType>(Rank, subType));
+                        }
+                    }
+                }
+
+                ManualSelectionList.AddRange(Candidates.GroupBy(dr => dr.Item1).OrderByDescending(dr => dr.Key).First().Select(dr => dr.Item2));
+                if (ManualSelectionList.Count == 1 && ManualSelectionList[0] == ControllerSubType)
+                    ManualSelectionList.Clear();
+            }
+        }
+
+        private void ChangeControllerSubType(FlyDigiSubType NewControllerSubType)
+        {
+            if (NewControllerSubType == ControllerSubType)
+            {
+                UpdateAlternateSubTypes();
+                return;
+            }
+
+            ControllerSubType = NewControllerSubType;
+            ControllerAttribute = ControllerSubType.GetAttribute<ControllerSubTypeAttribute>();
+
+            StateMutationLock.EnterWriteLock();
+            try
+            {
+                if (NewControllerSubType == FlyDigiSubType.None)
+                {
+                    MetadataMutationLock.Wait();
+                    try
+                    {
+                        DetectedDeviceId = null;
+                        ReportFESubType = null;
+                        FixedValueFromByte28 = null;
+                        //VersionFromByte30 = null;
+                        FixedValueFromByte31 = null;
+                        NoMetaForThisController = false;
+                    }
+                    finally
+                    {
+                        MetadataMutationLock.Release();
+                    }
+                }
+            }
+            finally
+            {
+                StateMutationLock.ExitWriteLock();
+            }
+
+            UpdateAlternateSubTypes();
+
+            ControllerMetadataUpdate?.Invoke(this);
+        }
     }
 }
