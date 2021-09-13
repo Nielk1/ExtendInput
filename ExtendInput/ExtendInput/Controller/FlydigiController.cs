@@ -65,7 +65,7 @@ namespace ExtendInput.Controller
         private readonly string[] _CONNECTION_DONGLE = new string[] { ATOM_CONNECTION_DONGLE_1, ATOM_CONNECTION_DONGLE };
         private readonly string[] _CONNECTION_UNKKNOWN = new string[] { ATOM_CONNECTION_UNKKNOWN };
         #endregion String Definitions
-        
+
         enum FlyDigiSubType
         {
             [ControllerSubType(
@@ -84,7 +84,7 @@ namespace ExtendInput.Controller
                 DeviceIdFromFeature: 0x10,
                 ReportFESubType: 0x55)]
             X9,
-            
+
             [ControllerSubType(
                 Token: new string[] { "DEVICE_FLYDIGI_X8" },
                 Name: "Flydigi X8",
@@ -94,7 +94,7 @@ namespace ExtendInput.Controller
                 FixedValueFromByte31: 0x1B,
                 ReportFESubType: 0x66)]
             X8,
-            
+
             [ControllerSubType(
                 Token: new string[] { "DEVICE_FLYDIGI_APEX" },
                 Name: "Flydigi APEX",
@@ -103,7 +103,7 @@ namespace ExtendInput.Controller
                 VersionFromByte30: 0x32,
                 ExpectedDongle: new int[] { (PRODUCT_FLYDIGI_DONGLE_1 << 8) | REVISION_FLYDIGI_DONGLE_1 })]
             APEX,
-            
+
             [ControllerSubType(
                 Token: new string[] { "DEVICE_FLYDIGI_APEX_2" },
                 Name: "Flydigi APEX 2",
@@ -112,62 +112,62 @@ namespace ExtendInput.Controller
                 VersionFromByte30: 0x36,
                 ExpectedDongle: new int[] { (PRODUCT_FLYDIGI_DONGLE_2 << 8) | REVISION_FLYDIGI_DONGLE_2 })]
             APEX_2,
-            
+
             [ControllerSubType(
                 Token: new string[] { "DEVICE_FLYDIGI_F1" },
                 Name: "Flydigi F1",
                 DeviceIdFromFeature: 0x14,
                 ReportFESubType: 0x66)]
             F1,
-            
+
             [ControllerSubType(
                 Token: new string[] { "DEVICE_FLYDIGI_F1" },
                 Name: "Flydigi F1 WIRED",
                 DeviceIdFromFeature: 0x15)]
             F1_WIRED,
-            
+
             [ControllerSubType(
                 Token: new string[] { "DEVICE_FLYDIGI_WEE1" },
                 Name: "Flydigi WEE1",
                 DeviceIdFromFeature: 0x20)]
             WEE1,
-            
+
             [ControllerSubType(
                 Token: new string[] { "DEVICE_FLYDIGI_WEE2" },
                 Name: "Flydigi WEE2",
                 DeviceIdFromFeature: 0x21)]
             WEE2,
-            
+
             [ControllerSubType(
                 Token: new string[] { "DEVICE_FLYDIGI_Q1" },
                 Name: "Flydigi Q1",
                 DeviceIdFromFeature: 0x30)]
             Q1,
-            
+
             [ControllerSubType(
                 Token: new string[] { "DEVICE_FLYDIGI_D1" },
                 Name: "Flydigi D1",
                 DeviceIdFromFeature: 0x31)]
             D1,
-            
+
             [ControllerSubType(
                 Token: new string[] { "DEVICE_FLYDIGI_WASP_BT" },
                 Name: "Flydigi WASP BT",
                 DeviceIdFromFeature: 0x40)]
             WASP_BT,
-            
+
             [ControllerSubType(
                 Token: new string[] { "DEVICE_FLYDIGI_WASP_N" },
                 Name: "Flydigi WASP N",
                 DeviceIdFromFeature: 0x41)]
             WASP_N,
-            
+
             [ControllerSubType(
                 Token: new string[] { "DEVICE_FLYDIGI_WASP_X" },
                 Name: "Flydigi WASP X",
                 DeviceIdFromFeature: 0x42)]
             WASP_X,
-            
+
             [ControllerSubType(
                 Token: new string[] { "DEVICE_FLYDIGI_WASP_2" },
                 Name: "Flydigi WASP 2",
@@ -178,6 +178,7 @@ namespace ExtendInput.Controller
         private ControllerSubTypeAttribute ControllerAttribute = null;
         private byte? DetectedDeviceId = null;
         private bool ControlsCreated = false;
+        private DateTime LastData;
 
         private HidDevice _device;
         int reportUsageLock = 0;
@@ -238,10 +239,20 @@ namespace ExtendInput.Controller
         {
             get
             {
-                return new string[] { "DEVICE_FLYDIGI" };
+                return ControllerAttribute?.Tokens ?? new string[] { "DEVICE_UNKNOWN" };
+                //return new string[] { "DEVICE_FLYDIGI" };
 
             }
         }
+
+        public string[] NameDetails
+        {
+            get
+            {
+                return null;
+            }
+        }
+
         public string Name
         {
             get
@@ -251,17 +262,17 @@ namespace ExtendInput.Controller
                     return retVal;
                 UInt16 VID = (UInt16)_device.VendorId;
                 UInt16 PID = (UInt16)_device.ProductId;
+                UInt16 REV = (UInt16)_device.RevisionNumber;
                 if (ControllerSubType == FlyDigiSubType.None)
                 {
                     if (VID == VENDOR_FLYDIGI)
                     {
-                        //switch (PID)
-                        //{
-                        //    case PRODUCT_SONY_DONGLE:
-                        //        return "DUALSHOCK®4 USB Wireless Adaptor";
-                        //    case PRODUCT_SONY_DONGLE_DFU:
-                        //        return "DUALSHOCK®4 USB Wireless Adaptor in DFU mode!!!";
-                        //}
+                        if (PID == PRODUCT_FLYDIGI_DONGLE_1 && REV == REVISION_FLYDIGI_DONGLE_1) // 1 dot dongle
+                            return "Flydigi USB Dongle•";
+                        if (PID == PRODUCT_FLYDIGI_DONGLE_2 && REV == REVISION_FLYDIGI_DONGLE_2) // 2 dot dongle
+                            return "Flydigi USB Dongle••";
+                        if (PID == PRODUCT_FLYDIGI_DONGLE_3 && REV == REVISION_FLYDIGI_DONGLE_3) // 3 dot dongle
+                            return "Flydigi USB Dongle•••";
                         return $"Flydigi Device <{PID:X4}>";
                     }
                     return $"Unknown Device <{VID:X4},{PID:X4}>";
@@ -277,14 +288,6 @@ namespace ExtendInput.Controller
             return ControllerSubType.GetAttribute<ControllerSubTypeAttribute>()?.Name;
         }
 
-
-        public string[] NameDetails
-        {
-            get
-            {
-                return null;
-            }
-        }
         public bool HasSelectableAlternatives => false;
         public Dictionary<string, string> Alternates => null;
 
@@ -293,9 +296,14 @@ namespace ExtendInput.Controller
         ControllerState State = new ControllerState();
         ControllerState OldState = null;
 
-
+        bool AbortStatusThread = false;
+        //bool EarlyDeviceRecheck = false;
+        Thread CheckControllerStatusThread;
+        Thread CheckControllerDongleAliveThread;
         public FlydigiController(HidDevice device, EConnectionType ConnectionType = EConnectionType.Unknown)
         {
+            //LastData = DateTime.UtcNow;
+            LastData = new DateTime();
             this.ConnectionType = ConnectionType;
 
             _device = device;
@@ -314,6 +322,22 @@ namespace ExtendInput.Controller
                  || (_device.ProductId == PRODUCT_FLYDIGI_DONGLE_3 && _device.RevisionNumber == REVISION_FLYDIGI_DONGLE_3)) // 3 dot dongle
                 {
                     this.ConnectionType = EConnectionType.Dongle;
+                    CheckControllerDongleAliveThread = new Thread(() =>
+                    {
+                        for (; ; )
+                        {
+                            if (LastData.AddSeconds(PollingState == EPollingState.SlowPoll ? (_SLOW_POLL_MS + 100) / 1000f : 0.2) < DateTime.UtcNow)
+                            {
+                                ControllerSubType = FlyDigiSubType.None;
+                                ControllerAttribute = ControllerSubType.GetAttribute<ControllerSubTypeAttribute>();
+                                DetectedDeviceId = null;
+                            }
+                            if (AbortStatusThread)
+                                return;
+                            Thread.Sleep(1000);
+                        }
+                    });
+                    CheckControllerDongleAliveThread.Start();
                 }
                 else if ((_device.ProductId == PRODUCT_FLYDIGI_USB && _device.RevisionNumber == REVISION_FLYDIGI_USB))
                 {
@@ -325,17 +349,51 @@ namespace ExtendInput.Controller
                  || (_device.ProductId == PRODUCT_FLYDIGI_USB && _device.RevisionNumber == REVISION_FLYDIGI_USB)) // controller that supports USB
                 {
                     this.PollingState = EPollingState.RunUntilReady; // we need to read until we get device info
-                    getDeviceInfoInAndroid();
+                    _device.StartReading();
+                    CheckControllerStatusThread = new Thread(() =>
+                    {
+                        for (; ; )
+                        {
+                            getDeviceInfoInAndroid();
+                            for (int i = 0; i < 60; i++)
+                            {
+                                if (AbortStatusThread)
+                                    return;
+                                Thread.Sleep(1000);
+                                //if (EarlyDeviceRecheck)
+                                //{
+                                //    EarlyDeviceRecheck = false;
+                                //    //Thread.Sleep(1000);
+                                //    break;
+                                //}
+                            }
+                        }
+                    });
+                    CheckControllerStatusThread.Start();
                 }
                 else
                 {
                     this.PollingState = EPollingState.RunOnce; // we are either a controller or a dumb 
+                    _device.StartReading();
                 }
             }
-            _device.StartReading();
         }
         public void Dispose()
         {
+            AbortStatusThread = true;
+            switch (PollingState)
+            {
+                case EPollingState.Active:
+                case EPollingState.SlowPoll:
+                case EPollingState.RunUntilReady:
+                    {
+                        _device.StopReading();
+
+                        PollingState = EPollingState.Inactive;
+                        _device.CloseDevice();
+                    }
+                    break;
+            }
         }
 
         public void Initalize()
@@ -374,19 +432,29 @@ namespace ExtendInput.Controller
         private void OnReport(IReport rawReportData)
         {
             if (PollingState == EPollingState.Inactive) return;
+
+            LastData = DateTime.UtcNow;
+            if (ControllerSubType == FlyDigiSubType.None)
+            {
+                ControllerSubType = FlyDigiSubType.Unknown;
+                ControllerAttribute = ControllerSubType.GetAttribute<ControllerSubTypeAttribute>();
+                getDeviceInfoInAndroid();
+                //EarlyDeviceRecheck = true;
+            }
+
             //if (!(reportData is HidReport)) return;
             if (rawReportData.ReportTypeCode != REPORT_TYPE.HID) return;
             HidReport reportData = (HidReport)rawReportData;
 
-            if (0 == Interlocked.Exchange(ref reportUsageLock, 1))
+            if (reportData.ReportId == 0x04)
             {
-                try
+                switch (reportData.ReportBytes[0])
                 {
-                    if (reportData.ReportId == 0x04)
-                    {
-                        switch (reportData.ReportBytes[0])
+                    case 0xFE:
                         {
-                            case 0xFE:
+                            if (0 == Interlocked.Exchange(ref reportUsageLock, 1))
+                            {
+                                try
                                 {
                                     StateMutationLock.EnterReadLock();
                                     try
@@ -485,11 +553,18 @@ namespace ExtendInput.Controller
 
                                         ControllerStateUpdate?.Invoke(this, State);
 
-                                        if (PollingState == EPollingState.RunOnce)
+                                        if (PollingState == EPollingState.RunUntilReady)
                                         {
-                                            _device.StopReading();
-                                            PollingState = EPollingState.Inactive;
-                                            _device.CloseDevice();
+                                            if (ConnectionType == EConnectionType.Dongle)
+                                            {
+                                                PollingState = EPollingState.SlowPoll;
+                                            }
+                                            else
+                                            {
+                                                _device.StopReading();
+                                                PollingState = EPollingState.Inactive;
+                                                _device.CloseDevice();
+                                            }
                                         }
                                     }
                                     finally
@@ -506,84 +581,89 @@ namespace ExtendInput.Controller
                                         //    ResetControllerInfo();
 
                                         Interlocked.Exchange(ref reportUsageLock, 0);
-                                        //Console.WriteLine($"{reportData.ReportId:X2} {BitConverter.ToString(reportData.ReportBytes)}");
-                                        
+
+                                        Console.ForegroundColor = ConsoleColor.Green;
                                         Console.WriteLine($"{reportData.ReportId:X2} {BitConverter.ToString(reportData.ReportBytes)}");
+                                        Console.ResetColor();
                                     }
                                 }
-                                break;
-                            case 0xFF:
+                                finally
                                 {
-                                    if (reportData.ReportBytes[1] == 0xF0)
-                                    {
-                                        if ((reportData.ReportBytes[14] & 0xFF) == 0xEC)
-                                        {
-                                            int FirmwareRevision = reportData.ReportBytes[8] & 0xF;
-                                            int FirmwareBuild = reportData.ReportBytes[8] >> 4;
-                                            int FirmwareMinor = reportData.ReportBytes[9] & 0xF;
-                                            int FirmwareMajor = reportData.ReportBytes[9] >> 4;
-                                            int BatteryReading = reportData.ReportBytes[10];
-                                            int BatteryRangeMin = 0x62;
-                                            int BatteryRangeMax = 0x72;
-                                            if (BatteryReading < BatteryRangeMin)
-                                            {
-                                                BatteryReading = BatteryRangeMin;
-                                            }
-                                            else if (BatteryReading > BatteryRangeMax)
-                                            {
-                                                BatteryReading = BatteryRangeMax;
-                                            }
-                                            // reportData.ReportBytes[10] of 0 means unknown
-                                            int batteryPercent = (int)((float)(BatteryReading - BatteryRangeMin) / (float)(BatteryRangeMax - BatteryRangeMin) * 100f);
-                                            Console.WriteLine("Controller firmware version: V" + FirmwareMajor + "." + FirmwareMinor + "." + FirmwareBuild + "." + FirmwareRevision);
-                                            Console.WriteLine("Controller Power: " + batteryPercent);
-
-                                            DetectedDeviceId = reportData.ReportBytes[2];
-
-                                            if (PollingState == EPollingState.RunUntilReady)
-                                                PollingState = EPollingState.SlowPoll;
-                                            Console.WriteLine($"{reportData.ReportId:X2} {BitConverter.ToString(reportData.ReportBytes)}");
-                                        }
-                                        else
-                                        {
-                                            Console.WriteLine($"{reportData.ReportId:X2} {BitConverter.ToString(reportData.ReportBytes)}");
-                                        }
-                                    }
-                                    else
-                                    {
-                                        Console.WriteLine($"{reportData.ReportId:X2} {BitConverter.ToString(reportData.ReportBytes)}");
-                                    }
+                                    Interlocked.Exchange(ref reportUsageLock, 0);
                                 }
-                                break;
-                            default:
-                                Console.WriteLine($"{reportData.ReportId:X2} {BitConverter.ToString(reportData.ReportBytes)}");
-                                break;
+                            }
                         }
-                    }
-                    else
-                    {
+                        break;
+                    case 0xFF:
+                        {
+                            if (reportData.ReportBytes[1] == 0xF0)
+                            {
+                                if ((reportData.ReportBytes[14] & 0xFF) == 0xEC)
+                                {
+                                    int FirmwareRevision = reportData.ReportBytes[8] & 0xF;
+                                    int FirmwareBuild = reportData.ReportBytes[8] >> 4;
+                                    int FirmwareMinor = reportData.ReportBytes[9] & 0xF;
+                                    int FirmwareMajor = reportData.ReportBytes[9] >> 4;
+                                    int BatteryReading = reportData.ReportBytes[10];
+                                    int BatteryRangeMin = 0x62;
+                                    int BatteryRangeMax = 0x72;
+                                    if (BatteryReading < BatteryRangeMin)
+                                    {
+                                        BatteryReading = BatteryRangeMin;
+                                    }
+                                    else if (BatteryReading > BatteryRangeMax)
+                                    {
+                                        BatteryReading = BatteryRangeMax;
+                                    }
+                                    // reportData.ReportBytes[10] of 0 means unknown
+                                    int batteryPercent = (int)((float)(BatteryReading - BatteryRangeMin) / (float)(BatteryRangeMax - BatteryRangeMin) * 100f);
+                                    Console.WriteLine("Controller firmware version: V" + FirmwareMajor + "." + FirmwareMinor + "." + FirmwareBuild + "." + FirmwareRevision);
+                                    Console.WriteLine("Controller Power: " + batteryPercent);
+
+                                    byte? OldDetectedDeviceId = DetectedDeviceId;
+                                    DetectedDeviceId = reportData.ReportBytes[2];
+                                    if (OldDetectedDeviceId != DetectedDeviceId)
+                                        ResetControllerInfo();
+
+                                    Console.ForegroundColor = ConsoleColor.Blue;
+                                    Console.WriteLine($"{reportData.ReportId:X2} {BitConverter.ToString(reportData.ReportBytes)}");
+                                    Console.ResetColor();
+                                }
+                                else
+                                {
+                                    Console.WriteLine($"{reportData.ReportId:X2} {BitConverter.ToString(reportData.ReportBytes)}");
+                                }
+                            }
+                            else
+                            {
+                                Console.WriteLine($"{reportData.ReportId:X2} {BitConverter.ToString(reportData.ReportBytes)}");
+                            }
+                        }
+                        break;
+                    default:
                         Console.WriteLine($"{reportData.ReportId:X2} {BitConverter.ToString(reportData.ReportBytes)}");
-                    }
+                        break;
                 }
-                finally
-                {
-                    Interlocked.Exchange(ref reportUsageLock, 0);
-                }
-
-
-                // TODO: change how this works because we don't want to lock, we need to actually change the polling rate in the device
-                if (PollingState == EPollingState.SlowPoll)
-                    Thread.Sleep(_SLOW_POLL_MS); // if we're a dongle and we're not connected we might only be partially initalized, so slow roll our read
             }
-                        Console.WriteLine($"{reportData.ReportId:X2} {BitConverter.ToString(reportData.ReportBytes)}");
+            else
+            {
+                Console.WriteLine($"{reportData.ReportId:X2} {BitConverter.ToString(reportData.ReportBytes)}");
+            }
+
+            // TODO: change how this works because we don't want to lock, we need to actually change the polling rate in the device
+            if (PollingState == EPollingState.SlowPoll)
+                Thread.Sleep(_SLOW_POLL_MS); // if we're a dongle and we're not connected we might only be partially initalized, so slow roll our read
+
+            //Console.WriteLine($"{reportData.ReportId:X2} {BitConverter.ToString(reportData.ReportBytes)}");
         }
 
         private void getDeviceInfoInAndroid()
         {
-            byte[] array = new byte[14];
+            Console.WriteLine("getDeviceInfoInAndroid");
+            byte[] array = new byte[12];
             array[0] = 5;
             array[1] = 0xEC;
-            _device.WriteReport(array);
+            bool success = _device.WriteReport(array);
         }
 
         object UpdateLocalDataLock = new object();
@@ -591,6 +671,7 @@ namespace ExtendInput.Controller
 
         private void ResetControllerInfo()
         {
+            Console.WriteLine("TRY GET CON");
             ControllerSubType = GetControllerInitialTypeCode((UInt16)_device.VendorId, (UInt16)_device.ProductId, (UInt16)_device.RevisionNumber);
             ControllerAttribute = ControllerSubType.GetAttribute<ControllerSubTypeAttribute>();
 
