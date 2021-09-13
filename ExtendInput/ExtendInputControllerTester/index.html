@@ -484,9 +484,11 @@
                                 cardImage.attr("alt", controller.Name);
                             }
 
-                            if (controller.HasSelectableAlternatives) {
-                                var menu = $('<div class="list-group small alternate_controller_list" />');
-                                menu.append('<h6 class="list-group-item">Alternate Controllers</h6>');
+                            var menu = $('<div class="list-group small alternate_controller_list" />');
+                            menu.append('<h6 class="list-group-item">Alternate Controllers</h6>');
+
+                            //if (controller.HasSelectableAlternatives) {
+                            {
                                 for (var alternate in controller.Alternates) {
                                     var alternate_item = $('<a class="alternate_controller list-group-item list-group-item-action" href="#" />');
                                     alternate_item.attr('data-id', alternate);
@@ -496,8 +498,14 @@
                                 var alternateBody = $('<div class="card-body" />');
                                 alternateBody.append(menu);
                                 cardWrapper.append(alternateBody);
-                            }
 
+                                if (controller.HasSelectableAlternatives) {
+                                    alternateBody.show();
+                                } else {
+                                    alternateBody.hide();
+                                }
+                            }
+                            
                             cardWrapper.append('<a href="#" class="btn btn-primary btn-lg btn-block activate_controller" role="button" data-id="' + controller_id + '"></a>');
                             wrapper.append(cardWrapper);
                         } else {
@@ -505,6 +513,11 @@
                             delete knownChildren['controller_' + controller_id];
 
                             var menu = wrapper.find('.alternate_controller_list');
+                            if (controller.HasSelectableAlternatives) {
+                                menu.parent().show();
+                            } else {
+                                menu.parent().hide();
+                            }
                             for (var alternate in controller.Alternates) {
                                 if (menu.children('.alternate_controller[data-id="' + alternate + '"]').length == 0) {
                                     var alternate_item = $('<a class="alternate_controller list-group-item list-group-item-action" href="#" />');
