@@ -16,7 +16,7 @@ namespace ExtendInput.Controller
         public byte? ReportFESubType { get; private set; } // 2nd data byte
         public byte? FixedValueFromByte28 { get; private set; } // 27th data byte
         //public byte? VersionFromByte30 { get; private set; } // 29th data byte
-        public byte? FixedValueFromByte31 { get; private set; } // 30th data byte
+        //public byte? FixedValueFromByte31 { get; private set; } // 30th data byte
         public int[] ExpectedDongle { get; private set; }
         public ControllerSubTypeAttribute(
             string[] Token,
@@ -24,7 +24,7 @@ namespace ExtendInput.Controller
             int DeviceIdFromFeature = -1,
             int FixedValueFromByte28 = -1,
             //int VersionFromByte30 = -1,
-            int FixedValueFromByte31 = -1,
+            //int FixedValueFromByte31 = -1,
             int ReportFESubType = -1,
             int[] ExpectedDongle = null)
         {
@@ -33,7 +33,7 @@ namespace ExtendInput.Controller
             this.DeviceIdFromFeature = DeviceIdFromFeature > -1 ? (byte?)DeviceIdFromFeature : null;
             this.FixedValueFromByte28 = FixedValueFromByte28 > -1 ? (byte?)FixedValueFromByte28 : null;
             //this.VersionFromByte30 = VersionFromByte30 > -1 ? (byte?)VersionFromByte30 : null;
-            this.FixedValueFromByte31 = FixedValueFromByte31 > -1 ? (byte?)FixedValueFromByte31 : null;
+            //this.FixedValueFromByte31 = FixedValueFromByte31 > -1 ? (byte?)FixedValueFromByte31 : null;
             this.ReportFESubType = ReportFESubType > -1 ? (byte?)ReportFESubType : null;
             this.ExpectedDongle = ExpectedDongle;
         }
@@ -45,7 +45,7 @@ namespace ExtendInput.Controller
         public const int PRODUCT_FLYDIGI_DONGLE_1 = 0x2410;
         public const int PRODUCT_FLYDIGI_DONGLE_2 = 0x2411;
         public const int PRODUCT_FLYDIGI_DONGLE_3 = 0x2411;
-        public const int PRODUCT_FLYDIGI_USB = 0x2411;
+        public const int PRODUCT_FLYDIGI_USB = 0x2412;
         public const int REVISION_FLYDIGI_DONGLE_1 = 0x0303;
         public const int REVISION_FLYDIGI_DONGLE_2 = 0x0303;
         public const int REVISION_FLYDIGI_DONGLE_3 = 0x0401;
@@ -92,7 +92,7 @@ namespace ExtendInput.Controller
                 //DeviceIdFromFeature: 0x11,
                 FixedValueFromByte28: 0x00,
                 //VersionFromByte30: 0x32,
-                FixedValueFromByte31: 0x1B,
+                //FixedValueFromByte31: 0x1B,
                 ReportFESubType: 0x66)]
             X8,
 
@@ -423,7 +423,7 @@ namespace ExtendInput.Controller
                 }
                 else
                 {
-                    this.PollingState = EPollingState.RunOnce; // we are either a controller or a dumb 
+                    this.PollingState = EPollingState.RunOnce; // we are either a controller or a dumb dongle
                     _device.StartReading();
                 }
             }
@@ -559,6 +559,7 @@ namespace ExtendInput.Controller
                                         byte StickRX = reportData.ReportBytes[20];
                                         byte StickRY = reportData.ReportBytes[21];
 
+
                                         /*if ((ControllerID == 0x01 && _device.Attributes.ProductId == ProductId_X8_Apex1) || (settings.NoApex2 ?? false)) // is APEX1 reportID and is APEX1 VID
                                         {
                                             ds4Controller.SetSliderValue(DualShock4Slider.LeftTrigger, report.Data[22]);
@@ -600,6 +601,9 @@ namespace ExtendInput.Controller
                                                 //ds4Controller.SetDPadDirection(DualShock4DPadDirection.None);
                                         */
 
+                                        //short yaw = ProcSignedByteNybble((short)(((report.Data[4] & 0x0f) << 8) + report.Data[3]));
+                                        //short pitch = ProcSignedByteNybble((short)(((report.Data[4] & 0xf0) >> 4) + (report.Data[5] << 4)));
+
                                         MetadataMutationLock.Wait();
                                         try
                                         {
@@ -616,9 +620,9 @@ namespace ExtendInput.Controller
                                             FixedValueFromByte31 = reportData.ReportBytes[30];
 
                                             if (OldReportFESubType != ReportFESubType
-                                             || OldFixedValueFromByte28 != FixedValueFromByte28
-                                             //|| OldVersionFromByte30 != VersionFromByte30
-                                             || OldFixedValueFromByte31 != FixedValueFromByte31)
+                                             || OldFixedValueFromByte28 != FixedValueFromByte28)
+                                             ////|| OldVersionFromByte30 != VersionFromByte30
+                                             //|| OldFixedValueFromByte31 != FixedValueFromByte31)
                                                 ResetControllerInfo();
                                         }
                                         finally
@@ -645,13 +649,22 @@ namespace ExtendInput.Controller
                                                     ResetControllerInfo();
                                                 }
                                             }
-                                            else
+                                            // USB mode we expect data, so don't stop if we get a normal report, we should keep our RunUntilReady until we see what we want
+                                            /*else
                                             {
                                                 _device.StopReading();
                                                 PollingState = EPollingState.Inactive;
                                                 _device.CloseDevice();
-                                            }
+                                            }*/
                                         }
+
+
+
+                                        byte XorTest = (byte)(reportData.ReportBytes[3] & reportData.ReportBytes[4] & reportData.ReportBytes[5] & reportData.ReportBytes[16] & reportData.ReportBytes[18] & reportData.ReportBytes[20] & reportData.ReportBytes[21]);
+
+                                        Console.ForegroundColor = ConsoleColor.Green;
+                                        Console.WriteLine($"{reportData.ReportId:X2} {BitConverter.ToString(reportData.ReportBytes)} {XorTest:X2}");
+                                        Console.ResetColor();
                                     }
                                     finally
                                     {
@@ -725,6 +738,7 @@ namespace ExtendInput.Controller
                                         }
                                         else
                                         {
+                                            RequestAndroidInfoTimeGap = 60; // we are a wired device that can't change, slow to lowest poll rate as we just want to read the battery now
                                             _device.StopReading();
                                             PollingState = EPollingState.Inactive;
                                             _device.CloseDevice();
@@ -760,7 +774,9 @@ namespace ExtendInput.Controller
             if (PollingState == EPollingState.SlowPoll)
                 Thread.Sleep(_SLOW_POLL_MS); // if we're a dongle and we're not connected we might only be partially initalized, so slow roll our read
 
+            //Console.ForegroundColor = ConsoleColor.DarkGray;
             //Console.WriteLine($"{reportData.ReportId:X2} {BitConverter.ToString(reportData.ReportBytes)}");
+            //Console.ResetColor();
         }
 
         private void getDeviceInfoInAndroid()
@@ -968,15 +984,15 @@ namespace ExtendInput.Controller
                     //    {
                     //        Matches = false;
                     //    }
-                    if (FixedValueFromByte31.HasValue && attr.FixedValueFromByte31.HasValue)
-                        if (FixedValueFromByte31.Value == attr.FixedValueFromByte31.Value)
-                        {
-                            Rank += REPORT_BYTES_MATCH;
-                        }
-                        else
-                        {
-                            Matches = false;
-                        }
+                    //if (FixedValueFromByte31.HasValue && attr.FixedValueFromByte31.HasValue)
+                    //    if (FixedValueFromByte31.Value == attr.FixedValueFromByte31.Value)
+                    //    {
+                    //        Rank += REPORT_BYTES_MATCH;
+                    //    }
+                    //    else
+                    //    {
+                    //        Matches = false;
+                    //    }
 
                     if (Matches)
                     {
@@ -1127,15 +1143,15 @@ namespace ExtendInput.Controller
                         //    {
                         //        Matches = false;
                         //    }
-                        if (FixedValueFromByte31.HasValue && attr.FixedValueFromByte31.HasValue)
-                            if (FixedValueFromByte31.Value == attr.FixedValueFromByte31.Value)
-                            {
-                                Rank += REPORT_BYTES_MATCH;
-                            }
-                            else
-                            {
-                                Matches = false;
-                            }
+                        //if (FixedValueFromByte31.HasValue && attr.FixedValueFromByte31.HasValue)
+                        //    if (FixedValueFromByte31.Value == attr.FixedValueFromByte31.Value)
+                        //    {
+                        //        Rank += REPORT_BYTES_MATCH;
+                        //    }
+                        //    else
+                        //    {
+                        //        Matches = false;
+                        //    }
 
                         if (Matches)
                         {

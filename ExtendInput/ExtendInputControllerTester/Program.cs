@@ -71,6 +71,8 @@ namespace ExtendInputControllerTester
             ControllersLock.Wait();
             {
                 string md5 = CreateMD5(e.UniqueKey);
+                if (Controllers.ContainsKey(md5))
+                    Controllers[md5].Dispose(); // hack solution until this is added to the DeviceManager
                 Controllers.Remove(md5);
             }
             ControllersLock.Release();

@@ -110,6 +110,7 @@ namespace ExtendInput
         private void DeviceRemoved(object sender, IDevice e)
         {
             DeviceChangeEventHandler threadSafeEventHandler = ControllerRemoved;
+            // TODO Must Dispose controller here, which means we need to keep a device to controller map.  Should probably make the factories do it
             threadSafeEventHandler?.Invoke(this, e);
         }
 
