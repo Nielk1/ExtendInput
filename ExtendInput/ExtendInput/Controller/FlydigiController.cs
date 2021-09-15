@@ -421,9 +421,14 @@ namespace ExtendInput.Controller
                     });
                     CheckControllerStatusThread.Start();
                 }
+                else if (_device.ProductId == PRODUCT_FLYDIGI_DONGLE_1 && _device.RevisionNumber == REVISION_FLYDIGI_DONGLE_1) // 1 dot dongle
+                {
+                    this.PollingState = EPollingState.SlowPoll;
+                    _device.StartReading();
+                }
                 else
                 {
-                    this.PollingState = EPollingState.RunOnce; // we are either a controller or a dumb dongle
+                    this.PollingState = EPollingState.RunOnce; // we are either a controller
                     _device.StartReading();
                 }
             }
@@ -482,6 +487,8 @@ namespace ExtendInput.Controller
         private void OnReport(IReport rawReportData)
         {
             if (PollingState == EPollingState.Inactive) return;
+
+            bool IgnoreSlowPoll = false;
 
             LastData = DateTime.UtcNow;
             if (ControllerSubType == FlyDigiSubType.None)
@@ -636,11 +643,16 @@ namespace ExtendInput.Controller
 
                                         ControllerStateUpdate?.Invoke(this, State);
 
-                                        if (PollingState == EPollingState.RunUntilReady)
+                                        if (PollingState == EPollingState.RunUntilReady || PollingState == EPollingState.RunOnce)
                                         {
                                             if (ConnectionType == EConnectionType.Dongle)
                                             {
-                                                if (FirstDeviceInfoRequestTime.HasValue && (FirstDeviceInfoRequestTime.Value.AddSeconds(5) < DateTime.UtcNow)) // check if we are a dongle and asked for this data a while ago, but still don't have it
+                                                /*if (_device.VendorId == VENDOR_FLYDIGI && _device.ProductId == PRODUCT_FLYDIGI_DONGLE_1 && _device.RevisionNumber == REVISION_FLYDIGI_DONGLE_1)
+                                                {
+                                                    Console.WriteLine("Dongle is a type 1 that never gives data, so we have what we're going to get");
+                                                    PollingState = EPollingState.SlowPoll;
+                                                }
+                                                else*/ if (FirstDeviceInfoRequestTime.HasValue && (FirstDeviceInfoRequestTime.Value.AddSeconds(5) < DateTime.UtcNow)) // check if we are a dongle and asked for this data a while ago, but still don't have it
                                                 {
                                                     Console.WriteLine("Did not get dongle data within timeout");
                                                     FirstDeviceInfoRequestTime = null;
@@ -744,6 +756,7 @@ namespace ExtendInput.Controller
                                             _device.CloseDevice();
                                         }
                                     }
+                                    IgnoreSlowPoll = true; // don't slow-poll right after this request, but on the one after
 
                                     Console.ForegroundColor = ConsoleColor.Blue;
                                     Console.WriteLine($"{reportData.ReportId:X2} {BitConverter.ToString(reportData.ReportBytes)}");
@@ -771,7 +784,7 @@ namespace ExtendInput.Controller
             }
 
             // TODO: change how this works because we don't want to lock, we need to actually change the polling rate in the device
-            if (PollingState == EPollingState.SlowPoll)
+            if (!IgnoreSlowPoll && PollingState == EPollingState.SlowPoll)
                 Thread.Sleep(_SLOW_POLL_MS); // if we're a dongle and we're not connected we might only be partially initalized, so slow roll our read
 
             //Console.ForegroundColor = ConsoleColor.DarkGray;
