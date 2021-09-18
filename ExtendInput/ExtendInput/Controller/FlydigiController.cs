@@ -158,7 +158,8 @@ namespace ExtendInput.Controller
                 ExpectedDongle: new int[] { (PRODUCT_FLYDIGI_DONGLE_2 << 8) | REVISION_FLYDIGI_DONGLE_2 },
                 HasBottomMenu: true,
                 HasMButtons: true,
-                HasCZBottom: true)]
+                HasCZBottom: true,
+                HasBumper2: true)]
             APEX_2,
 
             [ControllerSubType(
@@ -228,6 +229,7 @@ namespace ExtendInput.Controller
                 DeviceIdFromFeature: 0x43)]
             WASP_2,
         }
+        //private FlyDigiSubType PreviousControllerSubType = FlyDigiSubType.None;
         private FlyDigiSubType ControllerSubType = FlyDigiSubType.None;
         private ControllerSubTypeAttribute ControllerAttribute = null;
         private SemaphoreSlim MetadataMutationLock = new SemaphoreSlim(1);
@@ -254,7 +256,8 @@ namespace ExtendInput.Controller
         public event ControllerStateUpdateEvent ControllerStateUpdate;
 
         // The controller state can drastically change, where it picks up or loses items based on passive detection of quirky controllers, this makes it safe
-        private ReaderWriterLockSlim StateMutationLock = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
+        //private ReaderWriterLockSlim StateMutationLock = new ReaderWriterLockSlim();
+        private SemaphoreSlim StateMutationLock = new SemaphoreSlim(1);
 
         public bool HasMotion => true;
 
@@ -571,58 +574,59 @@ namespace ExtendInput.Controller
                             {
                                 try
                                 {
-                                    StateMutationLock.EnterReadLock();
-                                    try
+                                    //StateMutationLock.EnterReadLock();
+                                    //try
                                     {
                                         // Clone the current state before altering it since the OldState is likely a shared reference
-                                        ControllerState StateInFlight = (ControllerState)State.Clone();
-
-                                        //byte ControllerID = reportData.ReportBytes[27];
-
-                                        bool buttonC = (reportData.ReportBytes[6] & 0x01) == 0x01;
-                                        bool buttonZ = (reportData.ReportBytes[6] & 0x02) == 0x02;
-                                        bool buttonM1 = (reportData.ReportBytes[6] & 0x04) == 0x04;
-                                        bool buttonM2 = (reportData.ReportBytes[6] & 0x08) == 0x08;
-                                        bool buttonM3 = (reportData.ReportBytes[6] & 0x10) == 0x10;
-                                        bool buttonM4 = (reportData.ReportBytes[6] & 0x20) == 0x20;
-                                        bool buttonM5 = (reportData.ReportBytes[6] & 0x40) == 0x40;
-                                        bool buttonM6 = (reportData.ReportBytes[6] & 0x80) == 0x80;
-                                        bool buttonPair = (reportData.ReportBytes[7] & 0x01) == 0x01;
-                                        bool buttonHome = (reportData.ReportBytes[7] & 0x08) == 0x08;
-                                        bool buttonBack = (reportData.ReportBytes[7] & 0x10) == 0x10;
-                                        ////////////////////////////////////////////////////
-                                        bool buttonUp = (reportData.ReportBytes[8] & 0x01) == 0x01;
-                                        bool buttonRight = (reportData.ReportBytes[8] & 0x02) == 0x02;
-                                        bool buttonDown = (reportData.ReportBytes[8] & 0x04) == 0x04;
-                                        bool buttonLeft = (reportData.ReportBytes[8] & 0x08) == 0x08;
-                                        ////////////////////////////////////////////////////
-                                        bool buttonA = (reportData.ReportBytes[8] & 0x10) == 0x10;
-                                        bool buttonB = (reportData.ReportBytes[8] & 0x20) == 0x20;
-                                        bool buttonSelect = (reportData.ReportBytes[8] & 0x40) == 0x40;
-                                        bool buttonX = (reportData.ReportBytes[8] & 0x80) == 0x80;
-                                        bool buttonY = (reportData.ReportBytes[9] & 0x01) == 0x01;
-                                        bool buttonStart = (reportData.ReportBytes[9] & 0x02) == 0x02;
-                                        bool buttonL1 = (reportData.ReportBytes[9] & 0x04) == 0x04;
-                                        bool buttonR1 = (reportData.ReportBytes[9] & 0x08) == 0x08;
-                                        bool buttonL2 = (reportData.ReportBytes[9] & 0x10) == 0x10;
-                                        bool buttonR2 = (reportData.ReportBytes[9] & 0x20) == 0x20;
-                                        bool buttonL3 = (reportData.ReportBytes[9] & 0x40) == 0x40;
-                                        bool buttonR3 = (reportData.ReportBytes[9] & 0x80) == 0x80;
-                                        ////////////////////////////////////////////////////
-                                        byte LStickX = reportData.ReportBytes[16];
-                                        byte LStickY = reportData.ReportBytes[18];
-                                        byte RStickX = reportData.ReportBytes[20];
-                                        byte RStickY = reportData.ReportBytes[21];
-                                        byte SStickX = reportData.ReportBytes[22];
-                                        byte SStickY = reportData.ReportBytes[23];
-                                        ////////////////////////////////////////////////////
-                                        byte WheelX = reportData.ReportBytes[16]; // or trigger
-                                        byte WheelY = reportData.ReportBytes[18]; // or trigger
-                                        //byte StickRX = reportData.ReportBytes[20];
-                                        //byte StickRY = reportData.ReportBytes[21];
-
-                                        /*if (ControllerSubType != FlyDigiSubType.None && ControllerSubType != FlyDigiSubType.Unknown)
+                                        ControllerState StateInFlight = null;
+                                        StateMutationLock.Wait();
+                                        try
                                         {
+                                            Console.ForegroundColor = ConsoleColor.Cyan;
+                                            Console.WriteLine($"Clone State {State.Controls["triggers"]?.GetType()}");
+                                            Console.ResetColor();
+                                            StateInFlight = (ControllerState)State.Clone();
+
+                                            //byte ControllerID = reportData.ReportBytes[27];
+
+                                            bool buttonC = (reportData.ReportBytes[6] & 0x01) == 0x01;
+                                            bool buttonZ = (reportData.ReportBytes[6] & 0x02) == 0x02;
+                                            bool buttonM1 = (reportData.ReportBytes[6] & 0x04) == 0x04;
+                                            bool buttonM2 = (reportData.ReportBytes[6] & 0x08) == 0x08;
+                                            bool buttonM3 = (reportData.ReportBytes[6] & 0x10) == 0x10;
+                                            bool buttonM4 = (reportData.ReportBytes[6] & 0x20) == 0x20;
+                                            bool buttonM5 = (reportData.ReportBytes[6] & 0x40) == 0x40;
+                                            bool buttonM6 = (reportData.ReportBytes[6] & 0x80) == 0x80;
+                                            bool buttonPair = (reportData.ReportBytes[7] & 0x01) == 0x01;
+                                            bool buttonHome = (reportData.ReportBytes[7] & 0x08) == 0x08;
+                                            bool buttonBack = (reportData.ReportBytes[7] & 0x10) == 0x10;
+                                            ////////////////////////////////////////////////////
+                                            bool buttonUp = (reportData.ReportBytes[8] & 0x01) == 0x01;
+                                            bool buttonRight = (reportData.ReportBytes[8] & 0x02) == 0x02;
+                                            bool buttonDown = (reportData.ReportBytes[8] & 0x04) == 0x04;
+                                            bool buttonLeft = (reportData.ReportBytes[8] & 0x08) == 0x08;
+                                            ////////////////////////////////////////////////////
+                                            bool buttonA = (reportData.ReportBytes[8] & 0x10) == 0x10;
+                                            bool buttonB = (reportData.ReportBytes[8] & 0x20) == 0x20;
+                                            bool buttonSelect = (reportData.ReportBytes[8] & 0x40) == 0x40;
+                                            bool buttonX = (reportData.ReportBytes[8] & 0x80) == 0x80;
+                                            bool buttonY = (reportData.ReportBytes[9] & 0x01) == 0x01;
+                                            bool buttonStart = (reportData.ReportBytes[9] & 0x02) == 0x02;
+                                            bool buttonL1 = (reportData.ReportBytes[9] & 0x04) == 0x04;
+                                            bool buttonR1 = (reportData.ReportBytes[9] & 0x08) == 0x08;
+                                            bool buttonL2 = (reportData.ReportBytes[9] & 0x10) == 0x10;
+                                            bool buttonR2 = (reportData.ReportBytes[9] & 0x20) == 0x20;
+                                            bool buttonL3 = (reportData.ReportBytes[9] & 0x40) == 0x40;
+                                            bool buttonR3 = (reportData.ReportBytes[9] & 0x80) == 0x80;
+                                            ////////////////////////////////////////////////////
+                                            byte LStickX = reportData.ReportBytes[16];
+                                            byte LStickY = reportData.ReportBytes[18];
+                                            byte RStickX = reportData.ReportBytes[20];
+                                            byte RStickY = reportData.ReportBytes[21];
+                                            byte SStickX = reportData.ReportBytes[22];
+                                            byte SStickY = reportData.ReportBytes[23];
+                                            ////////////////////////////////////////////////////
+
                                             (StateInFlight.Controls["stick_left"] as ControlStick).X = ControllerMathTools.QuickStickToFloat(LStickX);
                                             (StateInFlight.Controls["stick_left"] as ControlStick).Y = ControllerMathTools.QuickStickToFloat(LStickY);
                                             (StateInFlight.Controls["stick_left"] as ControlStick).Click = buttonL3;
@@ -631,12 +635,15 @@ namespace ExtendInput.Controller
                                             (StateInFlight.Controls["stick_right"] as ControlStick).Click = buttonR3;
                                             (StateInFlight.Controls["bumpers"] as ControlButtonPair).Left.Button0 = buttonL1;
                                             (StateInFlight.Controls["bumpers"] as ControlButtonPair).Right.Button0 = buttonR1;
-                                            if (ControllerAttribute.HasAnalogTrigger)
+                                            (StateInFlight.Controls["menu"] as ControlButtonPair).Left.Button0 = buttonSelect;
+                                            (StateInFlight.Controls["menu"] as ControlButtonPair).Right.Button0 = buttonStart;
+                                            
+                                            if (ControllerAttribute.HasAnalogTrigger && StateInFlight.Controls["triggers"] is ControlTriggerPair)
                                             {
-                                                (StateInFlight.Controls["triggers"] as ControlTriggerPair).Left.Analog = WheelX;
-                                                (StateInFlight.Controls["triggers"] as ControlTriggerPair).Right.Analog = WheelY;
+                                                (StateInFlight.Controls["triggers"] as ControlTriggerPair).Left.Analog = SStickX > 0 ? SStickX / 255f : buttonL2 ? 255 : 0;
+                                                (StateInFlight.Controls["triggers"] as ControlTriggerPair).Right.Analog = SStickY > 0 ? SStickY / 255f : buttonR2 ? 255 : 0;
                                             }
-                                            else if (ControllerSubType != FlyDigiSubType.None && ControllerSubType != FlyDigiSubType.Unknown)
+                                            else if (ControllerSubType != FlyDigiSubType.None && ControllerSubType != FlyDigiSubType.Unknown && StateInFlight.Controls["triggers"] is ControlButtonPair)
                                             {
                                                 (StateInFlight.Controls["triggers"] as ControlButtonPair).Left.Button0 = buttonL2;
                                                 (StateInFlight.Controls["triggers"] as ControlButtonPair).Right.Button0 = buttonR2;
@@ -676,15 +683,15 @@ namespace ExtendInput.Controller
                                             }
                                             if (ControllerAttribute.HasMRockers)
                                             {
-                                                (StateInFlight.Controls["m1m3"] as ControlButtonPair).Left.Button0 = buttonM1;
-                                                (StateInFlight.Controls["m1m3"] as ControlButtonPair).Right.Button0 = buttonM3;
+                                                (StateInFlight.Controls["m1m3"] as ControlButtonPair).Left.Button0 = buttonM3;
+                                                (StateInFlight.Controls["m1m3"] as ControlButtonPair).Right.Button0 = buttonM1;
                                                 (StateInFlight.Controls["m2m4"] as ControlButtonPair).Left.Button0 = buttonM2;
                                                 (StateInFlight.Controls["m2m4"] as ControlButtonPair).Right.Button0 = buttonM4;
                                             }
                                             if (ControllerAttribute.HasBumper2)
                                             {
-                                                (StateInFlight.Controls["m5m6"] as ControlButtonPair).Left.Button0 = buttonM5;
-                                                (StateInFlight.Controls["m5m6"] as ControlButtonPair).Right.Button0 = buttonM6;
+                                                (StateInFlight.Controls["m5m6"] as ControlButtonPair).Left.Button0 = buttonM6;
+                                                (StateInFlight.Controls["m5m6"] as ControlButtonPair).Right.Button0 = buttonM5;
                                             }
                                             if (ControllerAttribute.HasWheel)
                                             {
@@ -731,8 +738,17 @@ namespace ExtendInput.Controller
 
                                             //short yaw = ProcSignedByteNybble((short)(((report.Data[4] & 0x0f) << 8) + report.Data[3]));
                                             //short pitch = ProcSignedByteNybble((short)(((report.Data[4] & 0xf0) >> 4) + (report.Data[5] << 4)));
-                                        }*/
                                         
+
+                                            // bring OldState in line with new State
+                                            OldState = State;
+                                            State = StateInFlight;
+                                        }
+                                        finally
+                                        {
+                                            StateMutationLock.Release();
+                                        }
+
                                         MetadataMutationLock.Wait();
                                         try
                                         {
@@ -750,8 +766,8 @@ namespace ExtendInput.Controller
 
                                             if (OldReportFESubType != ReportFESubType
                                              || OldFixedValueFromByte28 != FixedValueFromByte28)
-                                             ////|| OldVersionFromByte30 != VersionFromByte30
-                                             //|| OldFixedValueFromByte31 != FixedValueFromByte31)
+                                                ////|| OldVersionFromByte30 != VersionFromByte30
+                                                //|| OldFixedValueFromByte31 != FixedValueFromByte31)
                                                 ResetControllerInfo();
                                         }
                                         finally
@@ -759,9 +775,6 @@ namespace ExtendInput.Controller
                                             MetadataMutationLock.Release();
                                         }
 
-                                        // bring OldState in line with new State
-                                        OldState = State;
-                                        State = StateInFlight;
 
                                         ControllerStateUpdate?.Invoke(this, State);
 
@@ -793,16 +806,13 @@ namespace ExtendInput.Controller
                                         }
 
 
-
-                                        byte XorTest = (byte)(reportData.ReportBytes[3] & reportData.ReportBytes[4] & reportData.ReportBytes[5] & reportData.ReportBytes[16] & reportData.ReportBytes[18] & reportData.ReportBytes[20] & reportData.ReportBytes[21]);
-
                                         Console.ForegroundColor = ConsoleColor.Green;
-                                        Console.WriteLine($"{reportData.ReportId:X2} {BitConverter.ToString(reportData.ReportBytes)} {XorTest:X2}");
+                                        Console.WriteLine($"{reportData.ReportId:X2} {BitConverter.ToString(reportData.ReportBytes)}");
                                         Console.ResetColor();
                                     }
-                                    finally
+                                    //finally
                                     {
-                                        StateMutationLock.ExitReadLock();
+                                        //StateMutationLock.ExitReadLock();
 
                                         //if (ControllerTempDataAppeared)
                                         //{
@@ -937,10 +947,39 @@ namespace ExtendInput.Controller
             ControllerSubType = GetControllerInitialTypeCode((UInt16)_device.VendorId, (UInt16)_device.ProductId, (UInt16)_device.RevisionNumber);
             ControllerAttribute = ControllerSubType.GetAttribute<ControllerSubTypeAttribute>();
 
+            if (!ControlsCreated)
+            {
+                StateMutationLock.Wait();
+                try
+                {
+                    // universal fixed controls that all Flydigi controllers have, these won't change
+                    State.Controls["quad_left"] = new ControlDPad();
+                    State.Controls["stick_left"] = new ControlStick(HasClick: true);
+                    State.Controls["stick_right"] = new ControlStick(HasClick: true);
+                    State.Controls["bumpers"] = new ControlButtonPair();
+                    State.Controls["menu"] = new ControlButtonPair();
+                    ControlsCreated = true;
+                }
+                finally
+                {
+                    StateMutationLock.Release();
+                }
+            }
+            ControllerMetadataUpdate?.Invoke(this);
+
+            lock (UpdateLocalDataLock)
+            {
+                ChangeControllerSubType(ControllerSubType);
+
+                ControllerMetadataUpdate?.Invoke(this);
+            }
+
+            //ChangeControllerSubType(GetControllerInitialTypeCode((UInt16)_device.VendorId, (UInt16)_device.ProductId, (UInt16)_device.RevisionNumber));
+
             //CreateControls();
 
-            UpdateAlternateSubTypes();
-            ControllerMetadataUpdate?.Invoke(this);
+            //UpdateAlternateSubTypes();
+            //ControllerMetadataUpdate?.Invoke(this);
 
             /*{
                 lock (UpdateLocalDataLock)
@@ -1059,7 +1098,8 @@ namespace ExtendInput.Controller
                         }
                     }
                 }*/
-                if (subType != FlyDigiSubType.None && subType != FlyDigiSubType.Unknown)
+                //if (subType != FlyDigiSubType.None && subType != FlyDigiSubType.Unknown)
+                if (subType != FlyDigiSubType.Unknown)
                 {
                     bool Matches = true;
                     if (ReportFESubType.HasValue && attr.ReportFESubType.HasValue)
@@ -1277,7 +1317,9 @@ namespace ExtendInput.Controller
 
         private void ChangeControllerSubType(FlyDigiSubType NewControllerSubType)
         {
-            Console.WriteLine("ChangeControllerSubType Start");
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine($"ChangeControllerSubType Start {NewControllerSubType}");
+            Console.ResetColor();
             /*if (!ControlsCreated)
             {
                 StateMutationLock.EnterWriteLock();
@@ -1314,19 +1356,23 @@ namespace ExtendInput.Controller
                 ControllerMetadataUpdate?.Invoke(this);
             }*/
 
-            if (NewControllerSubType == ControllerSubType)
+            /*if (ControllerSubType == NewControllerSubType)
             {
                 UpdateAlternateSubTypes();
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine($"ChangeControllerSubType End {NewControllerSubType}");
+                Console.ResetColor();
                 return;
-            }
+            }*/
 
             //FlyDigiSubType PrevControllerType = ControllerSubType;
             //ControllerSubTypeAttribute PrevControllerAttribute = PrevControllerType.GetAttribute<ControllerSubTypeAttribute>();
-
+            
+            //PreviousControllerSubType = ControllerSubType;
             ControllerSubType = NewControllerSubType;
             ControllerAttribute = ControllerSubType.GetAttribute<ControllerSubTypeAttribute>();
 
-            StateMutationLock.EnterWriteLock();
+            StateMutationLock.Wait();
             try
             {
                 if (NewControllerSubType == FlyDigiSubType.None)
@@ -1347,17 +1393,19 @@ namespace ExtendInput.Controller
                     }
                 }
 
-                //CreateControls();
+                CreateControls();
             }
             finally
             {
-                StateMutationLock.ExitWriteLock();
+                StateMutationLock.Release();
             }
 
             UpdateAlternateSubTypes();
 
             ControllerMetadataUpdate?.Invoke(this);
-            Console.WriteLine("ChangeControllerSubType End");
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine($"ChangeControllerSubType End {NewControllerSubType}");
+            Console.ResetColor();
         }
 
         private void CreateControls()
@@ -1399,7 +1447,7 @@ namespace ExtendInput.Controller
                 ControlsCreated = true;
             }
 
-            StateMutationLock.EnterWriteLock();
+            //StateMutationLock.Wait();
             try
             {
                 if (ControllerAttribute.HasAnalogTrigger)
@@ -1412,6 +1460,9 @@ namespace ExtendInput.Controller
                     State.Controls["triggers"] = new ControlButtonPair();
                     Console.WriteLine("Trigger set to Digital");
                 }
+                Console.ForegroundColor = ConsoleColor.Cyan;
+                Console.WriteLine($"Set State {State.Controls["triggers"]?.GetType()}");
+                Console.ResetColor();
 
                 if (ControllerAttribute.HasLogo)
                 {
@@ -1516,7 +1567,7 @@ namespace ExtendInput.Controller
             }
             finally
             {
-                StateMutationLock.ExitWriteLock();
+                //StateMutationLock.Release();
             }
             Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine($"CreateControls End for {ControllerSubType}");

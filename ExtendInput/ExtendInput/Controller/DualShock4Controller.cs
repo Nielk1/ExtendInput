@@ -1257,7 +1257,7 @@ namespace ExtendInput.Controller
         }
 
         object UpdateLocalDataLock = new object();
-        bool UpdateLocalDataPoison = false;
+        //bool UpdateLocalDataPoison = false;
 
         private void ResetControllerInfo()
         {
@@ -1318,11 +1318,11 @@ namespace ExtendInput.Controller
                     //{
                         lock (UpdateLocalDataLock)
                         {
-                            if (UpdateLocalDataPoison)
-                                return;
+                            //if (UpdateLocalDataPoison)
+                            //    return;
                             string SerialNumber_ = GetSerialNumber();
-                            if (UpdateLocalDataPoison)
-                                return;
+                            //if (UpdateLocalDataPoison)
+                            //    return;
                             SerialNumber = SerialNumber_;
 
                             if (!string.IsNullOrWhiteSpace(SerialNumber))
