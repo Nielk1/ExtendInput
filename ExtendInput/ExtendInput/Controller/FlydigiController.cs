@@ -18,6 +18,19 @@ namespace ExtendInput.Controller
         //public byte? VersionFromByte30 { get; private set; } // 29th data byte
         //public byte? FixedValueFromByte31 { get; private set; } // 30th data byte
         public int[] ExpectedDongle { get; private set; }
+
+
+        public bool HasAnalogTrigger { get; private set; }
+        public bool HasTopMenu { get; private set; }
+        public bool HasBottomMenu { get; private set; }
+        public bool HasLogo { get; private set; }
+        public bool HasCZTop { get; private set; }
+        public bool HasCZBottom { get; private set; }
+        public bool HasBumper2 { get; private set; }
+        public bool HasMButtons { get; private set; }
+        public bool HasMRockers { get; private set; }
+        public bool HasWheel { get; private set; }
+
         public ControllerSubTypeAttribute(
             string[] Token,
             string Name,
@@ -26,7 +39,17 @@ namespace ExtendInput.Controller
             //int VersionFromByte30 = -1,
             //int FixedValueFromByte31 = -1,
             int ReportFESubType = -1,
-            int[] ExpectedDongle = null)
+            int[] ExpectedDongle = null,
+            bool HasAnalogTrigger = false,
+            bool HasTopMenu = false,
+            bool HasBottomMenu = false,
+            bool HasLogo = false,
+            bool HasCZTop = false,
+            bool HasCZBottom = false,
+            bool HasBumper2 = false,
+            bool HasMButtons = false,
+            bool HasMRockers = false,
+            bool HasWheel = false)
         {
             this.Tokens = Token;
             this.Name = Name;
@@ -36,6 +59,19 @@ namespace ExtendInput.Controller
             //this.FixedValueFromByte31 = FixedValueFromByte31 > -1 ? (byte?)FixedValueFromByte31 : null;
             this.ReportFESubType = ReportFESubType > -1 ? (byte?)ReportFESubType : null;
             this.ExpectedDongle = ExpectedDongle;
+
+
+
+            this.HasAnalogTrigger = HasAnalogTrigger;
+            this.HasTopMenu = HasTopMenu;
+            this.HasBottomMenu = HasBottomMenu;
+            this.HasLogo = HasLogo;
+            this.HasCZTop = HasCZTop;
+            this.HasCZBottom = HasCZBottom;
+            this.HasBumper2 = HasBumper2;
+            this.HasMButtons = HasMButtons;
+            this.HasMRockers = HasMRockers;
+            this.HasWheel = HasWheel;
         }
     }
 
@@ -83,7 +119,9 @@ namespace ExtendInput.Controller
                 Token: new string[] { "DEVICE_FLYDIGI_X9" },
                 Name: "Flydigi X9",
                 //DeviceIdFromFeature: 0x10,
-                ReportFESubType: 0x55)]
+                ReportFESubType: 0x55,
+                HasTopMenu: true,
+                HasLogo: true)]
             X9,
 
             [ControllerSubType(
@@ -93,7 +131,9 @@ namespace ExtendInput.Controller
                 FixedValueFromByte28: 0x00,
                 //VersionFromByte30: 0x32,
                 //FixedValueFromByte31: 0x1B,
-                ReportFESubType: 0x66)]
+                ReportFESubType: 0x66,
+                HasTopMenu: true,
+                HasLogo: true)]
             X8,
 
             [ControllerSubType(
@@ -102,7 +142,11 @@ namespace ExtendInput.Controller
                 //DeviceIdFromFeature: 0x12, // removed because we can't get a device ID, if we find we can with a 3dot we will need to put this back but replace nullchecks on it with a new check of a new bool property that says we don't respond on 2dot. We know 1dot doesn't support the query this data is for at all.
                 FixedValueFromByte28: 0x01,
                 //VersionFromByte30: 0x32,
-                ExpectedDongle: new int[] { (PRODUCT_FLYDIGI_DONGLE_1 << 8) | REVISION_FLYDIGI_DONGLE_1 })]
+                ExpectedDongle: new int[] { (PRODUCT_FLYDIGI_DONGLE_1 << 8) | REVISION_FLYDIGI_DONGLE_1 },
+                HasAnalogTrigger: true,
+                HasBottomMenu: true,
+                HasMRockers: true,
+                HasCZTop: true)]
             APEX,
 
             [ControllerSubType(
@@ -111,20 +155,29 @@ namespace ExtendInput.Controller
                 DeviceIdFromFeature: 0x13,
                 FixedValueFromByte28: 0x01,
                 //VersionFromByte30: 0x36,
-                ExpectedDongle: new int[] { (PRODUCT_FLYDIGI_DONGLE_2 << 8) | REVISION_FLYDIGI_DONGLE_2 })]
+                ExpectedDongle: new int[] { (PRODUCT_FLYDIGI_DONGLE_2 << 8) | REVISION_FLYDIGI_DONGLE_2 },
+                HasBottomMenu: true,
+                HasMButtons: true,
+                HasCZBottom: true)]
             APEX_2,
 
             [ControllerSubType(
                 Token: new string[] { "DEVICE_FLYDIGI_F1" },
                 Name: "Flydigi F1",
                 DeviceIdFromFeature: 0x14,
-                ReportFESubType: 0x66)]
+                ReportFESubType: 0x66,
+                HasBottomMenu: true,
+                HasMButtons: true,
+                HasCZBottom: true)]
             F1,
 
             [ControllerSubType(
                 Token: new string[] { "DEVICE_FLYDIGI_F1" },
                 Name: "Flydigi F1 WIRED",
-                DeviceIdFromFeature: 0x15)]
+                DeviceIdFromFeature: 0x15,
+                HasBottomMenu: true,
+                HasMButtons: true,
+                HasCZBottom: true)]
             F1_WIRED,
 
             [ControllerSubType(
@@ -201,7 +254,7 @@ namespace ExtendInput.Controller
         public event ControllerStateUpdateEvent ControllerStateUpdate;
 
         // The controller state can drastically change, where it picks up or loses items based on passive detection of quirky controllers, this makes it safe
-        private ReaderWriterLockSlim StateMutationLock = new ReaderWriterLockSlim();
+        private ReaderWriterLockSlim StateMutationLock = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
 
         public bool HasMotion => true;
 
@@ -453,6 +506,7 @@ namespace ExtendInput.Controller
 
         public void Initalize()
         {
+            Console.WriteLine("Initalize");
             if (PollingState == EPollingState.Active) return;
 
             PollingState = EPollingState.Active;
@@ -461,6 +515,7 @@ namespace ExtendInput.Controller
 
         public void DeInitalize()
         {
+            Console.WriteLine("DeInitalize");
             if (PollingState == EPollingState.Inactive) return;
             if (PollingState == EPollingState.SlowPoll) return;
             //if (PollingState == EPollingState.RunOnce) return;
@@ -563,54 +618,121 @@ namespace ExtendInput.Controller
                                         ////////////////////////////////////////////////////
                                         byte WheelX = reportData.ReportBytes[16]; // or trigger
                                         byte WheelY = reportData.ReportBytes[18]; // or trigger
-                                        byte StickRX = reportData.ReportBytes[20];
-                                        byte StickRY = reportData.ReportBytes[21];
+                                        //byte StickRX = reportData.ReportBytes[20];
+                                        //byte StickRY = reportData.ReportBytes[21];
 
+                                        /*if (ControllerSubType != FlyDigiSubType.None && ControllerSubType != FlyDigiSubType.Unknown)
+                                        {
+                                            (StateInFlight.Controls["stick_left"] as ControlStick).X = ControllerMathTools.QuickStickToFloat(LStickX);
+                                            (StateInFlight.Controls["stick_left"] as ControlStick).Y = ControllerMathTools.QuickStickToFloat(LStickY);
+                                            (StateInFlight.Controls["stick_left"] as ControlStick).Click = buttonL3;
+                                            (StateInFlight.Controls["stick_right"] as ControlStick).X = ControllerMathTools.QuickStickToFloat(RStickX);
+                                            (StateInFlight.Controls["stick_right"] as ControlStick).Y = ControllerMathTools.QuickStickToFloat(RStickY);
+                                            (StateInFlight.Controls["stick_right"] as ControlStick).Click = buttonR3;
+                                            (StateInFlight.Controls["bumpers"] as ControlButtonPair).Left.Button0 = buttonL1;
+                                            (StateInFlight.Controls["bumpers"] as ControlButtonPair).Right.Button0 = buttonR1;
+                                            if (ControllerAttribute.HasAnalogTrigger)
+                                            {
+                                                (StateInFlight.Controls["triggers"] as ControlTriggerPair).Left.Analog = WheelX;
+                                                (StateInFlight.Controls["triggers"] as ControlTriggerPair).Right.Analog = WheelY;
+                                            }
+                                            else if (ControllerSubType != FlyDigiSubType.None && ControllerSubType != FlyDigiSubType.Unknown)
+                                            {
+                                                (StateInFlight.Controls["triggers"] as ControlButtonPair).Left.Button0 = buttonL2;
+                                                (StateInFlight.Controls["triggers"] as ControlButtonPair).Right.Button0 = buttonR2;
+                                            }
+                                            //if (ControllerAttribute.HasLogo)
+                                            //{
+                                            //    (StateInFlight.Controls["logo"] as ControlButton).Button0 = buttonLogo;
+                                            //}
+                                            if (ControllerAttribute.HasTopMenu)
+                                            {
+                                                (StateInFlight.Controls["mtop_back"] as ControlButton).Button0 = buttonBack;
+                                                (StateInFlight.Controls["mtop_home"] as ControlButton).Button0 = buttonHome;
+                                                (StateInFlight.Controls["mtop_pair"] as ControlButton).Button0 = buttonPair;
+                                            }
+                                            if (ControllerAttribute.HasBottomMenu)
+                                            {
+                                                (StateInFlight.Controls["m_back"] as ControlButton).Button0 = buttonBack;
+                                                (StateInFlight.Controls["m_home"] as ControlButton).Button0 = buttonHome;
+                                                (StateInFlight.Controls["m_pair"] as ControlButton).Button0 = buttonPair;
+                                            }
+                                            if (ControllerAttribute.HasCZBottom)
+                                            {
+                                                (StateInFlight.Controls["c"] as ControlButton).Button0 = buttonC;
+                                                (StateInFlight.Controls["z"] as ControlButton).Button0 = buttonZ;
+                                            }
+                                            if (ControllerAttribute.HasCZTop)
+                                            {
+                                                (StateInFlight.Controls["c_top"] as ControlButton).Button0 = buttonC;
+                                                (StateInFlight.Controls["z_top"] as ControlButton).Button0 = buttonZ;
+                                            }
+                                            if (ControllerAttribute.HasMButtons)
+                                            {
+                                                (StateInFlight.Controls["m1"] as ControlButton).Button0 = buttonM1;
+                                                (StateInFlight.Controls["m2"] as ControlButton).Button0 = buttonM2;
+                                                (StateInFlight.Controls["m3"] as ControlButton).Button0 = buttonM3;
+                                                (StateInFlight.Controls["m4"] as ControlButton).Button0 = buttonM4;
+                                            }
+                                            if (ControllerAttribute.HasMRockers)
+                                            {
+                                                (StateInFlight.Controls["m1m3"] as ControlButtonPair).Left.Button0 = buttonM1;
+                                                (StateInFlight.Controls["m1m3"] as ControlButtonPair).Right.Button0 = buttonM3;
+                                                (StateInFlight.Controls["m2m4"] as ControlButtonPair).Left.Button0 = buttonM2;
+                                                (StateInFlight.Controls["m2m4"] as ControlButtonPair).Right.Button0 = buttonM4;
+                                            }
+                                            if (ControllerAttribute.HasBumper2)
+                                            {
+                                                (StateInFlight.Controls["m5m6"] as ControlButtonPair).Left.Button0 = buttonM5;
+                                                (StateInFlight.Controls["m5m6"] as ControlButtonPair).Right.Button0 = buttonM6;
+                                            }
+                                            if (ControllerAttribute.HasWheel)
+                                            {
+                                                (StateInFlight.Controls["quad_right"] as ControlButtonQuad).ButtonN = buttonY; // wheel
+                                                (StateInFlight.Controls["quad_right"] as ControlButtonQuad).ButtonE = buttonB;
+                                                (StateInFlight.Controls["quad_right"] as ControlButtonQuad).ButtonS = buttonA;
+                                                (StateInFlight.Controls["quad_right"] as ControlButtonQuad).ButtonW = buttonX;
+                                            }
+                                            else if (ControllerSubType != FlyDigiSubType.None && ControllerSubType != FlyDigiSubType.Unknown)
+                                            {
+                                                (StateInFlight.Controls["quad_right"] as ControlButtonQuad).ButtonN = buttonY;
+                                                (StateInFlight.Controls["quad_right"] as ControlButtonQuad).ButtonE = buttonB;
+                                                (StateInFlight.Controls["quad_right"] as ControlButtonQuad).ButtonS = buttonA;
+                                                (StateInFlight.Controls["quad_right"] as ControlButtonQuad).ButtonW = buttonX;
+                                            }
 
-                                        /*if ((ControllerID == 0x01 && _device.Attributes.ProductId == ProductId_X8_Apex1) || (settings.NoApex2 ?? false)) // is APEX1 reportID and is APEX1 VID
-                                        {
-                                            ds4Controller.SetSliderValue(DualShock4Slider.LeftTrigger, report.Data[22]);
-                                            ds4Controller.SetSliderValue(DualShock4Slider.RightTrigger, report.Data[23]);
-                                        }
-                                        else
-                                        {
-                                            ds4Controller.SetSliderValue(DualShock4Slider.LeftTrigger, (byte)(buttonL2 ? 0xff : 0x00));
-                                            ds4Controller.SetSliderValue(DualShock4Slider.RightTrigger, (byte)(buttonR2 ? 0xff : 0x00));
+                                            int padH = 0;
+                                            int padV = 0;
+                                            if (buttonUp) padV++;
+                                            if (buttonDown) padV--;
+                                            if (buttonRight) padH++;
+                                            if (buttonLeft) padH--;
+                                            if (padH > 0)
+                                                if (padV > 0)
+                                                    (StateInFlight.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.NorthEast;
+                                                else if (padV < 0)
+                                                    (StateInFlight.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.SouthEast;
+                                                else
+                                                    (StateInFlight.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.East;
+                                            else if (padH < 0)
+                                                if (padV > 0)
+                                                    (StateInFlight.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.NorthWest;
+                                                else if (padV < 0)
+                                                    (StateInFlight.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.SouthWest;
+                                                else
+                                                    (StateInFlight.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.West;
+                                            else
+                                                if (padV > 0)
+                                                (StateInFlight.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.North;
+                                            else if (padV < 0)
+                                                (StateInFlight.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.South;
+                                            else
+                                                (StateInFlight.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.None;
+
+                                            //short yaw = ProcSignedByteNybble((short)(((report.Data[4] & 0x0f) << 8) + report.Data[3]));
+                                            //short pitch = ProcSignedByteNybble((short)(((report.Data[4] & 0xf0) >> 4) + (report.Data[5] << 4)));
                                         }*/
-
-                                        int padH = 0;
-                                        int padV = 0;
-                                        if (buttonUp) padV++;
-                                        if (buttonDown) padV--;
-                                        if (buttonRight) padH++;
-                                        if (buttonLeft) padH--;
-                                        /*
-                                        if (padH > 0)
-                                            if (padV > 0)
-                                                //ds4Controller.SetDPadDirection(DualShock4DPadDirection.Northeast);
-                                            else if (padV < 0)
-                                                //ds4Controller.SetDPadDirection(DualShock4DPadDirection.Southeast);
-                                            else
-                                                //ds4Controller.SetDPadDirection(DualShock4DPadDirection.East);
-                                        else if (padH < 0)
-                                            if (padV > 0)
-                                                //ds4Controller.SetDPadDirection(DualShock4DPadDirection.Northwest);
-                                            else if (padV < 0)
-                                                //ds4Controller.SetDPadDirection(DualShock4DPadDirection.Southwest);
-                                            else
-                                                //ds4Controller.SetDPadDirection(DualShock4DPadDirection.West);
-                                        else
-                                            if (padV > 0)
-                                                //ds4Controller.SetDPadDirection(DualShock4DPadDirection.North);
-                                            else if (padV < 0)
-                                            //ds4Controller.SetDPadDirection(DualShock4DPadDirection.South);
-                                            else
-                                                //ds4Controller.SetDPadDirection(DualShock4DPadDirection.None);
-                                        */
-
-                                        //short yaw = ProcSignedByteNybble((short)(((report.Data[4] & 0x0f) << 8) + report.Data[3]));
-                                        //short pitch = ProcSignedByteNybble((short)(((report.Data[4] & 0xf0) >> 4) + (report.Data[5] << 4)));
-
+                                        
                                         MetadataMutationLock.Wait();
                                         try
                                         {
@@ -810,44 +932,13 @@ namespace ExtendInput.Controller
 
         private void ResetControllerInfo()
         {
-            Console.WriteLine("TRY GET CON");
+            Console.WriteLine("ResetControllerInfo Start");
+
             ControllerSubType = GetControllerInitialTypeCode((UInt16)_device.VendorId, (UInt16)_device.ProductId, (UInt16)_device.RevisionNumber);
             ControllerAttribute = ControllerSubType.GetAttribute<ControllerSubTypeAttribute>();
 
-            if (!ControlsCreated)
-            {
-                StateMutationLock.EnterWriteLock();
-                try
-                {
-                    // universal fixed controls that all Flydigi controllers have, these won't change
-                    State.Controls["quad_left"] = new ControlDPad();
-                    State.Controls["quad_right"] = new ControlButtonQuad();
-                    State.Controls["bumpers"] = new ControlButtonPair();
-                    //State.Controls["triggers"] = new ControlTriggerPair(HasStage2: false);
-                    State.Controls["menu"] = new ControlButtonPair();
-                    State.Controls["home"] = new ControlButton();
-                    State.Controls["stick_left"] = new ControlStick(HasClick: true);
-                    State.Controls["stick_right"] = new ControlStick(HasClick: true);
-                    State.Controls["stick_right"] = new ControlStick(HasClick: true);
-                    //if (ControllerAttribute?.PadIsClickOnly ?? false)
-                    //{
-                    //    State.Controls["touch_center"] = new ControlButton();
-                    //}
-                    //else
-                    //{
-                    //    State.Controls["touch_center"] = new ControlTouch(TouchCount: 2, HasClick: true);
-                    //    (State.Controls["touch_center"] as ControlTouch).PhysicalWidth = ControllerAttribute.PhysicalWidth;
-                    //    (State.Controls["touch_center"] as ControlTouch).PhysicalHeight = ControllerAttribute.PhysicalHeight;
-                    //}
-                    // According to this the normalized domain of the DS4 gyro is 1024 units per rad/s: https://gamedev.stackexchange.com/a/87178
-                    //State.Controls["motion"] = new ControlMotion();
-                    ControlsCreated = true;
-                }
-                finally
-                {
-                    StateMutationLock.ExitWriteLock();
-                }
-            }
+            //CreateControls();
+
             UpdateAlternateSubTypes();
             ControllerMetadataUpdate?.Invoke(this);
 
@@ -882,6 +973,7 @@ namespace ExtendInput.Controller
                     ControllerMetadataUpdate?.Invoke(this);
                 }
             }*/
+            Console.WriteLine("ResetControllerInfo End");
         }
 
         private FlyDigiSubType GetControllerInitialTypeCode(UInt16 VID, UInt16 PID, UInt16 REV)
@@ -1024,6 +1116,7 @@ namespace ExtendInput.Controller
 
         private void UpdateAlternateSubTypes()
         {
+            Console.WriteLine("UpdateAlternateSubTypes Start");
             lock (ManualSelectionList)
             {
                 ManualSelectionList.Clear();
@@ -1115,6 +1208,7 @@ namespace ExtendInput.Controller
                             if (attr.DeviceIdFromFeature.HasValue && attr.DeviceIdFromFeature.Value == DetectedDeviceId.Value)
                             {
                                 ManualSelectionList.Clear();
+                                Console.WriteLine("UpdateAlternateSubTypes End");
                                 return;
                             }
                         }
@@ -1178,15 +1272,56 @@ namespace ExtendInput.Controller
                 if (ManualSelectionList.Count == 1 && ManualSelectionList[0] == ControllerSubType)
                     ManualSelectionList.Clear();
             }
+            Console.WriteLine("UpdateAlternateSubTypes End");
         }
 
         private void ChangeControllerSubType(FlyDigiSubType NewControllerSubType)
         {
+            Console.WriteLine("ChangeControllerSubType Start");
+            /*if (!ControlsCreated)
+            {
+                StateMutationLock.EnterWriteLock();
+                try
+                {
+                    // universal fixed controls that all Flydigi controllers have, these won't change
+                    State.Controls["quad_left"] = new ControlDPad();
+                    State.Controls["stick_left"] = new ControlStick(HasClick: true);
+                    State.Controls["stick_right"] = new ControlStick(HasClick: true);
+                    State.Controls["bumpers"] = new ControlButtonPair();
+                    State.Controls["menu"] = new ControlButtonPair();
+                    //State.Controls["home"] = new ControlButton();
+                    //State.Controls["quad_right"] = new ControlButtonQuad();
+                    //State.Controls["triggers"] = new ControlTriggerPair(HasStage2: false);
+                    //if (ControllerAttribute?.PadIsClickOnly ?? false)
+                    //{
+                    //    State.Controls["touch_center"] = new ControlButton();
+                    //}
+                    //else
+                    //{
+                    //    State.Controls["touch_center"] = new ControlTouch(TouchCount: 2, HasClick: true);
+                    //    (State.Controls["touch_center"] as ControlTouch).PhysicalWidth = ControllerAttribute.PhysicalWidth;
+                    //    (State.Controls["touch_center"] as ControlTouch).PhysicalHeight = ControllerAttribute.PhysicalHeight;
+                    //}
+                    // According to this the normalized domain of the DS4 gyro is 1024 units per rad/s: https://gamedev.stackexchange.com/a/87178
+                    //State.Controls["motion"] = new ControlMotion();
+                    ControlsCreated = true;
+                }
+                finally
+                {
+                    StateMutationLock.ExitWriteLock();
+                }
+                UpdateAlternateSubTypes();
+                ControllerMetadataUpdate?.Invoke(this);
+            }*/
+
             if (NewControllerSubType == ControllerSubType)
             {
                 UpdateAlternateSubTypes();
                 return;
             }
+
+            //FlyDigiSubType PrevControllerType = ControllerSubType;
+            //ControllerSubTypeAttribute PrevControllerAttribute = PrevControllerType.GetAttribute<ControllerSubTypeAttribute>();
 
             ControllerSubType = NewControllerSubType;
             ControllerAttribute = ControllerSubType.GetAttribute<ControllerSubTypeAttribute>();
@@ -1211,6 +1346,8 @@ namespace ExtendInput.Controller
                         MetadataMutationLock.Release();
                     }
                 }
+
+                //CreateControls();
             }
             finally
             {
@@ -1220,6 +1357,170 @@ namespace ExtendInput.Controller
             UpdateAlternateSubTypes();
 
             ControllerMetadataUpdate?.Invoke(this);
+            Console.WriteLine("ChangeControllerSubType End");
+        }
+
+        private void CreateControls()
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine($"CreateControls Start for {ControllerSubType}");
+            Console.ResetColor();
+
+            if (!ControlsCreated)
+            {
+                // universal fixed controls that all Flydigi controllers have, these won't change
+                State.Controls["quad_left"] = new ControlDPad();
+                State.Controls["stick_left"] = new ControlStick(HasClick: true);
+                State.Controls["stick_right"] = new ControlStick(HasClick: true);
+                State.Controls["bumpers"] = new ControlButtonPair();
+                State.Controls["menu"] = new ControlButtonPair();
+
+                //State.Controls["quad_left"] = new ControlDPad();
+                //State.Controls["quad_right"] = new ControlButtonQuad();
+                //State.Controls["bumpers"] = new ControlButtonPair();
+                ////State.Controls["triggers"] = new ControlTriggerPair(HasStage2: false);
+                //State.Controls["menu"] = new ControlButtonPair();
+                //State.Controls["home"] = new ControlButton();
+                //State.Controls["stick_left"] = new ControlStick(HasClick: true);
+                //State.Controls["stick_right"] = new ControlStick(HasClick: true);
+                //State.Controls["stick_right"] = new ControlStick(HasClick: true);
+                //if (ControllerAttribute?.PadIsClickOnly ?? false)
+                //{
+                //    State.Controls["touch_center"] = new ControlButton();
+                //}
+                //else
+                //{
+                //    State.Controls["touch_center"] = new ControlTouch(TouchCount: 2, HasClick: true);
+                //    (State.Controls["touch_center"] as ControlTouch).PhysicalWidth = ControllerAttribute.PhysicalWidth;
+                //    (State.Controls["touch_center"] as ControlTouch).PhysicalHeight = ControllerAttribute.PhysicalHeight;
+                //}
+                // According to this the normalized domain of the DS4 gyro is 1024 units per rad/s: https://gamedev.stackexchange.com/a/87178
+                //State.Controls["motion"] = new ControlMotion();
+                ControlsCreated = true;
+            }
+
+            StateMutationLock.EnterWriteLock();
+            try
+            {
+                if (ControllerAttribute.HasAnalogTrigger)
+                {
+                    State.Controls["triggers"] = new ControlTriggerPair(HasStage2: false);
+                    Console.WriteLine("Trigger set to Analog");
+                }
+                else
+                {
+                    State.Controls["triggers"] = new ControlButtonPair();
+                    Console.WriteLine("Trigger set to Digital");
+                }
+
+                if (ControllerAttribute.HasLogo)
+                {
+                    State.Controls["logo"] = new ControlButton();
+                }
+                else
+                {
+                    State.Controls["logo"] = null;
+                }
+
+                if (ControllerAttribute.HasTopMenu)
+                {
+                    State.Controls["mtop_back"] = new ControlButton();
+                    State.Controls["mtop_home"] = new ControlButton();
+                    State.Controls["mtop_pair"] = new ControlButton();
+                }
+                else
+                {
+                    State.Controls["mtop_back"] = null;
+                    State.Controls["mtop_home"] = null;
+                    State.Controls["mtop_pair"] = null;
+                }
+
+                if (ControllerAttribute.HasBottomMenu)
+                {
+                    State.Controls["m_back"] = new ControlButton();
+                    State.Controls["m_home"] = new ControlButton();
+                    State.Controls["m_pair"] = new ControlButton();
+                }
+                else
+                {
+                    State.Controls["m_back"] = null;
+                    State.Controls["m_home"] = null;
+                    State.Controls["m_pair"] = null;
+                }
+
+                if (ControllerAttribute.HasCZBottom)
+                {
+                    State.Controls["c"] = new ControlButton();
+                    State.Controls["z"] = new ControlButton();
+                }
+                else
+                {
+                    State.Controls["c"] = null;
+                    State.Controls["z"] = null;
+                }
+
+                if (ControllerAttribute.HasCZTop)
+                {
+                    State.Controls["c_top"] = new ControlButton();
+                    State.Controls["z_top"] = new ControlButton();
+                }
+                else
+                {
+                    State.Controls["c_top"] = null;
+                    State.Controls["z_top"] = null;
+                }
+
+                if (ControllerAttribute.HasMButtons)
+                {
+                    State.Controls["m1"] = new ControlButton();
+                    State.Controls["m2"] = new ControlButton();
+                    State.Controls["m3"] = new ControlButton();
+                    State.Controls["m4"] = new ControlButton();
+                }
+                else
+                {
+                    State.Controls["m1"] = null;
+                    State.Controls["m2"] = null;
+                    State.Controls["m3"] = null;
+                    State.Controls["m4"] = null;
+                }
+
+                if (ControllerAttribute.HasMRockers)
+                {
+                    State.Controls["m1m3"] = new ControlButtonPair(); // rocker
+                    State.Controls["m2m4"] = new ControlButtonPair(); // rocker
+                }
+                else
+                {
+                    State.Controls["m1m3"] = null;
+                    State.Controls["m2m4"] = null;
+                }
+
+                if (ControllerAttribute.HasBumper2)
+                {
+                    State.Controls["m5m6"] = new ControlButtonPair();
+                }
+                else
+                {
+                    State.Controls["m5m6"] = null;
+                }
+
+                if (ControllerAttribute.HasWheel)
+                {
+                    State.Controls["quad_right"] = new ControlButtonQuad(); // wheel
+                }
+                else
+                {
+                    State.Controls["quad_right"] = new ControlButtonQuad();
+                }
+            }
+            finally
+            {
+                StateMutationLock.ExitWriteLock();
+            }
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine($"CreateControls End for {ControllerSubType}");
+            Console.ResetColor();
         }
     }
 }
