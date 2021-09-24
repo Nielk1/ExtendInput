@@ -14,6 +14,5 @@ namespace ExtendInput
             var name = Enum.GetName(enumType, value);
             return enumType.GetField(name).GetCustomAttributes(false).OfType<TAttribute>().SingleOrDefault();
         }
-
     }
 }

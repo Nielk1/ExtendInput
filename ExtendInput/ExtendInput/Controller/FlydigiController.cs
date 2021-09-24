@@ -91,15 +91,19 @@ namespace ExtendInput.Controller
         private const string ATOM_CONNECTION_WIRE = "CONNECTION_WIRE";
         private const string ATOM_CONNECTION_USB_WIRE = "CONNECTION_WIRE_USB";
         private const string ATOM_CONNECTION_BT = "CONNECTION_BT";
-        private const string ATOM_CONNECTION_DONGLE = "CONNECTION_DONGLE";
-        private const string ATOM_CONNECTION_DONGLE_1 = "CONNECTION_DONGLE_1";
-        private const string ATOM_CONNECTION_DONGLE_2 = "CONNECTION_DONGLE_2";
-        private const string ATOM_CONNECTION_DONGLE_3 = "CONNECTION_DONGLE_3";
+        private const string ATOM_CONNECTION_DONGLE = "CONNECTION_FLYDIGI_DONGLE";
+        private const string ATOM_CONNECTION_FLYDIGI_DONGLE = "CONNECTION_FLYDIGI_DONGLE";
+        private const string ATOM_CONNECTION_FLYDIGI_DONGLE_1 = "CONNECTION_FLYDIGI_DONGLE_1";
+        private const string ATOM_CONNECTION_FLYDIGI_DONGLE_2 = "CONNECTION_FLYDIGI_DONGLE_2";
+        private const string ATOM_CONNECTION_FLYDIGI_DONGLE_3 = "CONNECTION_FLYDIGI_DONGLE_3";
         private const string ATOM_CONNECTION_UNKKNOWN = "CONNECTION_UNKNOWN";
 
         private readonly string[] _CONNECTION_WIRE = new string[] { ATOM_CONNECTION_USB_WIRE, ATOM_CONNECTION_WIRE };
         private readonly string[] _CONNECTION_BT = new string[] { ATOM_CONNECTION_BT };
-        private readonly string[] _CONNECTION_DONGLE = new string[] { ATOM_CONNECTION_DONGLE_1, ATOM_CONNECTION_DONGLE };
+        private readonly string[] _CONNECTION_DONGLE = new string[] { ATOM_CONNECTION_FLYDIGI_DONGLE, ATOM_CONNECTION_DONGLE };
+        private readonly string[] _CONNECTION_DONGLE_1 = new string[] { ATOM_CONNECTION_FLYDIGI_DONGLE_1, ATOM_CONNECTION_DONGLE };
+        private readonly string[] _CONNECTION_DONGLE_2 = new string[] { ATOM_CONNECTION_FLYDIGI_DONGLE_2, ATOM_CONNECTION_DONGLE };
+        private readonly string[] _CONNECTION_DONGLE_3 = new string[] { ATOM_CONNECTION_FLYDIGI_DONGLE_3, ATOM_CONNECTION_DONGLE };
         private readonly string[] _CONNECTION_UNKKNOWN = new string[] { ATOM_CONNECTION_UNKKNOWN };
         #endregion String Definitions
 
@@ -298,7 +302,11 @@ namespace ExtendInput.Controller
                 {
                     case EConnectionType.USB: return _CONNECTION_WIRE;
                     case EConnectionType.Bluetooth: return _CONNECTION_BT;
-                    case EConnectionType.Dongle: return _CONNECTION_DONGLE;
+                    case EConnectionType.Dongle:
+                        if (_device.ProductId == PRODUCT_FLYDIGI_DONGLE_1 && _device.RevisionNumber == REVISION_FLYDIGI_DONGLE_1) return _CONNECTION_DONGLE_1;
+                        if (_device.ProductId == PRODUCT_FLYDIGI_DONGLE_2 && _device.RevisionNumber == REVISION_FLYDIGI_DONGLE_2) return _CONNECTION_DONGLE_2;
+                        if (_device.ProductId == PRODUCT_FLYDIGI_DONGLE_3 && _device.RevisionNumber == REVISION_FLYDIGI_DONGLE_3) return _CONNECTION_DONGLE_3;
+                        return _CONNECTION_DONGLE;
                     default: return _CONNECTION_UNKKNOWN;
                 }
             }
@@ -588,6 +596,8 @@ namespace ExtendInput.Controller
                                             StateInFlight = (ControllerState)State.Clone();
 
                                             //byte ControllerID = reportData.ReportBytes[27];
+                                            bool AirMouseActive = (reportData.ReportBytes[2] & 0x80) == 0x80;
+                                            bool AirMouseClick = (reportData.ReportBytes[2] & 0x01) == 0x01;
 
                                             bool buttonC = (reportData.ReportBytes[6] & 0x01) == 0x01;
                                             bool buttonZ = (reportData.ReportBytes[6] & 0x02) == 0x02;
@@ -623,8 +633,8 @@ namespace ExtendInput.Controller
                                             byte LStickY = reportData.ReportBytes[18];
                                             byte RStickX = reportData.ReportBytes[20];
                                             byte RStickY = reportData.ReportBytes[21];
-                                            byte SStickX = reportData.ReportBytes[22];
-                                            byte SStickY = reportData.ReportBytes[23];
+                                            byte TriggerLeft = reportData.ReportBytes[22];
+                                            byte TriggerRight = reportData.ReportBytes[23];
                                             ////////////////////////////////////////////////////
 
                                             (StateInFlight.Controls["stick_left"] as ControlStick).X = ControllerMathTools.QuickStickToFloat(LStickX);
@@ -637,11 +647,11 @@ namespace ExtendInput.Controller
                                             (StateInFlight.Controls["bumpers"] as ControlButtonPair).Right.Button0 = buttonR1;
                                             (StateInFlight.Controls["menu"] as ControlButtonPair).Left.Button0 = buttonSelect;
                                             (StateInFlight.Controls["menu"] as ControlButtonPair).Right.Button0 = buttonStart;
-                                            
+
                                             if (ControllerAttribute.HasAnalogTrigger && StateInFlight.Controls["triggers"] is ControlTriggerPair)
                                             {
-                                                (StateInFlight.Controls["triggers"] as ControlTriggerPair).Left.Analog = SStickX > 0 ? SStickX / 255f : buttonL2 ? 255 : 0;
-                                                (StateInFlight.Controls["triggers"] as ControlTriggerPair).Right.Analog = SStickY > 0 ? SStickY / 255f : buttonR2 ? 255 : 0;
+                                                (StateInFlight.Controls["triggers"] as ControlTriggerPair).Left.Analog = TriggerLeft > 0 ? TriggerLeft / 255f : buttonL2 ? 255 : 0;
+                                                (StateInFlight.Controls["triggers"] as ControlTriggerPair).Right.Analog = TriggerRight > 0 ? TriggerRight / 255f : buttonR2 ? 255 : 0;
                                             }
                                             else if (ControllerSubType != FlyDigiSubType.None && ControllerSubType != FlyDigiSubType.Unknown && StateInFlight.Controls["triggers"] is ControlButtonPair)
                                             {
@@ -676,7 +686,7 @@ namespace ExtendInput.Controller
                                             }
                                             if (ControllerAttribute.HasMButtons)
                                             {
-                                                (StateInFlight.Controls["m1"] as ControlButton).Button0 = buttonM1;
+                                                (StateInFlight.Controls["m1"] as ControlButton).Button0 = buttonM1 || AirMouseClick;
                                                 (StateInFlight.Controls["m2"] as ControlButton).Button0 = buttonM2;
                                                 (StateInFlight.Controls["m3"] as ControlButton).Button0 = buttonM3;
                                                 (StateInFlight.Controls["m4"] as ControlButton).Button0 = buttonM4;
@@ -684,7 +694,7 @@ namespace ExtendInput.Controller
                                             if (ControllerAttribute.HasMRockers)
                                             {
                                                 (StateInFlight.Controls["m1m3"] as ControlButtonPair).Left.Button0 = buttonM3;
-                                                (StateInFlight.Controls["m1m3"] as ControlButtonPair).Right.Button0 = buttonM1;
+                                                (StateInFlight.Controls["m1m3"] as ControlButtonPair).Right.Button0 = buttonM1 || AirMouseClick;
                                                 (StateInFlight.Controls["m2m4"] as ControlButtonPair).Left.Button0 = buttonM2;
                                                 (StateInFlight.Controls["m2m4"] as ControlButtonPair).Right.Button0 = buttonM4;
                                             }
