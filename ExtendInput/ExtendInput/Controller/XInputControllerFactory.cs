@@ -9,6 +9,7 @@ namespace ExtendInput.Controller
 {
     public class XInputControllerFactory : IControllerFactory
     {
+        public Dictionary<string, dynamic>[] DeviceWhitelist => null;
         public IController NewDevice(IDevice device)
         {
             XInputDevice _device = device as XInputDevice;

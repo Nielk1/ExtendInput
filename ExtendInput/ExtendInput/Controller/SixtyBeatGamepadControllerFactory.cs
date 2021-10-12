@@ -9,6 +9,7 @@ namespace ExtendInput.Controller
 {
     public class SixtyBeatGamepadControllerFactory : IControllerFactory
     {
+        public Dictionary<string, dynamic>[] DeviceWhitelist => null;
         public IController NewDevice(IDevice device)
         {
             SixtyBeatAudioDevice _device = device as SixtyBeatAudioDevice;

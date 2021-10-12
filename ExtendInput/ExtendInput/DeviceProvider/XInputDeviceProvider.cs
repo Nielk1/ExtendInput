@@ -59,5 +59,7 @@ namespace ExtendInput.DeviceProvider
         {
             throw new NotImplementedException();
         }
+        public void RegisterWhitelist(Dictionary<string, dynamic>[] deviceWhitelist)
+        { }
     }
 }

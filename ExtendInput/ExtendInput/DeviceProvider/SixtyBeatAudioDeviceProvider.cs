@@ -54,6 +54,9 @@ namespace ExtendInput.DeviceProvider
 
             return ResponseData;
         }
+
+        public void RegisterWhitelist(Dictionary<string, dynamic>[] deviceWhitelist)
+        { }
     }
 
     public class SixtyBeatAudioDeviceManualTriggerContext : IDeviceManualTriggerContext

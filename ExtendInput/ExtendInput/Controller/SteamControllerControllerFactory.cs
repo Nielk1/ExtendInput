@@ -12,6 +12,14 @@ namespace ExtendInput.Controller
         //Dictionary<string, WeakReference<SemaphoreSlim>> SharedDongleLocks = new Dictionary<string, WeakReference<SemaphoreSlim>>();
         Dictionary<Guid, WeakReference<SemaphoreSlim>> SharedDongleLocks = new Dictionary<Guid, WeakReference<SemaphoreSlim>>();
 
+        public Dictionary<string, dynamic>[] DeviceWhitelist => new Dictionary<string, dynamic>[]
+        {
+            new Dictionary<string, dynamic>(){ { "VID", SteamController.VendorId }, { "PID", SteamController.ProductIdDongle } },
+            new Dictionary<string, dynamic>(){ { "VID", SteamController.VendorId }, { "PID", SteamController.ProductIdWired } },
+            new Dictionary<string, dynamic>(){ { "VID", SteamController.VendorId }, { "PID", SteamController.ProductIdBT } },
+            new Dictionary<string, dynamic>(){ { "VID", SteamController.VendorId }, { "PID", SteamController.ProductIdChell } },
+        };
+
         public IController NewDevice(IDevice device)
         {
             HidDevice _device = device as HidDevice;

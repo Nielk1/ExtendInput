@@ -1,10 +1,15 @@
 ﻿using ExtendInput.DeviceProvider;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace ExtendInput.Controller
 {
     public class DualSenseControllerFactory : IControllerFactory
     {
+        public Dictionary<string, dynamic>[] DeviceWhitelist => new Dictionary<string, dynamic>[]
+        {
+            new Dictionary<string, dynamic>(){ { "VID", DualSenseController.VendorId }, { "PID", DualSenseController.ProductId } },
+        };
         public IController NewDevice(IDevice device)
         {
             HidDevice _device = device as HidDevice;

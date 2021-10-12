@@ -16,6 +16,8 @@ namespace ExtendInput.DeviceProvider
         HashSet<HidSharp.HidDevice> KnownDevices = new HashSet<HidSharp.HidDevice>();
         object lock_device_list = new object();
 
+        HashSet<(UInt16, UInt16?)> Whitelist = new HashSet<(ushort, ushort?)>();
+
         public HidDeviceProvider()
         {
             HidSharp.DeviceList.Local.Changed += DeviceListChanged;
@@ -33,14 +35,14 @@ namespace ExtendInput.DeviceProvider
                     {
                         if (!AllCurrentDevices.Contains(device))
                         {
-                            //string FriendlyName = string.Empty;
-                            //try
-                            //{
-                            //    FriendlyName = device.GetFriendlyName();
-                            //}
-                            //catch (IOException) { }
-                            //Debug.WriteLine($"Device Removed: {device.DevicePath.PadRight(100)} \"{FriendlyName}\"");
-                            //Debug.WriteLine($"Device Removed: {device.DevicePath.PadRight(100)} \"{device}\"");
+                            string FriendlyName = string.Empty;
+                            try
+                            {
+                                FriendlyName = device.GetFriendlyName();
+                            }
+                            catch (IOException) { }
+                            Debug.WriteLine($"Device Removed: {device.DevicePath.PadRight(100)} \"{FriendlyName}\"");
+                            Debug.WriteLine($"Device Removed: {device.DevicePath.PadRight(100)} \"{device}\"");
 
                             KnownDevices.Remove(device);
                             DeviceChangeEventHandler threadSafeEventHandler = DeviceRemoved;
@@ -50,16 +52,16 @@ namespace ExtendInput.DeviceProvider
 
                     foreach (HidSharp.HidDevice device in AllCurrentDevices.ToList())
                     {
-                        if (!KnownDevices.Contains(device))
+                        if ((Whitelist.Contains(((UInt16)device.VendorID, null)) || Whitelist.Contains(((UInt16)device.VendorID, (UInt16?)device.ProductID))) && !KnownDevices.Contains(device))
                         {
-                            //string FriendlyName = string.Empty;
-                            //try
-                            //{
-                            //    FriendlyName = device.GetFriendlyName();
-                            //}
-                            //catch(IOException) { }
-                            //Debug.WriteLine($"Device Added: {device.DevicePath.PadRight(100)} \"{FriendlyName}\"");
-                            //Debug.WriteLine($"Device Added: {device.DevicePath.PadRight(100)} \"{device}\"");
+                            string FriendlyName = string.Empty;
+                            try
+                            {
+                                FriendlyName = device.GetFriendlyName();
+                            }
+                            catch(IOException) { }
+                            Debug.WriteLine($"Device Added: {device.DevicePath.PadRight(100)} \"{FriendlyName}\"");
+                            Debug.WriteLine($"Device Added: {device.DevicePath.PadRight(100)} \"{device}\"");
 
                             KnownDevices.Add(device);
                             DeviceChangeEventHandler threadSafeEventHandler = DeviceAdded;
@@ -91,6 +93,20 @@ namespace ExtendInput.DeviceProvider
             throw new NotImplementedException();
         }
 
+        public void RegisterWhitelist(Dictionary<string, dynamic>[] deviceWhitelist)
+        {
+            if (deviceWhitelist == null)
+                return;
+            foreach(var white in deviceWhitelist)
+            {
+                UInt16? VID = white.ContainsKey("VID") ? white["VID"] as UInt16? : null;
+                UInt16? PID = white.ContainsKey("PID") ? white["PID"] as UInt16? : null;
+                if (VID.HasValue)
+                {
+                    Whitelist.Add((VID.Value, PID));
+                }
+            }
+        }
     }
 
     public delegate void DeviceChangeEventHandler(object sender, IDevice e);
@@ -101,6 +117,7 @@ namespace ExtendInput.DeviceProvider
 
         void ScanNow();
         IDeviceManualTriggerContext ManualTrigger(DeviceManualTriggerContextOption Option);
+        void RegisterWhitelist(Dictionary<string, dynamic>[] deviceWhitelist);
     }
     public class DeviceProviderAttribute : Attribute
     {

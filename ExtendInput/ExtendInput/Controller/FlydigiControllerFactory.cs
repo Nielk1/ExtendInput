@@ -1,10 +1,18 @@
 ﻿using ExtendInput.DeviceProvider;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace ExtendInput.Controller
 {
     public class FlydigiControllerFactory : IControllerFactory
     {
+        public Dictionary<string, dynamic>[] DeviceWhitelist => new Dictionary<string, dynamic>[]
+        {
+            new Dictionary<string, dynamic>(){ { "VID", FlydigiController.VENDOR_FLYDIGI }, { "PID", FlydigiController.PRODUCT_FLYDIGI_DONGLE_1 } },
+            new Dictionary<string, dynamic>(){ { "VID", FlydigiController.VENDOR_FLYDIGI }, { "PID", FlydigiController.PRODUCT_FLYDIGI_DONGLE_2 } },
+            new Dictionary<string, dynamic>(){ { "VID", FlydigiController.VENDOR_FLYDIGI }, { "PID", FlydigiController.PRODUCT_FLYDIGI_DONGLE_3 } },
+            new Dictionary<string, dynamic>(){ { "VID", FlydigiController.VENDOR_FLYDIGI }, { "PID", FlydigiController.PRODUCT_FLYDIGI_USB } },
+        };
         public IController NewDevice(IDevice device)
         {
             HidDevice _device = device as HidDevice;

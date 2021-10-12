@@ -1,13 +1,20 @@
 ﻿using System;
 using ExtendInput.DeviceProvider;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace ExtendInput.Controller
 {
     public class DualShock4ControllerFactory : IControllerFactory
     {
         private readonly Guid CONTAINER_ID_REWASD_VIRTUAL_DS4 = new Guid(0xfbc4667d, 0xf0d7, 0x58dc, 0x84, 0x32, 0x19, 0xf7, 0x0a, 0x66, 0x0d, 0xb2);
-
+        public Dictionary<string, dynamic>[] DeviceWhitelist => new Dictionary<string, dynamic>[]
+        {
+            new Dictionary<string, dynamic>(){ { "VID", DualShock4Controller.VENDOR_SONY }, { "PID", DualShock4Controller.PRODUCT_SONY_DONGLE } },
+            new Dictionary<string, dynamic>(){ { "VID", DualShock4Controller.VENDOR_SONY }, { "PID", DualShock4Controller.PRODUCT_SONY_DS4V1 } },
+            new Dictionary<string, dynamic>(){ { "VID", DualShock4Controller.VENDOR_SONY }, { "PID", DualShock4Controller.PRODUCT_SONY_DS4V2 } },
+            new Dictionary<string, dynamic>(){ { "VID", DualShock4Controller.VENDOR_BROOK }, { "PID", DualShock4Controller.PRODUCT_BROOK_MARS } },
+        };
         public IController NewDevice(IDevice device)
         {
             HidDevice _device = device as HidDevice;

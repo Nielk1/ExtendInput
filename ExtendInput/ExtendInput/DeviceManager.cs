@@ -78,6 +78,9 @@ namespace ExtendInput
                             IControllerFactory plugin = (IControllerFactory)Activator.CreateInstance(item, paramList);
                             ControllerFactories.Add(plugin);
 
+                            foreach (IDeviceProvider deviceProvider in DeviceProviders)
+                                deviceProvider.RegisterWhitelist(plugin.DeviceWhitelist);
+
                             break;
                         }
                         catch { }
