@@ -69,8 +69,8 @@ namespace ExtendInput.Controller
             ConnectionTypeCode = new string[] { "CONNECTION_UNKNOWN" };
             ControllerTypeCode = new string[] { "DEVICE_XBOX", "DEVICE_GAMEPAD" };
 
-            State.Controls["quad_left"] = new ControlDPad();
-            State.Controls["quad_right"] = new ControlButtonQuad();
+            State.Controls["cluster_left"] = new ControlDPad();
+            State.Controls["cluster_right"] = new ControlButtonQuad();
             State.Controls["bumpers"] = new ControlButtonPair();
             State.Controls["triggers"] = new ControlTriggerPair(HasStage2: false);
             State.Controls["menu"] = new ControlButtonPair();
@@ -112,10 +112,10 @@ namespace ExtendInput.Controller
                     (StateInFlight.Controls["stick_right"] as ControlStick).Y = reportData.sThumbRY * -1.0f / Int16.MaxValue;
 
 
-                    (StateInFlight.Controls["quad_right"] as ControlButtonQuad).ButtonN = (reportData.wButtons & 0x8000) == 0x8000;
-                    (StateInFlight.Controls["quad_right"] as ControlButtonQuad).ButtonE = (reportData.wButtons & 0x2000) == 0x2000;
-                    (StateInFlight.Controls["quad_right"] as ControlButtonQuad).ButtonS = (reportData.wButtons & 0x1000) == 0x1000;
-                    (StateInFlight.Controls["quad_right"] as ControlButtonQuad).ButtonW = (reportData.wButtons & 0x4000) == 0x4000;
+                    (StateInFlight.Controls["cluster_right"] as ControlButtonQuad).ButtonN = (reportData.wButtons & 0x8000) == 0x8000;
+                    (StateInFlight.Controls["cluster_right"] as ControlButtonQuad).ButtonE = (reportData.wButtons & 0x2000) == 0x2000;
+                    (StateInFlight.Controls["cluster_right"] as ControlButtonQuad).ButtonS = (reportData.wButtons & 0x1000) == 0x1000;
+                    (StateInFlight.Controls["cluster_right"] as ControlButtonQuad).ButtonW = (reportData.wButtons & 0x4000) == 0x4000;
 
                     bool DPadUp    = (reportData.wButtons & 0x0001) == 0x0001;
                     bool DPadDown  = (reportData.wButtons & 0x0002) == 0x0002;
@@ -132,45 +132,45 @@ namespace ExtendInput.Controller
                     {
                         if (DPadRight)
                         {
-                            (StateInFlight.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.NorthEast;
+                            (StateInFlight.Controls["cluster_left"] as ControlDPad).Direction = EDPadDirection.NorthEast;
                         }
                         else if (DPadLeft)
                         {
-                            (StateInFlight.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.NorthWest;
+                            (StateInFlight.Controls["cluster_left"] as ControlDPad).Direction = EDPadDirection.NorthWest;
                         }
                         else
                         {
-                            (StateInFlight.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.North;
+                            (StateInFlight.Controls["cluster_left"] as ControlDPad).Direction = EDPadDirection.North;
                         }
                     }
                     else if (DPadDown)
                     {
                         if (DPadRight)
                         {
-                            (StateInFlight.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.SouthEast;
+                            (StateInFlight.Controls["cluster_left"] as ControlDPad).Direction = EDPadDirection.SouthEast;
                         }
                         else if (DPadLeft)
                         {
-                            (StateInFlight.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.SouthWest;
+                            (StateInFlight.Controls["cluster_left"] as ControlDPad).Direction = EDPadDirection.SouthWest;
                         }
                         else
                         {
-                            (StateInFlight.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.South;
+                            (StateInFlight.Controls["cluster_left"] as ControlDPad).Direction = EDPadDirection.South;
                         }
                     }
                     else
                     {
                         if (DPadRight)
                         {
-                            (StateInFlight.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.East;
+                            (StateInFlight.Controls["cluster_left"] as ControlDPad).Direction = EDPadDirection.East;
                         }
                         else if (DPadLeft)
                         {
-                            (StateInFlight.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.West;
+                            (StateInFlight.Controls["cluster_left"] as ControlDPad).Direction = EDPadDirection.West;
                         }
                         else
                         {
-                            (StateInFlight.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.None;
+                            (StateInFlight.Controls["cluster_left"] as ControlDPad).Direction = EDPadDirection.None;
                         }
                     }
 

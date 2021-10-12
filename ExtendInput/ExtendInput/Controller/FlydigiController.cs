@@ -671,7 +671,7 @@ namespace ExtendInput.Controller
                                             //{
                                             //    (StateInFlight.Controls["logo"] as ControlButton).Button0 = buttonLogo;
                                             //}
-                                            if (ControllerAttribute.HasTopMenu)
+                                            /*if (ControllerAttribute.HasTopMenu)
                                             {
                                                 (StateInFlight.Controls["mtop_back"] as ControlButton).Button0 = buttonBack;
                                                 (StateInFlight.Controls["mtop_home"] as ControlButton).Button0 = buttonHome;
@@ -682,6 +682,12 @@ namespace ExtendInput.Controller
                                                 (StateInFlight.Controls["m_back"] as ControlButton).Button0 = buttonBack;
                                                 (StateInFlight.Controls["m_home"] as ControlButton).Button0 = buttonHome;
                                                 (StateInFlight.Controls["m_pair"] as ControlButton).Button0 = buttonPair;
+                                            }*/
+                                            if (ControllerAttribute.HasTopMenu || ControllerAttribute.HasBottomMenu)
+                                            {
+                                                (StateInFlight.Controls["cluster_middle"] as ControlButtonGrid).Button[0, 0] = buttonPair;
+                                                (StateInFlight.Controls["cluster_middle"] as ControlButtonGrid).Button[1, 0] = buttonHome;
+                                                (StateInFlight.Controls["cluster_middle"] as ControlButtonGrid).Button[2, 0] = buttonBack;
                                             }
                                             if (ControllerAttribute.HasCZBottom)
                                             {
@@ -714,17 +720,17 @@ namespace ExtendInput.Controller
                                             }
                                             if (ControllerAttribute.HasWheel)
                                             {
-                                                (StateInFlight.Controls["quad_right"] as ControlButtonQuad).ButtonN = buttonY; // wheel
-                                                (StateInFlight.Controls["quad_right"] as ControlButtonQuad).ButtonE = buttonB;
-                                                (StateInFlight.Controls["quad_right"] as ControlButtonQuad).ButtonS = buttonA;
-                                                (StateInFlight.Controls["quad_right"] as ControlButtonQuad).ButtonW = buttonX;
+                                                (StateInFlight.Controls["cluster_right"] as ControlButtonQuad).ButtonN = buttonY; // wheel
+                                                (StateInFlight.Controls["cluster_right"] as ControlButtonQuad).ButtonE = buttonB;
+                                                (StateInFlight.Controls["cluster_right"] as ControlButtonQuad).ButtonS = buttonA;
+                                                (StateInFlight.Controls["cluster_right"] as ControlButtonQuad).ButtonW = buttonX;
                                             }
                                             else if (ControllerSubType != FlyDigiSubType.None && ControllerSubType != FlyDigiSubType.Unknown)
                                             {
-                                                (StateInFlight.Controls["quad_right"] as ControlButtonQuad).ButtonN = buttonY;
-                                                (StateInFlight.Controls["quad_right"] as ControlButtonQuad).ButtonE = buttonB;
-                                                (StateInFlight.Controls["quad_right"] as ControlButtonQuad).ButtonS = buttonA;
-                                                (StateInFlight.Controls["quad_right"] as ControlButtonQuad).ButtonW = buttonX;
+                                                (StateInFlight.Controls["cluster_right"] as ControlButtonQuad).ButtonN = buttonY;
+                                                (StateInFlight.Controls["cluster_right"] as ControlButtonQuad).ButtonE = buttonB;
+                                                (StateInFlight.Controls["cluster_right"] as ControlButtonQuad).ButtonS = buttonA;
+                                                (StateInFlight.Controls["cluster_right"] as ControlButtonQuad).ButtonW = buttonX;
                                             }
 
                                             int padH = 0;
@@ -735,25 +741,25 @@ namespace ExtendInput.Controller
                                             if (buttonLeft) padH--;
                                             if (padH > 0)
                                                 if (padV > 0)
-                                                    (StateInFlight.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.NorthEast;
+                                                    (StateInFlight.Controls["cluster_left"] as ControlDPad).Direction = EDPadDirection.NorthEast;
                                                 else if (padV < 0)
-                                                    (StateInFlight.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.SouthEast;
+                                                    (StateInFlight.Controls["cluster_left"] as ControlDPad).Direction = EDPadDirection.SouthEast;
                                                 else
-                                                    (StateInFlight.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.East;
+                                                    (StateInFlight.Controls["cluster_left"] as ControlDPad).Direction = EDPadDirection.East;
                                             else if (padH < 0)
                                                 if (padV > 0)
-                                                    (StateInFlight.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.NorthWest;
+                                                    (StateInFlight.Controls["cluster_left"] as ControlDPad).Direction = EDPadDirection.NorthWest;
                                                 else if (padV < 0)
-                                                    (StateInFlight.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.SouthWest;
+                                                    (StateInFlight.Controls["cluster_left"] as ControlDPad).Direction = EDPadDirection.SouthWest;
                                                 else
-                                                    (StateInFlight.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.West;
+                                                    (StateInFlight.Controls["cluster_left"] as ControlDPad).Direction = EDPadDirection.West;
                                             else
                                                 if (padV > 0)
-                                                (StateInFlight.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.North;
+                                                (StateInFlight.Controls["cluster_left"] as ControlDPad).Direction = EDPadDirection.North;
                                             else if (padV < 0)
-                                                (StateInFlight.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.South;
+                                                (StateInFlight.Controls["cluster_left"] as ControlDPad).Direction = EDPadDirection.South;
                                             else
-                                                (StateInFlight.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.None;
+                                                (StateInFlight.Controls["cluster_left"] as ControlDPad).Direction = EDPadDirection.None;
 
                                             //short yaw = ProcSignedByteNybble((short)(((report.Data[4] & 0x0f) << 8) + report.Data[3]));
                                             //short pitch = ProcSignedByteNybble((short)(((report.Data[4] & 0xf0) >> 4) + (report.Data[5] << 4)));
@@ -972,7 +978,7 @@ namespace ExtendInput.Controller
                 try
                 {
                     // universal fixed controls that all Flydigi controllers have, these won't change
-                    State.Controls["quad_left"] = new ControlDPad();
+                    State.Controls["cluster_left"] = new ControlDPad();
                     State.Controls["stick_left"] = new ControlStick(HasClick: true);
                     State.Controls["stick_right"] = new ControlStick(HasClick: true);
                     State.Controls["bumpers"] = new ControlButtonPair();
@@ -1347,13 +1353,13 @@ namespace ExtendInput.Controller
                 try
                 {
                     // universal fixed controls that all Flydigi controllers have, these won't change
-                    State.Controls["quad_left"] = new ControlDPad();
+                    State.Controls["cluster_left"] = new ControlDPad();
                     State.Controls["stick_left"] = new ControlStick(HasClick: true);
                     State.Controls["stick_right"] = new ControlStick(HasClick: true);
                     State.Controls["bumpers"] = new ControlButtonPair();
                     State.Controls["menu"] = new ControlButtonPair();
                     //State.Controls["home"] = new ControlButton();
-                    //State.Controls["quad_right"] = new ControlButtonQuad();
+                    //State.Controls["cluster_right"] = new ControlButtonQuad();
                     //State.Controls["triggers"] = new ControlTriggerPair(HasStage2: false);
                     //if (ControllerAttribute?.PadIsClickOnly ?? false)
                     //{
@@ -1438,14 +1444,14 @@ namespace ExtendInput.Controller
             if (!ControlsCreated)
             {
                 // universal fixed controls that all Flydigi controllers have, these won't change
-                State.Controls["quad_left"] = new ControlDPad();
+                State.Controls["cluster_left"] = new ControlDPad();
                 State.Controls["stick_left"] = new ControlStick(HasClick: true);
                 State.Controls["stick_right"] = new ControlStick(HasClick: true);
                 State.Controls["bumpers"] = new ControlButtonPair();
                 State.Controls["menu"] = new ControlButtonPair();
 
-                //State.Controls["quad_left"] = new ControlDPad();
-                //State.Controls["quad_right"] = new ControlButtonQuad();
+                //State.Controls["cluster_left"] = new ControlDPad();
+                //State.Controls["cluster_right"] = new ControlButtonQuad();
                 //State.Controls["bumpers"] = new ControlButtonPair();
                 ////State.Controls["triggers"] = new ControlTriggerPair(HasStage2: false);
                 //State.Controls["menu"] = new ControlButtonPair();
@@ -1494,7 +1500,7 @@ namespace ExtendInput.Controller
                     State.Controls["logo"] = null;
                 }
 
-                if (ControllerAttribute.HasTopMenu)
+                /*if (ControllerAttribute.HasTopMenu)
                 {
                     State.Controls["mtop_back"] = new ControlButton();
                     State.Controls["mtop_home"] = new ControlButton();
@@ -1518,6 +1524,14 @@ namespace ExtendInput.Controller
                     State.Controls["m_back"] = null;
                     State.Controls["m_home"] = null;
                     State.Controls["m_pair"] = null;
+                }*/
+                if (ControllerAttribute.HasTopMenu || ControllerAttribute.HasBottomMenu)
+                {
+                    State.Controls["cluster_middle"] = new ControlButtonGrid(3, 1);
+                }
+                else
+                {
+                    State.Controls["cluster_middle"] = null;
                 }
 
                 if (ControllerAttribute.HasCZBottom)
@@ -1579,11 +1593,11 @@ namespace ExtendInput.Controller
 
                 if (ControllerAttribute.HasWheel)
                 {
-                    State.Controls["quad_right"] = new ControlButtonQuad(); // wheel
+                    State.Controls["cluster_right"] = new ControlButtonQuad(); // wheel
                 }
                 else
                 {
-                    State.Controls["quad_right"] = new ControlButtonQuad();
+                    State.Controls["cluster_right"] = new ControlButtonQuad();
                 }
             }
             finally

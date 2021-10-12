@@ -61,8 +61,8 @@ namespace ExtendInput.Controller
             ConnectionTypeCode = new string[] { "CONNECTION_WIRE_35MM_PHONE_TRRS", "CONNECTION_WIRE" };
             ControllerTypeCode = new string[] { "DEVICE_SIXTYBEAT_GAMEPAD", "DEVICE_GAMEPAD" };
 
-            State.Controls["quad_left"] = new ControlButtonQuad();
-            State.Controls["quad_right"] = new ControlButtonQuad();
+            State.Controls["cluster_left"] = new ControlButtonQuad();
+            State.Controls["cluster_right"] = new ControlButtonQuad();
             State.Controls["bumpers"] = new ControlButtonPair();
             State.Controls["bumpers2"] = new ControlButtonPair();
             State.Controls["menu"] = new ControlButtonPair();
@@ -108,15 +108,15 @@ namespace ExtendInput.Controller
                     (StateInFlight.Controls["stick_right"] as ControlStick).X = (float)(((double)SBJoystick_rawRightX + (double)SBJoystick_rawRightX) / 240.0 + -1.0);
                     (StateInFlight.Controls["stick_right"] as ControlStick).Y = (float)(((double)SBJoystick_rawRightY + (double)SBJoystick_rawRightY) / 240.0 + -1.0);
 
-                    (StateInFlight.Controls["quad_left"] as ControlButtonQuad).ButtonN = (reportData.ReportBytes[0] & 0x08) == 0x08;
-                    (StateInFlight.Controls["quad_left"] as ControlButtonQuad).ButtonE = (reportData.ReportBytes[6] & 0x20) == 0x20;
-                    (StateInFlight.Controls["quad_left"] as ControlButtonQuad).ButtonS = (reportData.ReportBytes[6] & 0x40) == 0x40;
-                    (StateInFlight.Controls["quad_left"] as ControlButtonQuad).ButtonW = (reportData.ReportBytes[6] & 0x80) == 0x80;
+                    (StateInFlight.Controls["cluster_left"] as ControlButtonQuad).ButtonN = (reportData.ReportBytes[0] & 0x08) == 0x08;
+                    (StateInFlight.Controls["cluster_left"] as ControlButtonQuad).ButtonE = (reportData.ReportBytes[6] & 0x20) == 0x20;
+                    (StateInFlight.Controls["cluster_left"] as ControlButtonQuad).ButtonS = (reportData.ReportBytes[6] & 0x40) == 0x40;
+                    (StateInFlight.Controls["cluster_left"] as ControlButtonQuad).ButtonW = (reportData.ReportBytes[6] & 0x80) == 0x80;
 
-                    (StateInFlight.Controls["quad_right"] as ControlButtonQuad).ButtonN = (reportData.ReportBytes[1] & 0x10) == 0x10;
-                    (StateInFlight.Controls["quad_right"] as ControlButtonQuad).ButtonE = (reportData.ReportBytes[1] & 0x20) == 0x20;
-                    (StateInFlight.Controls["quad_right"] as ControlButtonQuad).ButtonS = (reportData.ReportBytes[1] & 0x02) == 0x02;
-                    (StateInFlight.Controls["quad_right"] as ControlButtonQuad).ButtonW = (reportData.ReportBytes[1] & 0x01) == 0x01;
+                    (StateInFlight.Controls["cluster_right"] as ControlButtonQuad).ButtonN = (reportData.ReportBytes[1] & 0x10) == 0x10;
+                    (StateInFlight.Controls["cluster_right"] as ControlButtonQuad).ButtonE = (reportData.ReportBytes[1] & 0x20) == 0x20;
+                    (StateInFlight.Controls["cluster_right"] as ControlButtonQuad).ButtonS = (reportData.ReportBytes[1] & 0x02) == 0x02;
+                    (StateInFlight.Controls["cluster_right"] as ControlButtonQuad).ButtonW = (reportData.ReportBytes[1] & 0x01) == 0x01;
 
                     (StateInFlight.Controls["stick_right"] as ControlStick).Click = (reportData.ReportBytes[6] & 0x10) == 0x10;
                     (StateInFlight.Controls["stick_left"] as ControlStick).Click = (reportData.ReportBytes[6] & 0x08) == 0x08;

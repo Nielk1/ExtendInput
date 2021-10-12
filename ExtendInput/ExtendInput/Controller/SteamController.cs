@@ -317,8 +317,8 @@ namespace ExtendInput.Controller
             _device.DeviceReport += OnReport;
 
             if (type != EControllerType.Chell)
-                State.Controls["quad_left"] = new ControlDPad(/*4*/);
-            State.Controls["quad_right"] = new ControlButtonQuad();
+                State.Controls["cluster_left"] = new ControlDPad(/*4*/);
+            State.Controls["cluster_right"] = new ControlButtonQuad();
             State.Controls["bumpers"] = new ControlButtonPair();
             State.Controls["triggers"] = new ControlTriggerPair(HasStage2: true);
             State.Controls["menu"] = new ControlButtonPair();
@@ -1241,10 +1241,10 @@ namespace ExtendInput.Controller
             //OldState = State; // shouldn't this be a clone?
             ControllerState StateInFlight = (ControllerState)State.Clone(); // shouldn't this be a clone?
 
-            (StateInFlight.Controls["quad_right"] as ControlButtonQuad).ButtonS = (RawState.ulButtons[0] & 128) == 128; // A - S SE
-            (StateInFlight.Controls["quad_right"] as ControlButtonQuad).ButtonW = (RawState.ulButtons[0] & 64) == 64;   // X - W SW
-            (StateInFlight.Controls["quad_right"] as ControlButtonQuad).ButtonE = (RawState.ulButtons[0] & 32) == 32;   // B - E NE
-            (StateInFlight.Controls["quad_right"] as ControlButtonQuad).ButtonN = (RawState.ulButtons[0] & 16) == 16;   // Y - N NW
+            (StateInFlight.Controls["cluster_right"] as ControlButtonQuad).ButtonS = (RawState.ulButtons[0] & 128) == 128; // A - S SE
+            (StateInFlight.Controls["cluster_right"] as ControlButtonQuad).ButtonW = (RawState.ulButtons[0] & 64) == 64;   // X - W SW
+            (StateInFlight.Controls["cluster_right"] as ControlButtonQuad).ButtonE = (RawState.ulButtons[0] & 32) == 32;   // B - E NE
+            (StateInFlight.Controls["cluster_right"] as ControlButtonQuad).ButtonN = (RawState.ulButtons[0] & 16) == 16;   // Y - N NW
             (StateInFlight.Controls["bumpers"] as ControlButtonPair).Left.Button0 = (RawState.ulButtons[0] & 8) == 8;
             (StateInFlight.Controls["bumpers"] as ControlButtonPair).Right.Button0 = (RawState.ulButtons[0] & 4) == 4;
             (StateInFlight.Controls["triggers"] as ControlTriggerPair).Left.Stage2 = (RawState.ulButtons[0] & 2) == 2;
@@ -1268,23 +1268,23 @@ namespace ExtendInput.Controller
                 // these are mutually exclusive in the raw data, so let's act like they are in the code too, even though they use 4 bits
                 if ((RawState.ulButtons[1] & 1) == 1)
                 {
-                    (StateInFlight.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.North;
+                    (StateInFlight.Controls["cluster_left"] as ControlDPad).Direction = EDPadDirection.North;
                 }
                 else if ((RawState.ulButtons[1] & 2) == 2)
                 {
-                    (StateInFlight.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.East;
+                    (StateInFlight.Controls["cluster_left"] as ControlDPad).Direction = EDPadDirection.East;
                 }
                 else if ((RawState.ulButtons[1] & 8) == 8)
                 {
-                    (StateInFlight.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.South;
+                    (StateInFlight.Controls["cluster_left"] as ControlDPad).Direction = EDPadDirection.South;
                 }
                 else if ((RawState.ulButtons[1] & 4) == 4)
                 {
-                    (StateInFlight.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.West;
+                    (StateInFlight.Controls["cluster_left"] as ControlDPad).Direction = EDPadDirection.West;
                 }
                 else
                 {
-                    (StateInFlight.Controls["quad_left"] as ControlDPad).Direction = EDPadDirection.None;
+                    (StateInFlight.Controls["cluster_left"] as ControlDPad).Direction = EDPadDirection.None;
                 }
             }
             //bool LeftAnalogMultiplexMode = (RawState.ulButtons[2] & 128) == 128;
