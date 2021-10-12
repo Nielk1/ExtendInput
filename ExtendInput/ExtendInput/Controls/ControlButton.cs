@@ -105,7 +105,22 @@ namespace ExtendInput.Controls
     {
         public ButtonProperties Properties;
 
-        public bool Button0 { get; set; }
+        public bool Button0 { 
+            get { return Analog > 0; }
+            set { Analog = value ? 1.0f : 0.0f; }
+        }
+
+
+
+
+        public bool HasStage2 { get; set; }
+        public float Analog { get; set; }
+        public bool Stage2 { get; set; }
+
+
+
+
+
         public T Value<T>(string key)
         {
             if (string.IsNullOrEmpty(key) || key == "click")

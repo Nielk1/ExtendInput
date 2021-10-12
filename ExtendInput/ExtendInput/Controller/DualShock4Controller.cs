@@ -1088,8 +1088,8 @@ namespace ExtendInput.Controller
                             (StateInFlight.Controls["touch_center"] as ControlTouch).Click = (reportData.ReportBytes[baseOffset + 6] & 0x2) == 0x2;
                         }
 
-                        (StateInFlight.Controls["triggers"] as ControlTriggerPair).Left.Analog = (float)(reportData.ReportBytes[baseOffset + 7] > 0 ? reportData.ReportBytes[baseOffset + 7] : (reportData.ReportBytes[baseOffset + 5] & 4) == 4 ? 1 : 0) / byte.MaxValue;
-                        (StateInFlight.Controls["triggers"] as ControlTriggerPair).Right.Analog = (float)(reportData.ReportBytes[baseOffset + 8] > 0 ? reportData.ReportBytes[baseOffset + 8] : (reportData.ReportBytes[baseOffset + 5] & 8) == 8 ? 1 : 0) / byte.MaxValue;
+                        (StateInFlight.Controls["triggers"] as ControlButtonPair).Left.Analog = (float)(reportData.ReportBytes[baseOffset + 7] > 0 ? reportData.ReportBytes[baseOffset + 7] : (reportData.ReportBytes[baseOffset + 5] & 4) == 4 ? 1 : 0) / byte.MaxValue;
+                        (StateInFlight.Controls["triggers"] as ControlButtonPair).Right.Analog = (float)(reportData.ReportBytes[baseOffset + 8] > 0 ? reportData.ReportBytes[baseOffset + 8] : (reportData.ReportBytes[baseOffset + 5] & 8) == 8 ? 1 : 0) / byte.MaxValue;
 
                         // GyroTimestamp
                         //bld.Append(BitConverter.ToUInt16(reportData, 1 + baseOffset + 9).ToString().PadLeft(5));
@@ -1279,7 +1279,7 @@ namespace ExtendInput.Controller
                     State.Controls["cluster_right"] = new ControlButtonQuad();
                     State.Controls["bumpers"] = new ControlButtonPair();
                     //State.Controls["bumpers2"] = new ControlButtonPair();
-                    State.Controls["triggers"] = new ControlTriggerPair(HasStage2: false);
+                    State.Controls["triggers"] = new ControlButtonPair(HasStage2: false);
                     State.Controls["menu"] = new ControlButtonPair();
                     State.Controls["home"] = new ControlButton();
                     State.Controls["stick_left"] = new ControlStick(HasClick: true);
