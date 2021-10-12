@@ -715,8 +715,8 @@ namespace ExtendInput.Controller
                                             }
                                             if (ControllerAttribute.HasBumper2)
                                             {
-                                                (StateInFlight.Controls["m5m6"] as ControlButtonPair).Left.Button0 = buttonM6;
-                                                (StateInFlight.Controls["m5m6"] as ControlButtonPair).Right.Button0 = buttonM5;
+                                                (StateInFlight.Controls["shoulder_a"] as ControlButtonPair).Left.Button0 = buttonM6;
+                                                (StateInFlight.Controls["shoulder_a"] as ControlButtonPair).Right.Button0 = buttonM5;
                                             }
                                             if (ControllerAttribute.HasWheel)
                                             {
@@ -1584,11 +1584,11 @@ namespace ExtendInput.Controller
 
                 if (ControllerAttribute.HasBumper2)
                 {
-                    State.Controls["m5m6"] = new ControlButtonPair();
+                    State.Controls["shoulder_a"] = new ControlButtonPair();
                 }
                 else
                 {
-                    State.Controls["m5m6"] = null;
+                    State.Controls["shoulder_a"] = null;
                 }
 
                 if (ControllerAttribute.HasWheel)
