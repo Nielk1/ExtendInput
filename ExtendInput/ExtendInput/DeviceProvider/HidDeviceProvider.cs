@@ -99,8 +99,8 @@ namespace ExtendInput.DeviceProvider
                 return;
             foreach(var white in deviceWhitelist)
             {
-                UInt16? VID = white.ContainsKey("VID") ? white["VID"] as UInt16? : null;
-                UInt16? PID = white.ContainsKey("PID") ? white["PID"] as UInt16? : null;
+                UInt16? VID = white.ContainsKey("VID") ? (UInt16?)white["VID"] : null;
+                UInt16? PID = white.ContainsKey("PID") ? (UInt16?)white["PID"] : null;
                 if (VID.HasValue)
                 {
                     Whitelist.Add((VID.Value, PID));
