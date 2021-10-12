@@ -124,7 +124,7 @@ namespace ExtendInput.Controller
             Unknown = 0,
 
             [ControllerSubType(
-                Token: new string[] { "DEVICE_FLYDIGI_X9" },
+                Token: new string[] { "DEVICE_FLYDIGI_X9", "DEVICE_GAMEPAD" },
                 Name: "Flydigi X9",
                 //DeviceIdFromFeature: 0x10,
                 ReportFESubType: 0x55,
@@ -133,7 +133,7 @@ namespace ExtendInput.Controller
             X9,
 
             [ControllerSubType(
-                Token: new string[] { "DEVICE_FLYDIGI_X8" },
+                Token: new string[] { "DEVICE_FLYDIGI_X8", "DEVICE_GAMEPAD" },
                 Name: "Flydigi X8",
                 //DeviceIdFromFeature: 0x11,
                 FixedValueFromByte28: 0x00,
@@ -145,7 +145,7 @@ namespace ExtendInput.Controller
             X8,
 
             [ControllerSubType(
-                Token: new string[] { "DEVICE_FLYDIGI_APEX" },
+                Token: new string[] { "DEVICE_FLYDIGI_APEX", "DEVICE_GAMEPAD" },
                 Name: "Flydigi APEX",
                 //DeviceIdFromFeature: 0x12, // removed because we can't get a device ID, if we find we can with a 3dot we will need to put this back but replace nullchecks on it with a new check of a new bool property that says we don't respond on 2dot. We know 1dot doesn't support the query this data is for at all.
                 FixedValueFromByte28: 0x01,
@@ -158,7 +158,7 @@ namespace ExtendInput.Controller
             APEX,
 
             [ControllerSubType(
-                Token: new string[] { "DEVICE_FLYDIGI_APEX_2" },
+                Token: new string[] { "DEVICE_FLYDIGI_APEX_2", "DEVICE_GAMEPAD" },
                 Name: "Flydigi APEX 2",
                 DeviceIdFromFeature: 0x13,
                 FixedValueFromByte28: 0x01,
@@ -171,7 +171,7 @@ namespace ExtendInput.Controller
             APEX_2,
 
             [ControllerSubType(
-                Token: new string[] { "DEVICE_FLYDIGI_F1" },
+                Token: new string[] { "DEVICE_FLYDIGI_F1", "DEVICE_GAMEPAD" },
                 Name: "Flydigi F1",
                 DeviceIdFromFeature: 0x14,
                 ReportFESubType: 0x66,
@@ -181,7 +181,7 @@ namespace ExtendInput.Controller
             F1,
 
             [ControllerSubType(
-                Token: new string[] { "DEVICE_FLYDIGI_F1" },
+                Token: new string[] { "DEVICE_FLYDIGI_F1", "DEVICE_GAMEPAD" },
                 Name: "Flydigi F1 WIRED",
                 DeviceIdFromFeature: 0x15,
                 HasBottomMenu: true,
@@ -190,49 +190,49 @@ namespace ExtendInput.Controller
             F1_WIRED,
 
             [ControllerSubType(
-                Token: new string[] { "DEVICE_FLYDIGI_WEE1" },
+                Token: new string[] { "DEVICE_FLYDIGI_WEE1", "DEVICE_GAMEPAD" },
                 Name: "Flydigi WEE1",
                 DeviceIdFromFeature: 0x20)]
             WEE1,
 
             [ControllerSubType(
-                Token: new string[] { "DEVICE_FLYDIGI_WEE2" },
+                Token: new string[] { "DEVICE_FLYDIGI_WEE2", "DEVICE_GAMEPAD" },
                 Name: "Flydigi WEE2",
                 DeviceIdFromFeature: 0x21)]
             WEE2,
 
             [ControllerSubType(
-                Token: new string[] { "DEVICE_FLYDIGI_Q1" },
+                Token: new string[] { "DEVICE_FLYDIGI_Q1", "DEVICE_GAMEPAD" },
                 Name: "Flydigi Q1",
                 DeviceIdFromFeature: 0x30)]
             Q1,
 
             [ControllerSubType(
-                Token: new string[] { "DEVICE_FLYDIGI_D1" },
+                Token: new string[] { "DEVICE_FLYDIGI_D1", "DEVICE_GAMEPAD" },
                 Name: "Flydigi D1",
                 DeviceIdFromFeature: 0x31)]
             D1,
 
             [ControllerSubType(
-                Token: new string[] { "DEVICE_FLYDIGI_WASP_BT" },
+                Token: new string[] { "DEVICE_FLYDIGI_WASP_BT", "DEVICE_GAMEPAD" },
                 Name: "Flydigi WASP BT",
                 DeviceIdFromFeature: 0x40)]
             WASP_BT,
 
             [ControllerSubType(
-                Token: new string[] { "DEVICE_FLYDIGI_WASP_N" },
+                Token: new string[] { "DEVICE_FLYDIGI_WASP_N", "DEVICE_GAMEPAD" },
                 Name: "Flydigi WASP N",
                 DeviceIdFromFeature: 0x41)]
             WASP_N,
 
             [ControllerSubType(
-                Token: new string[] { "DEVICE_FLYDIGI_WASP_X" },
+                Token: new string[] { "DEVICE_FLYDIGI_WASP_X", "DEVICE_GAMEPAD" },
                 Name: "Flydigi WASP X",
                 DeviceIdFromFeature: 0x42)]
             WASP_X,
 
             [ControllerSubType(
-                Token: new string[] { "DEVICE_FLYDIGI_WASP_2" },
+                Token: new string[] { "DEVICE_FLYDIGI_WASP_2", "DEVICE_GAMEPAD" },
                 Name: "Flydigi WASP 2",
                 DeviceIdFromFeature: 0x43)]
             WASP_2,
