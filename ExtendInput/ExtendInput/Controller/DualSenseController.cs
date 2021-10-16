@@ -254,12 +254,12 @@ namespace ExtendInput.Controller
 
             State.Controls["cluster_left"] = new ControlDPad();
             State.Controls["cluster_right"] = new ControlButtonQuad();
-            State.Controls["bumpers"] = new ControlButtonPair();
-            State.Controls["bumpers2"] = new ControlButtonPair();
-            State.Controls["triggers"] = new ControlTriggerPair(HasStage2: false);
-            State.Controls["menu"] = new ControlButtonPair();
-            State.Controls["home"] = new ControlButton();
-            State.Controls["mute"] = new ControlButton();
+            State.Controls["bumpers"] = new ControlButtonPair(ButtonProperties.CMB_Bumper);
+            //State.Controls["bumpers2"] = new ControlButtonPair();
+            State.Controls["triggers"] = new ControlButtonPair(ButtonProperties.CMB_Trigger);
+            State.Controls["menu"] = new ControlButtonPair(ButtonProperties.CMB_Button);
+            State.Controls["home"] = new ControlButton(ButtonProperties.CMB_Button);
+            State.Controls["mute"] = new ControlButton(ButtonProperties.CMB_Button);
             State.Controls["stick_left"] = new ControlStick(HasClick: true);
             State.Controls["stick_right"] = new ControlStick(HasClick: true);
             State.Controls["touch_center"] = new ControlTouch(TouchCount: 2, HasClick: true);
@@ -458,20 +458,20 @@ namespace ExtendInput.Controller
 
                         (StateInFlight.Controls["stick_right"] as ControlStick).Click = (reportData.ReportBytes[baseOffset + 5] & 128) == 128;
                         (StateInFlight.Controls["stick_left"] as ControlStick).Click = (reportData.ReportBytes[baseOffset + 5] & 64) == 64;
-                        (StateInFlight.Controls["menu"] as ControlButtonPair).Right.Button0 = (reportData.ReportBytes[baseOffset + 5] & 32) == 32;
-                        (StateInFlight.Controls["menu"] as ControlButtonPair).Left.Button0 = (reportData.ReportBytes[baseOffset + 5] & 16) == 16;
-                        (StateInFlight.Controls["bumpers2"] as ControlButtonPair).Right.Button0 = (reportData.ReportBytes[baseOffset + 5] & 8) == 8;
-                        (StateInFlight.Controls["bumpers2"] as ControlButtonPair).Left.Button0 = (reportData.ReportBytes[baseOffset + 5] & 4) == 4;
-                        (StateInFlight.Controls["bumpers"] as ControlButtonPair).Right.Button0 = (reportData.ReportBytes[baseOffset + 5] & 2) == 2;
-                        (StateInFlight.Controls["bumpers"] as ControlButtonPair).Left.Button0 = (reportData.ReportBytes[baseOffset + 5] & 1) == 1;
+                        (StateInFlight.Controls["menu"] as ControlButtonPair).Right.Digital = (reportData.ReportBytes[baseOffset + 5] & 32) == 32;
+                        (StateInFlight.Controls["menu"] as ControlButtonPair).Left.Digital = (reportData.ReportBytes[baseOffset + 5] & 16) == 16;
+                        //(StateInFlight.Controls["bumpers2"] as ControlButtonPair).Right.Button0 = (reportData.ReportBytes[baseOffset + 5] & 8) == 8;
+                        //(StateInFlight.Controls["bumpers2"] as ControlButtonPair).Left.Button0 = (reportData.ReportBytes[baseOffset + 5] & 4) == 4;
+                        (StateInFlight.Controls["bumpers"] as ControlButtonPair).Right.Digital = (reportData.ReportBytes[baseOffset + 5] & 2) == 2;
+                        (StateInFlight.Controls["bumpers"] as ControlButtonPair).Left.Digital = (reportData.ReportBytes[baseOffset + 5] & 1) == 1;
 
                         // counter
                         // bld.Append((reportData.ReportBytes[baseOffset + 6] & 0xfc).ToString().PadLeft(3, '0'));
 
-                        (StateInFlight.Controls["home"] as ControlButton).Button0 = (reportData.ReportBytes[baseOffset + 6] & 0x1) == 0x1;
+                        (StateInFlight.Controls["home"] as ControlButton).Digital = (reportData.ReportBytes[baseOffset + 6] & 0x1) == 0x1;
                         (StateInFlight.Controls["touch_center"] as ControlTouch).Click = (reportData.ReportBytes[baseOffset + 6] & 0x2) == 0x2;
-                        (StateInFlight.Controls["triggers"] as ControlTriggerPair).Left.Analog = (float)reportData.ReportBytes[baseOffset + 7] / byte.MaxValue;
-                        (StateInFlight.Controls["triggers"] as ControlTriggerPair).Right.Analog = (float)reportData.ReportBytes[baseOffset + 8] / byte.MaxValue;
+                        (StateInFlight.Controls["triggers"] as ControlButtonPair).Left.Analog = (float)reportData.ReportBytes[baseOffset + 7] / byte.MaxValue;
+                        (StateInFlight.Controls["triggers"] as ControlButtonPair).Right.Analog = (float)reportData.ReportBytes[baseOffset + 8] / byte.MaxValue;
                     }
                     else
                     {
@@ -508,18 +508,18 @@ namespace ExtendInput.Controller
 
                             (StateInFlight.Controls["stick_right"] as ControlStick).Click = (reportData.ReportBytes[baseOffset + 8] & 128) == 128;
                             (StateInFlight.Controls["stick_left"] as ControlStick).Click = (reportData.ReportBytes[baseOffset + 8] & 64) == 64;
-                            (StateInFlight.Controls["menu"] as ControlButtonPair).Right.Button0 = (reportData.ReportBytes[baseOffset + 8] & 32) == 32;
-                            (StateInFlight.Controls["menu"] as ControlButtonPair).Left.Button0 = (reportData.ReportBytes[baseOffset + 8] & 16) == 16;
-                            (StateInFlight.Controls["bumpers2"] as ControlButtonPair).Right.Button0 = (reportData.ReportBytes[baseOffset + 8] & 8) == 8;
-                            (StateInFlight.Controls["bumpers2"] as ControlButtonPair).Left.Button0 = (reportData.ReportBytes[baseOffset + 8] & 4) == 4;
-                            (StateInFlight.Controls["bumpers"] as ControlButtonPair).Right.Button0 = (reportData.ReportBytes[baseOffset + 8] & 2) == 2;
-                            (StateInFlight.Controls["bumpers"] as ControlButtonPair).Left.Button0 = (reportData.ReportBytes[baseOffset + 8] & 1) == 1;
+                            (StateInFlight.Controls["menu"] as ControlButtonPair).Right.Digital = (reportData.ReportBytes[baseOffset + 8] & 32) == 32;
+                            (StateInFlight.Controls["menu"] as ControlButtonPair).Left.Digital = (reportData.ReportBytes[baseOffset + 8] & 16) == 16;
+                            //(StateInFlight.Controls["bumpers2"] as ControlButtonPair).Right.Button0 = (reportData.ReportBytes[baseOffset + 8] & 8) == 8;
+                            //(StateInFlight.Controls["bumpers2"] as ControlButtonPair).Left.Button0 = (reportData.ReportBytes[baseOffset + 8] & 4) == 4;
+                            (StateInFlight.Controls["bumpers"] as ControlButtonPair).Right.Digital = (reportData.ReportBytes[baseOffset + 8] & 2) == 2;
+                            (StateInFlight.Controls["bumpers"] as ControlButtonPair).Left.Digital = (reportData.ReportBytes[baseOffset + 8] & 1) == 1;
 
-                            (StateInFlight.Controls["home"] as ControlButton).Button0 = (reportData.ReportBytes[baseOffset + 9] & 0x1) == 0x1;
+                            (StateInFlight.Controls["home"] as ControlButton).Digital = (reportData.ReportBytes[baseOffset + 9] & 0x1) == 0x1;
                             (StateInFlight.Controls["touch_center"] as ControlTouch).Click = (reportData.ReportBytes[baseOffset + 9] & 0x2) == 0x2;
-                            (StateInFlight.Controls["mute"] as ControlButton).Button0 = (reportData.ReportBytes[baseOffset + 9] & 0x4) == 0x4;
-                            (StateInFlight.Controls["triggers"] as ControlTriggerPair).Left.Analog = (float)reportData.ReportBytes[baseOffset + 4] / byte.MaxValue;
-                            (StateInFlight.Controls["triggers"] as ControlTriggerPair).Right.Analog = (float)reportData.ReportBytes[baseOffset + 5] / byte.MaxValue;
+                            (StateInFlight.Controls["mute"] as ControlButton).Digital = (reportData.ReportBytes[baseOffset + 9] & 0x4) == 0x4;
+                            (StateInFlight.Controls["triggers"] as ControlButtonPair).Left.Analog = (float)reportData.ReportBytes[baseOffset + 4] / byte.MaxValue;
+                            (StateInFlight.Controls["triggers"] as ControlButtonPair).Right.Analog = (float)reportData.ReportBytes[baseOffset + 5] / byte.MaxValue;
 
                             (StateInFlight.Controls["motion"] as ControlMotion).AngularVelocityX = BitConverter.ToInt16(reportData.ReportBytes, baseOffset + 15);
                             (StateInFlight.Controls["motion"] as ControlMotion).AngularVelocityZ = BitConverter.ToInt16(reportData.ReportBytes, baseOffset + 17);

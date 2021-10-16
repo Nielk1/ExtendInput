@@ -4,15 +4,18 @@ namespace ExtendInput.Controls
 {
     public class ControlButtonPair : IControl, IControlPair<ControlButton>
     {
-        public bool HasStage2 { get; private set; }
         public ControlButton Left { get; private set; }
         public ControlButton Right { get; private set; }
 
-        public ControlButtonPair(bool HasStage2 = false)
+        public ControlButtonPair(ButtonProperties Properties)
         {
-            this.HasStage2 = HasStage2;
-            Left = new ControlButton(); // TODO introduce stage 2 here
-            Right = new ControlButton(); // TODO introduce stage 2 here
+            Left = new ControlButton(Properties);
+            Right = new ControlButton(Properties);
+        }
+        public ControlButtonPair(ControlButton Left, ControlButton Right)
+        {
+            this.Left = Left;
+            this.Right = Right;
         }
 
         public T Value<T>(string key)
@@ -45,10 +48,9 @@ namespace ExtendInput.Controls
 
         public object Clone()
         {
-            ControlButtonPair newData = new ControlButtonPair(this.HasStage2);
-
-            newData.Left = (ControlButton)this.Left.Clone();
-            newData.Right = (ControlButton)this.Right.Clone();
+            ControlButtonPair newData = new ControlButtonPair(
+                (ControlButton)this.Left.Clone(),
+                (ControlButton)this.Right.Clone());
 
             return newData;
         }

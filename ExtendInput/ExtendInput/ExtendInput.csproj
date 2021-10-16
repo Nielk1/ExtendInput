@@ -109,8 +109,6 @@
     <Compile Include="Controls\ControlMotion.cs" />
     <Compile Include="Controls\ControlStick.cs" />
     <Compile Include="Controls\ControlTouch.cs" />
-    <Compile Include="Controls\ControlTrigger.cs" />
-    <Compile Include="Controls\ControlTriggerPair.cs" />
     <Compile Include="Controls\EDPadDirection.cs" />
     <Compile Include="Controls\IControl.cs" />
     <Compile Include="Controls\IControlPair.cs" />

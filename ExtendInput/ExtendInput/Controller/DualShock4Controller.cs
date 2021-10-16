@@ -1033,12 +1033,12 @@ namespace ExtendInput.Controller
 
                         (StateInFlight.Controls["stick_right"] as ControlStick).Click = (reportData.ReportBytes[baseOffset + 5] & 128) == 128;
                         (StateInFlight.Controls["stick_left"] as ControlStick).Click = (reportData.ReportBytes[baseOffset + 5] & 64) == 64;
-                        (StateInFlight.Controls["menu"] as ControlButtonPair).Right.Button0 = (reportData.ReportBytes[baseOffset + 5] & 32) == 32;
-                        (StateInFlight.Controls["menu"] as ControlButtonPair).Left.Button0 = (reportData.ReportBytes[baseOffset + 5] & 16) == 16;
+                        (StateInFlight.Controls["menu"] as ControlButtonPair).Right.Digital = (reportData.ReportBytes[baseOffset + 5] & 32) == 32;
+                        (StateInFlight.Controls["menu"] as ControlButtonPair).Left.Digital = (reportData.ReportBytes[baseOffset + 5] & 16) == 16;
                         //(StateInFlight.Controls["bumpers2"] as ControlButtonPair).Right.Button0 = (reportData.ReportBytes[baseOffset + 5] & 8) == 8;
                         //(StateInFlight.Controls["bumpers2"] as ControlButtonPair).Left.Button0 = (reportData.ReportBytes[baseOffset + 5] & 4) == 4;
-                        (StateInFlight.Controls["bumpers"] as ControlButtonPair).Right.Button0 = (reportData.ReportBytes[baseOffset + 5] & 2) == 2;
-                        (StateInFlight.Controls["bumpers"] as ControlButtonPair).Left.Button0 = (reportData.ReportBytes[baseOffset + 5] & 1) == 1;
+                        (StateInFlight.Controls["bumpers"] as ControlButtonPair).Right.Digital = (reportData.ReportBytes[baseOffset + 5] & 2) == 2;
+                        (StateInFlight.Controls["bumpers"] as ControlButtonPair).Left.Digital = (reportData.ReportBytes[baseOffset + 5] & 1) == 1;
 
                         // counter
                         // bld.Append((reportData.ReportBytes[baseOffset + 6] & 0xfc).ToString().PadLeft(3, '0'));
@@ -1069,27 +1069,27 @@ namespace ExtendInput.Controller
                                     case EConnectionType.Bluetooth:
                                     case EConnectionType.Dongle:
                                         QuirkExtraButtonByte6Bit3RingBuffer = (byte)((QuirkExtraButtonByte6Bit3RingBuffer << 1) | ((reportData.ReportBytes[baseOffset + 6] & 0x04) == 0x04 ? 1 : 0));
-                                        (StateInFlight.Controls["clear"] as ControlButton).Button0 = (QuirkExtraButtonByte6Bit3RingBuffer & QUIRK_EXTRA_BUTTON_BYTE6_BIT3_BT_OBSCURE_RINGBUFFER_CHECK) == QUIRK_EXTRA_BUTTON_BYTE6_BIT3_BT_OBSCURE_RINGBUFFER_CHECK;
+                                        (StateInFlight.Controls["clear"] as ControlButton).Digital = (QuirkExtraButtonByte6Bit3RingBuffer & QUIRK_EXTRA_BUTTON_BYTE6_BIT3_BT_OBSCURE_RINGBUFFER_CHECK) == QUIRK_EXTRA_BUTTON_BYTE6_BIT3_BT_OBSCURE_RINGBUFFER_CHECK;
                                         break;
                                     case EConnectionType.USB:
-                                        (StateInFlight.Controls["clear"] as ControlButton).Button0 = (reportData.ReportBytes[baseOffset + 6] & 0x04) == 0x04;
+                                        (StateInFlight.Controls["clear"] as ControlButton).Digital = (reportData.ReportBytes[baseOffset + 6] & 0x04) == 0x04;
                                         break;
                                 }
                         }
 
-                        (StateInFlight.Controls["home"] as ControlButton).Button0 = (reportData.ReportBytes[baseOffset + 6] & 0x1) == 0x1;
+                        (StateInFlight.Controls["home"] as ControlButton).Digital = (reportData.ReportBytes[baseOffset + 6] & 0x1) == 0x1;
 
                         if (ControllerAttribute.PadIsClickOnly)
                         {
-                            (StateInFlight.Controls["touch_center"] as ControlButton).Button0 = (reportData.ReportBytes[baseOffset + 6] & 0x2) == 0x2;
+                            (StateInFlight.Controls["touch_center"] as ControlButton).Digital = (reportData.ReportBytes[baseOffset + 6] & 0x2) == 0x2;
                         }
                         else
                         {
                             (StateInFlight.Controls["touch_center"] as ControlTouch).Click = (reportData.ReportBytes[baseOffset + 6] & 0x2) == 0x2;
                         }
 
-                        (StateInFlight.Controls["triggers"] as ControlButtonPair).Left.Analog = (float)(reportData.ReportBytes[baseOffset + 7] > 0 ? reportData.ReportBytes[baseOffset + 7] : (reportData.ReportBytes[baseOffset + 5] & 4) == 4 ? 1 : 0) / byte.MaxValue;
-                        (StateInFlight.Controls["triggers"] as ControlButtonPair).Right.Analog = (float)(reportData.ReportBytes[baseOffset + 8] > 0 ? reportData.ReportBytes[baseOffset + 8] : (reportData.ReportBytes[baseOffset + 5] & 8) == 8 ? 1 : 0) / byte.MaxValue;
+                        (StateInFlight.Controls["triggers"] as ControlButtonPair).Left.Analog = (float)(reportData.ReportBytes[baseOffset + 7] > 0 ? reportData.ReportBytes[baseOffset + 7] : (reportData.ReportBytes[baseOffset + 5] & 4) == 4 ? byte.MaxValue : 0) / byte.MaxValue;
+                        (StateInFlight.Controls["triggers"] as ControlButtonPair).Right.Analog = (float)(reportData.ReportBytes[baseOffset + 8] > 0 ? reportData.ReportBytes[baseOffset + 8] : (reportData.ReportBytes[baseOffset + 5] & 8) == 8 ? byte.MaxValue : 0) / byte.MaxValue;
 
                         // GyroTimestamp
                         //bld.Append(BitConverter.ToUInt16(reportData, 1 + baseOffset + 9).ToString().PadLeft(5));
@@ -1277,16 +1277,16 @@ namespace ExtendInput.Controller
                     State.Controls["cluster_left"] = new ControlDPad();
                     State.Controls["cluster_left"] = new ControlDPad();
                     State.Controls["cluster_right"] = new ControlButtonQuad();
-                    State.Controls["bumpers"] = new ControlButtonPair();
+                    State.Controls["bumpers"] = new ControlButtonPair(ButtonProperties.CMB_Bumper);
                     //State.Controls["bumpers2"] = new ControlButtonPair();
-                    State.Controls["triggers"] = new ControlButtonPair(HasStage2: false);
-                    State.Controls["menu"] = new ControlButtonPair();
-                    State.Controls["home"] = new ControlButton();
+                    State.Controls["triggers"] = new ControlButtonPair(ButtonProperties.CMB_Trigger);
+                    State.Controls["menu"] = new ControlButtonPair(ButtonProperties.CMB_Button);
+                    State.Controls["home"] = new ControlButton(ButtonProperties.CMB_Button);
                     State.Controls["stick_left"] = new ControlStick(HasClick: true);
                     State.Controls["stick_right"] = new ControlStick(HasClick: true);
                     if (ControllerAttribute?.PadIsClickOnly ?? false)
                     {
-                        State.Controls["touch_center"] = new ControlButton();
+                        State.Controls["touch_center"] = new ControlButton(ButtonProperties.CMB_Button);
                     }
                     else
                     {
@@ -1423,7 +1423,7 @@ namespace ExtendInput.Controller
             {
                 if (ControllerAttribute.ExtraButton)
                 {
-                    State.Controls["clear"] = new ControlButton();
+                    State.Controls["clear"] = new ControlButton(ButtonProperties.CMB_Button);
                 }
                 else
                 {
@@ -1431,7 +1431,7 @@ namespace ExtendInput.Controller
                 }
                 if (ControllerAttribute.PadIsClickOnly)
                 {
-                    State.Controls["touch_center"] = new ControlButton();
+                    State.Controls["touch_center"] = new ControlButton(ButtonProperties.CMB_Button);
                 }
                 else
                 {

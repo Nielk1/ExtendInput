@@ -652,20 +652,20 @@ namespace ExtendInput.Controller
                                             (StateInFlight.Controls["stick_right"] as ControlStick).X = ControllerMathTools.QuickStickToFloat(RStickX);
                                             (StateInFlight.Controls["stick_right"] as ControlStick).Y = ControllerMathTools.QuickStickToFloat(RStickY);
                                             (StateInFlight.Controls["stick_right"] as ControlStick).Click = buttonR3;
-                                            (StateInFlight.Controls["bumpers"] as ControlButtonPair).Left.Button0 = buttonL1;
-                                            (StateInFlight.Controls["bumpers"] as ControlButtonPair).Right.Button0 = buttonR1;
-                                            (StateInFlight.Controls["menu"] as ControlButtonPair).Left.Button0 = buttonSelect;
-                                            (StateInFlight.Controls["menu"] as ControlButtonPair).Right.Button0 = buttonStart;
+                                            (StateInFlight.Controls["bumpers"] as ControlButtonPair).Left.Digital = buttonL1;
+                                            (StateInFlight.Controls["bumpers"] as ControlButtonPair).Right.Digital = buttonR1;
+                                            (StateInFlight.Controls["menu"] as ControlButtonPair).Left.Digital = buttonSelect;
+                                            (StateInFlight.Controls["menu"] as ControlButtonPair).Right.Digital = buttonStart;
 
-                                            if (ControllerAttribute.HasAnalogTrigger && StateInFlight.Controls["triggers"] is ControlTriggerPair)
+                                            if (ControllerAttribute.HasAnalogTrigger && StateInFlight.Controls["triggers"] is ControlButtonPair)
                                             {
-                                                (StateInFlight.Controls["triggers"] as ControlTriggerPair).Left.Analog = TriggerLeft > 0 ? TriggerLeft / 255f : buttonL2 ? 255 : 0;
-                                                (StateInFlight.Controls["triggers"] as ControlTriggerPair).Right.Analog = TriggerRight > 0 ? TriggerRight / 255f : buttonR2 ? 255 : 0;
+                                                (StateInFlight.Controls["triggers"] as ControlButtonPair).Left.Analog = TriggerLeft > 0 ? TriggerLeft / 255f : buttonL2 ? 255 : 0;
+                                                (StateInFlight.Controls["triggers"] as ControlButtonPair).Right.Analog = TriggerRight > 0 ? TriggerRight / 255f : buttonR2 ? 255 : 0;
                                             }
                                             else if (ControllerSubType != FlyDigiSubType.None && ControllerSubType != FlyDigiSubType.Unknown && StateInFlight.Controls["triggers"] is ControlButtonPair)
                                             {
-                                                (StateInFlight.Controls["triggers"] as ControlButtonPair).Left.Button0 = buttonL2;
-                                                (StateInFlight.Controls["triggers"] as ControlButtonPair).Right.Button0 = buttonR2;
+                                                (StateInFlight.Controls["triggers"] as ControlButtonPair).Left.Digital = buttonL2;
+                                                (StateInFlight.Controls["triggers"] as ControlButtonPair).Right.Digital = buttonR2;
                                             }
                                             //if (ControllerAttribute.HasLogo)
                                             //{
@@ -691,32 +691,32 @@ namespace ExtendInput.Controller
                                             }
                                             if (ControllerAttribute.HasCZBottom)
                                             {
-                                                (StateInFlight.Controls["c"] as ControlButton).Button0 = buttonC;
-                                                (StateInFlight.Controls["z"] as ControlButton).Button0 = buttonZ;
+                                                (StateInFlight.Controls["c"] as ControlButton).Digital = buttonC;
+                                                (StateInFlight.Controls["z"] as ControlButton).Digital = buttonZ;
                                             }
                                             if (ControllerAttribute.HasCZTop)
                                             {
-                                                (StateInFlight.Controls["c_top"] as ControlButton).Button0 = buttonC;
-                                                (StateInFlight.Controls["z_top"] as ControlButton).Button0 = buttonZ;
+                                                (StateInFlight.Controls["c_top"] as ControlButton).Digital = buttonC;
+                                                (StateInFlight.Controls["z_top"] as ControlButton).Digital = buttonZ;
                                             }
                                             if (ControllerAttribute.HasMButtons)
                                             {
-                                                (StateInFlight.Controls["m1"] as ControlButton).Button0 = buttonM1 || AirMouseClick;
-                                                (StateInFlight.Controls["m2"] as ControlButton).Button0 = buttonM2;
-                                                (StateInFlight.Controls["m3"] as ControlButton).Button0 = buttonM3;
-                                                (StateInFlight.Controls["m4"] as ControlButton).Button0 = buttonM4;
+                                                (StateInFlight.Controls["m1"] as ControlButton).Digital = buttonM1 || AirMouseClick;
+                                                (StateInFlight.Controls["m2"] as ControlButton).Digital = buttonM2;
+                                                (StateInFlight.Controls["m3"] as ControlButton).Digital = buttonM3;
+                                                (StateInFlight.Controls["m4"] as ControlButton).Digital = buttonM4;
                                             }
                                             if (ControllerAttribute.HasMRockers)
                                             {
-                                                (StateInFlight.Controls["m1m3"] as ControlButtonPair).Left.Button0 = buttonM3;
-                                                (StateInFlight.Controls["m1m3"] as ControlButtonPair).Right.Button0 = buttonM1 || AirMouseClick;
-                                                (StateInFlight.Controls["m2m4"] as ControlButtonPair).Left.Button0 = buttonM2;
-                                                (StateInFlight.Controls["m2m4"] as ControlButtonPair).Right.Button0 = buttonM4;
+                                                (StateInFlight.Controls["m1m3"] as ControlButtonPair).Left.Digital = buttonM3;
+                                                (StateInFlight.Controls["m1m3"] as ControlButtonPair).Right.Digital = buttonM1 || AirMouseClick;
+                                                (StateInFlight.Controls["m2m4"] as ControlButtonPair).Left.Digital = buttonM2;
+                                                (StateInFlight.Controls["m2m4"] as ControlButtonPair).Right.Digital = buttonM4;
                                             }
                                             if (ControllerAttribute.HasBumper2)
                                             {
-                                                (StateInFlight.Controls["shoulder_a"] as ControlButtonPair).Left.Button0 = buttonM6;
-                                                (StateInFlight.Controls["shoulder_a"] as ControlButtonPair).Right.Button0 = buttonM5;
+                                                (StateInFlight.Controls["shoulder_a"] as ControlButtonPair).Left.Digital = buttonM6;
+                                                (StateInFlight.Controls["shoulder_a"] as ControlButtonPair).Right.Digital = buttonM5;
                                             }
                                             if (ControllerAttribute.HasWheel)
                                             {
@@ -981,8 +981,8 @@ namespace ExtendInput.Controller
                     State.Controls["cluster_left"] = new ControlDPad();
                     State.Controls["stick_left"] = new ControlStick(HasClick: true);
                     State.Controls["stick_right"] = new ControlStick(HasClick: true);
-                    State.Controls["bumpers"] = new ControlButtonPair();
-                    State.Controls["menu"] = new ControlButtonPair();
+                    State.Controls["bumpers"] = new ControlButtonPair(ButtonProperties.CMB_Bumper);
+                    State.Controls["menu"] = new ControlButtonPair(ButtonProperties.CMB_Button);
                     ControlsCreated = true;
                 }
                 finally
@@ -1360,7 +1360,7 @@ namespace ExtendInput.Controller
                     State.Controls["menu"] = new ControlButtonPair();
                     //State.Controls["home"] = new ControlButton();
                     //State.Controls["cluster_right"] = new ControlButtonQuad();
-                    //State.Controls["triggers"] = new ControlTriggerPair(HasStage2: false);
+                    //State.Controls["triggers"] = new ControlButtonPair(HasStage2: false);
                     //if (ControllerAttribute?.PadIsClickOnly ?? false)
                     //{
                     //    State.Controls["touch_center"] = new ControlButton();
@@ -1447,13 +1447,13 @@ namespace ExtendInput.Controller
                 State.Controls["cluster_left"] = new ControlDPad();
                 State.Controls["stick_left"] = new ControlStick(HasClick: true);
                 State.Controls["stick_right"] = new ControlStick(HasClick: true);
-                State.Controls["bumpers"] = new ControlButtonPair();
-                State.Controls["menu"] = new ControlButtonPair();
+                State.Controls["bumpers"] = new ControlButtonPair(ButtonProperties.CMB_Bumper);
+                State.Controls["menu"] = new ControlButtonPair(ButtonProperties.CMB_Button);
 
                 //State.Controls["cluster_left"] = new ControlDPad();
                 //State.Controls["cluster_right"] = new ControlButtonQuad();
                 //State.Controls["bumpers"] = new ControlButtonPair();
-                ////State.Controls["triggers"] = new ControlTriggerPair(HasStage2: false);
+                ////State.Controls["triggers"] = new ControlButtonPair(HasStage2: false);
                 //State.Controls["menu"] = new ControlButtonPair();
                 //State.Controls["home"] = new ControlButton();
                 //State.Controls["stick_left"] = new ControlStick(HasClick: true);
@@ -1479,12 +1479,12 @@ namespace ExtendInput.Controller
             {
                 if (ControllerAttribute.HasAnalogTrigger)
                 {
-                    State.Controls["triggers"] = new ControlTriggerPair(HasStage2: false);
+                    State.Controls["triggers"] = new ControlButtonPair(ButtonProperties.CMB_Trigger);
                     Console.WriteLine("Trigger set to Analog");
                 }
                 else
                 {
-                    State.Controls["triggers"] = new ControlButtonPair();
+                    State.Controls["triggers"] = new ControlButtonPair(ButtonProperties.CMB_Bumper);
                     Console.WriteLine("Trigger set to Digital");
                 }
                 Console.ForegroundColor = ConsoleColor.Cyan;
@@ -1493,7 +1493,7 @@ namespace ExtendInput.Controller
 
                 if (ControllerAttribute.HasLogo)
                 {
-                    State.Controls["logo"] = new ControlButton();
+                    State.Controls["logo"] = new ControlButton(ButtonProperties.CMB_Button);
                 }
                 else
                 {
@@ -1536,8 +1536,8 @@ namespace ExtendInput.Controller
 
                 if (ControllerAttribute.HasCZBottom)
                 {
-                    State.Controls["c"] = new ControlButton();
-                    State.Controls["z"] = new ControlButton();
+                    State.Controls["c"] = new ControlButton(ButtonProperties.CMB_Button);
+                    State.Controls["z"] = new ControlButton(ButtonProperties.CMB_Button);
                 }
                 else
                 {
@@ -1547,8 +1547,8 @@ namespace ExtendInput.Controller
 
                 if (ControllerAttribute.HasCZTop)
                 {
-                    State.Controls["c_top"] = new ControlButton();
-                    State.Controls["z_top"] = new ControlButton();
+                    State.Controls["c_top"] = new ControlButton(ButtonProperties.CMB_Button);
+                    State.Controls["z_top"] = new ControlButton(ButtonProperties.CMB_Button);
                 }
                 else
                 {
@@ -1558,10 +1558,10 @@ namespace ExtendInput.Controller
 
                 if (ControllerAttribute.HasMButtons)
                 {
-                    State.Controls["m1"] = new ControlButton();
-                    State.Controls["m2"] = new ControlButton();
-                    State.Controls["m3"] = new ControlButton();
-                    State.Controls["m4"] = new ControlButton();
+                    State.Controls["m1"] = new ControlButton(ButtonProperties.CMB_Button);
+                    State.Controls["m2"] = new ControlButton(ButtonProperties.CMB_Button);
+                    State.Controls["m3"] = new ControlButton(ButtonProperties.CMB_Button);
+                    State.Controls["m4"] = new ControlButton(ButtonProperties.CMB_Button);
                 }
                 else
                 {
@@ -1573,8 +1573,8 @@ namespace ExtendInput.Controller
 
                 if (ControllerAttribute.HasMRockers)
                 {
-                    State.Controls["m1m3"] = new ControlButtonPair(); // rocker
-                    State.Controls["m2m4"] = new ControlButtonPair(); // rocker
+                    State.Controls["m1m3"] = new ControlButtonPair(ButtonProperties.CMB_Button); // rocker
+                    State.Controls["m2m4"] = new ControlButtonPair(ButtonProperties.CMB_Button); // rocker
                 }
                 else
                 {
@@ -1584,7 +1584,7 @@ namespace ExtendInput.Controller
 
                 if (ControllerAttribute.HasBumper2)
                 {
-                    State.Controls["shoulder_a"] = new ControlButtonPair();
+                    State.Controls["shoulder_a"] = new ControlButtonPair(ButtonProperties.CMB_Bumper);
                 }
                 else
                 {

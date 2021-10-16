@@ -71,10 +71,10 @@ namespace ExtendInput.Controller
 
             State.Controls["cluster_left"] = new ControlDPad();
             State.Controls["cluster_right"] = new ControlButtonQuad();
-            State.Controls["bumpers"] = new ControlButtonPair();
-            State.Controls["triggers"] = new ControlTriggerPair(HasStage2: false);
-            State.Controls["menu"] = new ControlButtonPair();
-            State.Controls["home"] = new ControlButton();
+            State.Controls["bumpers"] = new ControlButtonPair(ButtonProperties.CMB_Bumper);
+            State.Controls["triggers"] = new ControlButtonPair(ButtonProperties.CMB_Trigger);
+            State.Controls["menu"] = new ControlButtonPair(ButtonProperties.CMB_Button);
+            State.Controls["home"] = new ControlButton(ButtonProperties.CMB_Button);
             State.Controls["stick_left"] = new ControlStick(HasClick: true);
             State.Controls["stick_right"] = new ControlStick(HasClick: true);
 
@@ -177,14 +177,14 @@ namespace ExtendInput.Controller
 
                     (StateInFlight.Controls["stick_right"] as ControlStick).Click = (reportData.wButtons & 0x0080) == 0x0080;
                     (StateInFlight.Controls["stick_left" ] as ControlStick).Click = (reportData.wButtons & 0x0040) == 0x0040;
-                    (StateInFlight.Controls["menu"       ] as ControlButtonPair).Right.Button0 = (reportData.wButtons & 0x0010) == 0x0010;
-                    (StateInFlight.Controls["menu"       ] as ControlButtonPair).Left.Button0  = (reportData.wButtons & 0x0020) == 0x0020;
-                    (StateInFlight.Controls["bumpers"    ] as ControlButtonPair).Right.Button0 = (reportData.wButtons & 0x0200) == 0x0200;
-                    (StateInFlight.Controls["bumpers"    ] as ControlButtonPair).Left.Button0  = (reportData.wButtons & 0x0100) == 0x0100;
+                    (StateInFlight.Controls["menu"       ] as ControlButtonPair).Right.Digital = (reportData.wButtons & 0x0010) == 0x0010;
+                    (StateInFlight.Controls["menu"       ] as ControlButtonPair).Left.Digital  = (reportData.wButtons & 0x0020) == 0x0020;
+                    (StateInFlight.Controls["bumpers"    ] as ControlButtonPair).Right.Digital = (reportData.wButtons & 0x0200) == 0x0200;
+                    (StateInFlight.Controls["bumpers"    ] as ControlButtonPair).Left.Digital  = (reportData.wButtons & 0x0100) == 0x0100;
 
                     //(State.Controls["home"] as ControlButton).Button0 = (buttons & 0x1) == 0x1;
-                    (StateInFlight.Controls["triggers"] as ControlTriggerPair).Left.Analog  = (float)reportData.bLeftTrigger  / byte.MaxValue;
-                    (StateInFlight.Controls["triggers"] as ControlTriggerPair).Right.Analog = (float)reportData.bRightTrigger / byte.MaxValue;
+                    (StateInFlight.Controls["triggers"] as ControlButtonPair).Left.Analog  = (float)reportData.bLeftTrigger  / byte.MaxValue;
+                    (StateInFlight.Controls["triggers"] as ControlButtonPair).Right.Analog = (float)reportData.bRightTrigger / byte.MaxValue;
 
                     // bring OldState in line with new State
                     State = StateInFlight;

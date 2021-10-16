@@ -124,13 +124,15 @@ namespace ExtendInputControllerTester
             try
             {
                 if (activeController == null) return;
+                JsonSerializer serializer = new JsonSerializer();
+                serializer.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
                 ControllerState State = activeController.GetState();
                 JObject controls = new JObject();
                 foreach (string key in State.Controls.Keys)
                 {
                     JObject obj = new JObject();
                     obj["Type"] = State.Controls[key]?.GetType()?.ToString();
-                    obj["Data"] = State.Controls[key] != null ? JObject.FromObject(State.Controls[key]) : null;
+                    obj["Data"] = State.Controls[key] != null ? JObject.FromObject(State.Controls[key], serializer) : null;
                     controls[key] = obj;
                 }
                 JObject output = new JObject()

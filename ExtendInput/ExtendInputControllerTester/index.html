@@ -108,7 +108,7 @@
                 $state_data.empty();
                 //$('#controller_state').remove();
                 if (ControllerActive) {
-                    $.post("/activate_controller", null, function (data) {});
+                    $.post("/activate_controller", null, function (data) { });
 
                     if (ControllerPollAjax != null) ControllerPollAjax.abort();
                     ControllerActive = false;
@@ -230,24 +230,6 @@
                                         }
                                     }
                                     break;
-                                case 'ExtendInput.Controls.ControlButtonPair':
-                                    {
-                                        var renderElement = wrapper.find('.control-value');
-                                        renderElement.addClass('text-center');
-                                        if (NewSubtype || renderElement.children('svg').length == 0) {
-                                            renderElement.empty().append(
-                                                '<svg id="control_render_' + control_id + '" width="182" height="62" xmlns="http://www.w3.org/2000/svg">' +
-                                                '<g>' +
-                                                '<ellipse class="btn_r" ry="30" rx="30" cy="31" cx="151" stroke="#000" fill="#fff" />' +
-                                                '<ellipse class="btn_l" ry="30" rx="30" cy="31" cx="031" stroke="#000" fill="#fff" />' +
-                                                '</g>' +
-                                                '</svg>');
-                                        }
-                                        var ctrl = $('#control_render_' + control_id);
-                                        if (control.Data.Left.Button0) ctrl.find('.btn_l').addClass('active'); else ctrl.find('.btn_l').removeClass('active');
-                                        if (control.Data.Right.Button0) ctrl.find('.btn_r').addClass('active'); else ctrl.find('.btn_r').removeClass('active');
-                                    }
-                                    break;
                                 case 'ExtendInput.Controls.ControlButton':
                                     {
                                         var renderElement = wrapper.find('.control-value');
@@ -264,6 +246,7 @@
                                         if (control.Data.Button0) ctrl.find('.btn_x').addClass('active'); else ctrl.find('.btn_x').removeClass('active');
                                     }
                                     break;
+                                case 'ExtendInput.Controls.ControlButtonPair':
                                 case 'ExtendInput.Controls.ControlTriggerPair':
                                     {
                                         var renderElement = wrapper.find('.control-value');
@@ -287,8 +270,16 @@
                                                 '</svg>');
                                         }
                                         var ctrl = $('#control_render_' + control_id);
-                                        ctrl.find('.btn_l_data').attr('rx', control.Data.Left.Analog * 25).attr('ry', control.Data.Left.Analog * 25);
-                                        ctrl.find('.btn_r_data').attr('rx', control.Data.Right.Analog * 25).attr('ry', control.Data.Right.Analog * 25);
+                                        if (control.Data.Left.Button0) {
+                                            ctrl.find('.btn_l_data').attr('rx', 25).attr('ry', 25);
+                                        } else {
+                                            ctrl.find('.btn_l_data').attr('rx', control.Data.Left.Analog * 25).attr('ry', control.Data.Left.Analog * 25);
+                                        }
+                                        if (control.Data.Right.Button0) {
+                                            ctrl.find('.btn_r_data').attr('rx', 25).attr('ry', 25);
+                                        } else {
+                                            ctrl.find('.btn_r_data').attr('rx', control.Data.Right.Analog * 25).attr('ry', control.Data.Right.Analog * 25);
+                                        }
                                         if (control.Data.Left.HasStage2) if (control.Data.Left.Stage2) ctrl.find('.btn_l_click').addClass('active-o'); else ctrl.find('.btn_l_click').removeClass('active-o', 'disable-o'); else ctrl.find('.btn_l_click').addClass('disable-o');
                                         if (control.Data.Right.HasStage2) if (control.Data.Right.Stage2) ctrl.find('.btn_r_click').addClass('active-o'); else ctrl.find('.btn_r_click').removeClass('active-o', 'disable-o'); else ctrl.find('.btn_r_click').addClass('disable-o');
                                     }
@@ -505,7 +496,7 @@
                                     alternateBody.hide();
                                 }
                             }
-                            
+
                             cardWrapper.append('<a href="#" class="btn btn-primary btn-lg btn-block activate_controller" role="button" data-id="' + controller_id + '"></a>');
                             wrapper.append(cardWrapper);
                         } else {
