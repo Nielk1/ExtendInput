@@ -267,6 +267,9 @@ namespace ExtendInput.Controller
         //private ReaderWriterLockSlim StateMutationLock = new ReaderWriterLockSlim();
         private SemaphoreSlim StateMutationLock = new SemaphoreSlim(1);
 
+        bool ResetControllerInfoNeeded = false;
+
+
         public bool HasMotion => true;
 
         public bool IsReady => true;
@@ -792,7 +795,7 @@ namespace ExtendInput.Controller
                                              || OldFixedValueFromByte28 != FixedValueFromByte28)
                                                 ////|| OldVersionFromByte30 != VersionFromByte30
                                                 //|| OldFixedValueFromByte31 != FixedValueFromByte31)
-                                                ResetControllerInfo();
+                                                ResetControllerInfoNeeded = true; // ResetControllerInfo();
                                         }
                                         finally
                                         {
@@ -817,7 +820,7 @@ namespace ExtendInput.Controller
                                                     FirstDeviceInfoRequestTime = null;
                                                     NoMetaForThisController = true;
                                                     PollingState = EPollingState.SlowPoll;
-                                                    ResetControllerInfo();
+                                                    ResetControllerInfoNeeded = true; // ResetControllerInfo();
                                                 }
                                             }
                                             // USB mode we expect data, so don't stop if we get a normal report, we should keep our RunUntilReady until we see what we want
@@ -845,7 +848,7 @@ namespace ExtendInput.Controller
                                         //}
                                         //
                                         //if (DongleConnectionStatusChanged)
-                                        //    ResetControllerInfo();
+                                        //    QueueResetControllerInfo = true; // ResetControllerInfo();
 
                                         //Console.ForegroundColor = ConsoleColor.Green;
                                         //Console.WriteLine($"{reportData.ReportId:X2} {BitConverter.ToString(reportData.ReportBytes)}");
@@ -891,7 +894,7 @@ namespace ExtendInput.Controller
                                         byte? OldDetectedDeviceId = DetectedDeviceId;
                                         DetectedDeviceId = reportData.ReportBytes[2];
                                         if (OldDetectedDeviceId != DetectedDeviceId)
-                                            ResetControllerInfo();
+                                            ResetControllerInfoNeeded = true; // ResetControllerInfo();
                                     }
                                     finally
                                     {
@@ -937,6 +940,25 @@ namespace ExtendInput.Controller
             else
             {
                 Console.WriteLine($"{reportData.ReportId:X2} {BitConverter.ToString(reportData.ReportBytes)}");
+            }
+
+            if (ResetControllerInfoNeeded)
+            {
+                if (0 == Interlocked.Exchange(ref reportUsageLock, 1))
+                {
+                    try
+                    {
+                        if(ResetControllerInfoNeeded)
+                        {
+                            ResetControllerInfo();
+                            ResetControllerInfoNeeded = false;
+                        }
+                    }
+                    finally
+                    {
+                        Interlocked.Exchange(ref reportUsageLock, 0);
+                    }
+                }
             }
 
             // TODO: change how this works because we don't want to lock, we need to actually change the polling rate in the device
