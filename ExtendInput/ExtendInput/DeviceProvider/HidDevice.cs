@@ -195,6 +195,16 @@ namespace ExtendInput.DeviceProvider
                                 }).Start();
 
                             }
+                            if (PollingRate > 0)
+                            {
+                                int SleepTime = 0;
+                                while (SleepTime < (PollingRate / 1000))
+                                {
+                                    Thread.Sleep(1000);
+                                    SleepTime++;
+                                }
+                                Thread.Sleep(PollingRate % 1000);
+                            }
                         }
                         catch (System.TimeoutException)
                         { }
@@ -218,6 +228,8 @@ namespace ExtendInput.DeviceProvider
         }
 
         public string UniqueKey => $"HidDevice {DevPKey.PnpDevicePropertyAPI.devicePathToInstanceId(this.DevicePath)}";
+
+        public int PollingRate { get; internal set; }
 
         bool IEquatable<IDevice>.Equals(IDevice other)
         {

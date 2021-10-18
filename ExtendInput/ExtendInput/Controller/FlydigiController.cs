@@ -268,6 +268,7 @@ namespace ExtendInput.Controller
         private SemaphoreSlim StateMutationLock = new SemaphoreSlim(1);
 
         bool ResetControllerInfoNeeded = false;
+        object ResetControllerInfoNeededLock = new object();
 
 
         public bool HasMotion => true;
@@ -416,6 +417,7 @@ namespace ExtendInput.Controller
             _device = device;
 
             PollingState = EPollingState.Inactive;
+            Log($"Polling state set to Inactive", ConsoleColor.Yellow);
 
             _device.DeviceReport += OnReport;
 
@@ -436,7 +438,7 @@ namespace ExtendInput.Controller
                         {
                             if (ControllerSubType != FlyDigiSubType.None && LastData.AddSeconds(PollingState == EPollingState.SlowPoll ? (_SLOW_POLL_MS + 100) / 1000f : 0.2) < DateTime.UtcNow)
                             {
-                                Console.WriteLine("No report within timeout");
+                                Log("No report within timeout");
                                 ChangeControllerSubType(FlyDigiSubType.None);
                                 /*
                                 ControllerSubType = FlyDigiSubType.None;
@@ -475,11 +477,13 @@ namespace ExtendInput.Controller
                  || (_device.ProductId == PRODUCT_FLYDIGI_USB && _device.RevisionNumber == REVISION_FLYDIGI_USB)) // controller that supports USB
                 {
                     this.PollingState = EPollingState.RunUntilReady; // we need to read until we get device info
+                    Log($"Polling state set to RunUntilReady", ConsoleColor.Yellow);
                     _device.StartReading();
                     CheckControllerStatusThread = new Thread(() =>
                     {
                         for (; ; )
                         {
+                            Log($"getDeviceInfoInAndroid Timegap {RequestAndroidInfoTimeGap}");
                             getDeviceInfoInAndroid();
                             for (int i = 0; i < RequestAndroidInfoTimeGap; i++)
                             {
@@ -500,11 +504,13 @@ namespace ExtendInput.Controller
                 else if (_device.ProductId == PRODUCT_FLYDIGI_DONGLE_1 && _device.RevisionNumber == REVISION_FLYDIGI_DONGLE_1) // 1 dot dongle
                 {
                     this.PollingState = EPollingState.SlowPoll;
+                    Log($"Polling state set to SlowPoll", ConsoleColor.Yellow);
                     _device.StartReading();
                 }
                 else
                 {
                     this.PollingState = EPollingState.RunOnce; // we are either a controller
+                    Log($"Polling state set to RunOnce", ConsoleColor.Yellow);
                     _device.StartReading();
                 }
             }
@@ -521,6 +527,7 @@ namespace ExtendInput.Controller
                         _device.StopReading();
 
                         PollingState = EPollingState.Inactive;
+                        Log($"Polling state set to Inactive", ConsoleColor.Yellow);
                         _device.CloseDevice();
                     }
                     break;
@@ -529,16 +536,17 @@ namespace ExtendInput.Controller
 
         public void Initalize()
         {
-            Console.WriteLine("Initalize");
+            Log("Initalize");
             if (PollingState == EPollingState.Active) return;
 
             PollingState = EPollingState.Active;
+            Log($"Polling state set to Active", ConsoleColor.Yellow);
             _device.StartReading();
         }
 
         public void DeInitalize()
         {
-            Console.WriteLine("DeInitalize");
+            Log("DeInitalize");
             if (PollingState == EPollingState.Inactive) return;
             if (PollingState == EPollingState.SlowPoll) return;
             //if (PollingState == EPollingState.RunOnce) return;
@@ -548,12 +556,14 @@ namespace ExtendInput.Controller
             if (ConnectionType == EConnectionType.Dongle)
             {
                 PollingState = EPollingState.SlowPoll;
+                Log($"Polling state set to SlowPoll", ConsoleColor.Yellow);
             }
             else
             {
                 _device.StopReading();
 
                 PollingState = EPollingState.Inactive;
+                Log($"Polling state set to Inactive", ConsoleColor.Yellow);
                 _device.CloseDevice();
             }
         }
@@ -572,6 +582,13 @@ namespace ExtendInput.Controller
             if (ControllerSubType == FlyDigiSubType.None)
             {
                 ChangeControllerSubType(FlyDigiSubType.Unknown);
+
+                if (PollingState != EPollingState.Active)
+                {
+                    PollingState = EPollingState.RunUntilReady;
+                    Log($"Polling state set to RunUntilReady", ConsoleColor.Yellow);
+                }
+
                 //ControllerSubType = FlyDigiSubType.Unknown;
                 //ControllerAttribute = ControllerSubType.GetAttribute<ControllerSubTypeAttribute>();
                 FirstDeviceInfoRequestTime = DateTime.UtcNow;
@@ -602,9 +619,7 @@ namespace ExtendInput.Controller
                                         StateMutationLock.Wait();
                                         try
                                         {
-                                            Console.ForegroundColor = ConsoleColor.Cyan;
-                                            Console.WriteLine($"Clone State {State.Controls["triggers"]?.GetType()}");
-                                            Console.ResetColor();
+//                                            Log($"Clone State {State.Controls["triggers"]?.GetType()}", ConsoleColor.Cyan);
                                             StateInFlight = (ControllerState)State.Clone();
                                             ControllerSubTypeAttribute ControllerAttributeInFlight = ControllerAttribute;
 
@@ -765,7 +780,7 @@ namespace ExtendInput.Controller
 
                                             //short yaw = ProcSignedByteNybble((short)(((report.Data[4] & 0x0f) << 8) + report.Data[3]));
                                             //short pitch = ProcSignedByteNybble((short)(((report.Data[4] & 0xf0) >> 4) + (report.Data[5] << 4)));
-                                        
+
 
                                             // bring OldState in line with new State
                                             OldState = State;
@@ -795,7 +810,7 @@ namespace ExtendInput.Controller
                                              || OldFixedValueFromByte28 != FixedValueFromByte28)
                                                 ////|| OldVersionFromByte30 != VersionFromByte30
                                                 //|| OldFixedValueFromByte31 != FixedValueFromByte31)
-                                                ResetControllerInfoNeeded = true; // ResetControllerInfo();
+                                                lock (ResetControllerInfoNeededLock) ResetControllerInfoNeeded = true; // ResetControllerInfo();
                                         }
                                         finally
                                         {
@@ -814,13 +829,15 @@ namespace ExtendInput.Controller
                                                     Console.WriteLine("Dongle is a type 1 that never gives data, so we have what we're going to get");
                                                     PollingState = EPollingState.SlowPoll;
                                                 }
-                                                else*/ if (FirstDeviceInfoRequestTime.HasValue && (FirstDeviceInfoRequestTime.Value.AddSeconds(5) < DateTime.UtcNow)) // check if we are a dongle and asked for this data a while ago, but still don't have it
+                                                else*/
+                                                if (FirstDeviceInfoRequestTime.HasValue && (FirstDeviceInfoRequestTime.Value.AddSeconds(5) < DateTime.UtcNow)) // check if we are a dongle and asked for this data a while ago, but still don't have it
                                                 {
-                                                    Console.WriteLine("Did not get dongle data within timeout");
+                                                    Log("Did not get dongle data within timeout");
                                                     FirstDeviceInfoRequestTime = null;
                                                     NoMetaForThisController = true;
                                                     PollingState = EPollingState.SlowPoll;
-                                                    ResetControllerInfoNeeded = true; // ResetControllerInfo();
+                                                    Log($"Polling state set to SlowPoll", ConsoleColor.Yellow);
+                                                    lock (ResetControllerInfoNeededLock) ResetControllerInfoNeeded = true; // ResetControllerInfo();
                                                 }
                                             }
                                             // USB mode we expect data, so don't stop if we get a normal report, we should keep our RunUntilReady until we see what we want
@@ -832,10 +849,7 @@ namespace ExtendInput.Controller
                                             }*/
                                         }
 
-
-                                        Console.ForegroundColor = ConsoleColor.Green;
-                                        Console.WriteLine($"{reportData.ReportId:X2} {BitConverter.ToString(reportData.ReportBytes)}");
-                                        Console.ResetColor();
+//                                        Log($"{reportData.ReportId:X2} {BitConverter.ToString(reportData.ReportBytes)}", ConsoleColor.Green);
                                     }
                                     //finally
                                     {
@@ -885,8 +899,8 @@ namespace ExtendInput.Controller
                                     }
                                     // reportData.ReportBytes[10] of 0 means unknown
                                     int batteryPercent = (int)((float)(BatteryReading - BatteryRangeMin) / (float)(BatteryRangeMax - BatteryRangeMin) * 100f);
-                                    Console.WriteLine("Controller firmware version: V" + FirmwareMajor + "." + FirmwareMinor + "." + FirmwareBuild + "." + FirmwareRevision);
-                                    Console.WriteLine("Controller Power: " + batteryPercent);
+                                    //Log("Controller firmware version: V" + FirmwareMajor + "." + FirmwareMinor + "." + FirmwareBuild + "." + FirmwareRevision);
+                                    //Log("Controller Power: " + batteryPercent);
 
                                     MetadataMutationLock.Wait();
                                     try
@@ -894,7 +908,7 @@ namespace ExtendInput.Controller
                                         byte? OldDetectedDeviceId = DetectedDeviceId;
                                         DetectedDeviceId = reportData.ReportBytes[2];
                                         if (OldDetectedDeviceId != DetectedDeviceId)
-                                            ResetControllerInfoNeeded = true; // ResetControllerInfo();
+                                            lock (ResetControllerInfoNeededLock) ResetControllerInfoNeeded = true; // ResetControllerInfo();
                                     }
                                     finally
                                     {
@@ -906,64 +920,59 @@ namespace ExtendInput.Controller
                                         if (ConnectionType == EConnectionType.Dongle)
                                         {
                                             PollingState = EPollingState.SlowPoll;
+                                            Log($"Polling state set to SlowPoll", ConsoleColor.Yellow);
                                         }
                                         else
                                         {
                                             RequestAndroidInfoTimeGap = 60; // we are a wired device that can't change, slow to lowest poll rate as we just want to read the battery now
                                             _device.StopReading();
                                             PollingState = EPollingState.Inactive;
+                                            Log($"Polling state set to Inactive", ConsoleColor.Yellow);
                                             _device.CloseDevice();
                                         }
                                     }
                                     IgnoreSlowPoll = true; // don't slow-poll right after this request, but on the one after
 
-                                    Console.ForegroundColor = ConsoleColor.Blue;
-                                    Console.WriteLine($"{reportData.ReportId:X2} {BitConverter.ToString(reportData.ReportBytes)}");
-                                    Console.ResetColor();
+                                    Log($"{reportData.ReportId:X2} {BitConverter.ToString(reportData.ReportBytes)}", ConsoleColor.Blue);
                                 }
                                 else
                                 {
-                                    Console.WriteLine($"{reportData.ReportId:X2} {BitConverter.ToString(reportData.ReportBytes)}");
+                                    Log($"{reportData.ReportId:X2} {BitConverter.ToString(reportData.ReportBytes)}");
                                 }
                             }
                             else
                             {
-                                Console.WriteLine($"{reportData.ReportId:X2} {BitConverter.ToString(reportData.ReportBytes)}");
+                                Log($"{reportData.ReportId:X2} {BitConverter.ToString(reportData.ReportBytes)}");
                             }
                         }
                         break;
                     default:
-                        Console.WriteLine($"{reportData.ReportId:X2} {BitConverter.ToString(reportData.ReportBytes)}");
+                        Log($"{reportData.ReportId:X2} {BitConverter.ToString(reportData.ReportBytes)}");
                         break;
                 }
             }
             else
             {
-                Console.WriteLine($"{reportData.ReportId:X2} {BitConverter.ToString(reportData.ReportBytes)}");
+                Log($"{reportData.ReportId:X2} {BitConverter.ToString(reportData.ReportBytes)}");
             }
 
-            if (ResetControllerInfoNeeded)
+            lock (ResetControllerInfoNeededLock)
             {
-                if (0 == Interlocked.Exchange(ref reportUsageLock, 1))
+                if (ResetControllerInfoNeeded)
                 {
-                    try
-                    {
-                        if(ResetControllerInfoNeeded)
-                        {
-                            ResetControllerInfo();
-                            ResetControllerInfoNeeded = false;
-                        }
-                    }
-                    finally
-                    {
-                        Interlocked.Exchange(ref reportUsageLock, 0);
-                    }
+                    ResetControllerInfo();
+                    ResetControllerInfoNeeded = false;
                 }
             }
 
-            // TODO: change how this works because we don't want to lock, we need to actually change the polling rate in the device
             if (!IgnoreSlowPoll && PollingState == EPollingState.SlowPoll)
-                Thread.Sleep(_SLOW_POLL_MS); // if we're a dongle and we're not connected we might only be partially initalized, so slow roll our read
+            {
+                _device.PollingRate = _SLOW_POLL_MS; // if we're a dongle and we're not connected we might only be partially initalized, so slow roll our read
+            }
+            else
+            {
+                _device.PollingRate = 0;
+            }
 
             //Console.ForegroundColor = ConsoleColor.DarkGray;
             //Console.WriteLine($"{reportData.ReportId:X2} {BitConverter.ToString(reportData.ReportBytes)}");
@@ -972,10 +981,13 @@ namespace ExtendInput.Controller
 
         private void getDeviceInfoInAndroid()
         {
-            Console.WriteLine("getDeviceInfoInAndroid");
+            Log("getDeviceInfoInAndroid");
 
-            if (!NoMetaForThisController && ConnectionType == EConnectionType.Dongle && PollingState == EPollingState.SlowPoll)
+            /*if (!NoMetaForThisController && ConnectionType == EConnectionType.Dongle && PollingState == EPollingState.SlowPoll)
+            {
                 PollingState = EPollingState.RunUntilReady;
+                Log($"Polling state set to RunUntilReady");
+            }*/
 
             byte[] array = new byte[12];
             array[0] = 5;
@@ -988,77 +1000,18 @@ namespace ExtendInput.Controller
 
         private void ResetControllerInfo()
         {
-            Console.WriteLine("ResetControllerInfo Start");
-
-            ControllerSubType = GetControllerInitialTypeCode((UInt16)_device.VendorId, (UInt16)_device.ProductId, (UInt16)_device.RevisionNumber);
-            ControllerAttribute = ControllerSubType.GetAttribute<ControllerSubTypeAttribute>();
-
-            if (!ControlsCreated)
-            {
-                StateMutationLock.Wait();
-                try
-                {
-                    // universal fixed controls that all Flydigi controllers have, these won't change
-                    State.Controls["cluster_left"] = new ControlDPad();
-                    State.Controls["stick_left"] = new ControlStick(HasClick: true);
-                    State.Controls["stick_right"] = new ControlStick(HasClick: true);
-                    State.Controls["bumpers"] = new ControlButtonPair(ButtonProperties.CMB_Bumper);
-                    State.Controls["menu"] = new ControlButtonPair(ButtonProperties.CMB_Button);
-                    ControlsCreated = true;
-                }
-                finally
-                {
-                    StateMutationLock.Release();
-                }
-            }
-            ControllerMetadataUpdate?.Invoke(this);
-
             lock (UpdateLocalDataLock)
             {
-                ChangeControllerSubType(ControllerSubType);
+                Log("ResetControllerInfo Start", Indent: true);
+
+                FlyDigiSubType NewControllerSubType = GetControllerInitialTypeCode((UInt16)_device.VendorId, (UInt16)_device.ProductId, (UInt16)_device.RevisionNumber);
+
+                ChangeControllerSubType(NewControllerSubType);
 
                 ControllerMetadataUpdate?.Invoke(this);
+
+                Log("ResetControllerInfo End", Indent: false);
             }
-
-            //ChangeControllerSubType(GetControllerInitialTypeCode((UInt16)_device.VendorId, (UInt16)_device.ProductId, (UInt16)_device.RevisionNumber));
-
-            //CreateControls();
-
-            //UpdateAlternateSubTypes();
-            //ControllerMetadataUpdate?.Invoke(this);
-
-            /*{
-                lock (UpdateLocalDataLock)
-                {
-                    if (UpdateLocalDataPoison)
-                        return;
-                    //string SerialNumber_ = GetSerialNumber();
-                    //if (UpdateLocalDataPoison)
-                    //    return;
-                    //SerialNumber = SerialNumber_;
-
-                    //if (!string.IsNullOrWhiteSpace(SerialNumber))
-                    //{
-                    //    string ControllerData = StoredDataHandler.GetMacData(SerialNumber);
-                    //    DS4SubType ControllerSubTypeRead = DS4SubType.Unknown;
-                    //    if (!string.IsNullOrWhiteSpace(ControllerData) && Enum.TryParse<DS4SubType>(ControllerData, out ControllerSubTypeRead))
-                    //        ControllerSubType = ControllerSubTypeRead;
-                    //}
-                    //switch (ControllerSubType)
-                    //{
-                    //    case FlyDigiSubType.Unknown:
-                    //    case FlyDigiSubType.UnknownDS4V1:
-                    //    case FlyDigiSubType.UnknownDS4V2:
-                    //        IdentityHash = GetControllerAuthIdentityHash();
-                    //        ControllerSubType = GetControllerInitialTypeCode((UInt16)_device.VendorId, (UInt16)_device.ProductId, HaveSeenNonZeroRawTemp, IdentityHash);
-                    //        break;
-                    //}
-                    //ChangeControllerSubType(ControllerSubType);
-
-                    ControllerMetadataUpdate?.Invoke(this);
-                }
-            }*/
-            Console.WriteLine("ResetControllerInfo End");
         }
 
         private FlyDigiSubType GetControllerInitialTypeCode(UInt16 VID, UInt16 PID, UInt16 REV)
@@ -1203,13 +1156,17 @@ namespace ExtendInput.Controller
 
         private void UpdateAlternateSubTypes()
         {
-            Console.WriteLine("UpdateAlternateSubTypes Start");
+            Log("UpdateAlternateSubTypes Start", Indent: true);
             lock (ManualSelectionList)
             {
                 ManualSelectionList.Clear();
-                Console.WriteLine($"ManualSelectionList.Clear for {ControllerSubType}");
+                Log($"ManualSelectionList.Clear for {ControllerSubType}");
 
-                if (ControllerSubType == FlyDigiSubType.None) return;
+                if (ControllerSubType == FlyDigiSubType.None)
+                {
+                    Log("UpdateAlternateSubTypes End", Indent: false);
+                    return;
+                }
 
                 UInt16 VID = (UInt16)_device.VendorId;
                 UInt16 PID = (UInt16)_device.ProductId;
@@ -1286,8 +1243,8 @@ namespace ExtendInput.Controller
                 {
                     int Rank = 0;//(int)subType;
                     ControllerSubTypeAttribute attr = subType.GetAttribute<ControllerSubTypeAttribute>();
-                    if ((ConnectionType == EConnectionType.USB && VENDOR_FLYDIGI == VID && PRODUCT_FLYDIGI_USB == PID && REVISION_FLYDIGI_USB == REV)
-                     || (ConnectionType == EConnectionType.Dongle && VENDOR_FLYDIGI == VID && PRODUCT_FLYDIGI_DONGLE_2 == PID && REVISION_FLYDIGI_DONGLE_2 == REV)
+                    if ((ConnectionType == EConnectionType.USB    && VENDOR_FLYDIGI == VID && PRODUCT_FLYDIGI_USB      == PID && REVISION_FLYDIGI_USB       == REV)
+                     || (ConnectionType == EConnectionType.Dongle && VENDOR_FLYDIGI == VID && PRODUCT_FLYDIGI_DONGLE_2 == PID && REVISION_FLYDIGI_DONGLE_2  == REV)
                      || (ConnectionType == EConnectionType.Dongle && VENDOR_FLYDIGI == VID && PRODUCT_FLYDIGI_DONGLE_3 == PID && REVISION_FLYDIGI_DONGLE_3A == REV)
                      || (ConnectionType == EConnectionType.Dongle && VENDOR_FLYDIGI == VID && PRODUCT_FLYDIGI_DONGLE_3 == PID && REVISION_FLYDIGI_DONGLE_3B == REV))
                     {
@@ -1296,7 +1253,7 @@ namespace ExtendInput.Controller
                             if (attr.DeviceIdFromFeature.HasValue && attr.DeviceIdFromFeature.Value == DetectedDeviceId.Value)
                             {
                                 ManualSelectionList.Clear();
-                                Console.WriteLine("UpdateAlternateSubTypes End");
+                                Log("UpdateAlternateSubTypes End", Indent: false);
                                 return;
                             }
                         }
@@ -1360,67 +1317,24 @@ namespace ExtendInput.Controller
                 if (ManualSelectionList.Count == 1 && ManualSelectionList[0] == ControllerSubType)
                     ManualSelectionList.Clear();
             }
-            Console.WriteLine("UpdateAlternateSubTypes End");
+            Log("UpdateAlternateSubTypes End", Indent: false);
         }
 
         private void ChangeControllerSubType(FlyDigiSubType NewControllerSubType)
         {
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine($"ChangeControllerSubType Start {NewControllerSubType}");
-            Console.ResetColor();
-            /*if (!ControlsCreated)
-            {
-                StateMutationLock.EnterWriteLock();
-                try
-                {
-                    // universal fixed controls that all Flydigi controllers have, these won't change
-                    State.Controls["cluster_left"] = new ControlDPad();
-                    State.Controls["stick_left"] = new ControlStick(HasClick: true);
-                    State.Controls["stick_right"] = new ControlStick(HasClick: true);
-                    State.Controls["bumpers"] = new ControlButtonPair();
-                    State.Controls["menu"] = new ControlButtonPair();
-                    //State.Controls["home"] = new ControlButton();
-                    //State.Controls["cluster_right"] = new ControlButtonQuad();
-                    //State.Controls["triggers"] = new ControlButtonPair(HasStage2: false);
-                    //if (ControllerAttribute?.PadIsClickOnly ?? false)
-                    //{
-                    //    State.Controls["touch_center"] = new ControlButton();
-                    //}
-                    //else
-                    //{
-                    //    State.Controls["touch_center"] = new ControlTouch(TouchCount: 2, HasClick: true);
-                    //    (State.Controls["touch_center"] as ControlTouch).PhysicalWidth = ControllerAttribute.PhysicalWidth;
-                    //    (State.Controls["touch_center"] as ControlTouch).PhysicalHeight = ControllerAttribute.PhysicalHeight;
-                    //}
-                    // According to this the normalized domain of the DS4 gyro is 1024 units per rad/s: https://gamedev.stackexchange.com/a/87178
-                    //State.Controls["motion"] = new ControlMotion();
-                    ControlsCreated = true;
-                }
-                finally
-                {
-                    StateMutationLock.ExitWriteLock();
-                }
-                UpdateAlternateSubTypes();
-                ControllerMetadataUpdate?.Invoke(this);
-            }*/
+            Log($"ChangeControllerSubType Start {NewControllerSubType}", ConsoleColor.Green, true);
 
-            /*if (ControllerSubType == NewControllerSubType)
+            if (ControllerSubType == NewControllerSubType && ControlsCreated)
             {
-                UpdateAlternateSubTypes();
-                Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine($"ChangeControllerSubType End {NewControllerSubType}");
-                Console.ResetColor();
+                Log($"ChangeControllerSubType End {NewControllerSubType}", ConsoleColor.Green, false);
                 return;
-            }*/
+            }
 
-            //FlyDigiSubType PrevControllerType = ControllerSubType;
-            //ControllerSubTypeAttribute PrevControllerAttribute = PrevControllerType.GetAttribute<ControllerSubTypeAttribute>();
-            
-            //PreviousControllerSubType = ControllerSubType;
+            StateMutationLock.Wait();
+
             ControllerSubType = NewControllerSubType;
             ControllerAttribute = ControllerSubType.GetAttribute<ControllerSubTypeAttribute>();
 
-            StateMutationLock.Wait();
             try
             {
                 if (NewControllerSubType == FlyDigiSubType.None)
@@ -1441,7 +1355,101 @@ namespace ExtendInput.Controller
                     }
                 }
 
-                CreateControls();
+                {
+                    if (!ControlsCreated)
+                    {
+                        // universal fixed controls that all Flydigi controllers have, these won't change
+                        State.Controls["cluster_left"] = new ControlDPad();
+                        State.Controls["stick_left"] = new ControlStick(HasClick: true);
+                        State.Controls["stick_right"] = new ControlStick(HasClick: true);
+                        State.Controls["bumpers"] = new ControlButtonPair(ButtonProperties.CMB_Bumper);
+                        State.Controls["menu"] = new ControlButtonPair(ButtonProperties.CMB_Button);
+
+                        ControlsCreated = true;
+                    }
+
+                    if (ControllerAttribute.HasAnalogTrigger)
+                    {
+                        State.Controls["triggers"] = new ControlButtonPair(ButtonProperties.CMB_Trigger);
+                        Log("Trigger set to Analog");
+                    }
+                    else
+                    {
+                        State.Controls["triggers"] = new ControlButtonPair(ButtonProperties.CMB_Bumper);
+                        Log("Trigger set to Digital");
+                    }
+
+                    if (ControllerAttribute.HasLogo)
+                    {
+                        State.Controls["logo"] = new ControlButton(ButtonProperties.CMB_Button);
+                    }
+                    else
+                    {
+                        State.Controls["logo"] = null;
+                    }
+
+                    if (ControllerAttribute.HasTopMenu || ControllerAttribute.HasBottomMenu)
+                    {
+                        State.Controls["cluster_middle"] = new ControlButtonGrid(3, 1);
+                    }
+                    else
+                    {
+                        State.Controls["cluster_middle"] = null;
+                    }
+
+                    if (ControllerAttribute.HasCZBottom)
+                    {
+                        State.Controls["c"] = new ControlButton(ButtonProperties.CMB_Button);
+                        State.Controls["z"] = new ControlButton(ButtonProperties.CMB_Button);
+                    }
+                    else
+                    {
+                        State.Controls["c"] = null;
+                        State.Controls["z"] = null;
+                    }
+
+                    if (ControllerAttribute.HasCZTop)
+                    {
+                        State.Controls["c_top"] = new ControlButton(ButtonProperties.CMB_Button);
+                        State.Controls["z_top"] = new ControlButton(ButtonProperties.CMB_Button);
+                    }
+                    else
+                    {
+                        State.Controls["c_top"] = null;
+                        State.Controls["z_top"] = null;
+                    }
+
+                    if (ControllerAttribute.HasMRockers)
+                    {
+                        State.Controls["grip"] = new ControlPair<ControlRocker>(new ControlRocker(), new ControlRocker());
+                    }
+                    else if (ControllerAttribute.HasMButtons)
+                    {
+                        State.Controls["grip"] = new ControlPair<ControlButtonPair>(new ControlButtonPair(ButtonProperties.CMB_Bumper), new ControlButtonPair(ButtonProperties.CMB_Bumper));
+                    }
+                    else
+                    {
+                        State.Controls["grip"] = null;
+                    }
+
+                    if (ControllerAttribute.HasBumper2)
+                    {
+                        State.Controls["shoulder_a"] = new ControlButtonPair(ButtonProperties.CMB_Bumper);
+                    }
+                    else
+                    {
+                        State.Controls["shoulder_a"] = null;
+                    }
+
+                    if (ControllerAttribute.HasWheel)
+                    {
+                        State.Controls["cluster_right"] = new ControlButtonQuad(); // wheel
+                    }
+                    else
+                    {
+                        State.Controls["cluster_right"] = new ControlButtonQuad();
+                    }
+                }
             }
             finally
             {
@@ -1451,170 +1459,34 @@ namespace ExtendInput.Controller
             UpdateAlternateSubTypes();
 
             ControllerMetadataUpdate?.Invoke(this);
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine($"ChangeControllerSubType End {NewControllerSubType}");
-            Console.ResetColor();
+            Log($"ChangeControllerSubType End {NewControllerSubType}", ConsoleColor.Green, false);
         }
 
-        private void CreateControls()
+        private object OutLock = new object();
+        private Dictionary<int, int> indent = new Dictionary<int, int>();
+        private void Log(string line, ConsoleColor color = ConsoleColor.Gray, bool? Indent = null, [System.Runtime.CompilerServices.CallerLineNumber] int lineNumber = 0)
         {
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine($"CreateControls Start for {ControllerSubType}");
-            Console.ResetColor();
-
-            if (!ControlsCreated)
+            lock (OutLock)
             {
-                // universal fixed controls that all Flydigi controllers have, these won't change
-                State.Controls["cluster_left"] = new ControlDPad();
-                State.Controls["stick_left"] = new ControlStick(HasClick: true);
-                State.Controls["stick_right"] = new ControlStick(HasClick: true);
-                State.Controls["bumpers"] = new ControlButtonPair(ButtonProperties.CMB_Bumper);
-                State.Controls["menu"] = new ControlButtonPair(ButtonProperties.CMB_Button);
-
-                //State.Controls["cluster_left"] = new ControlDPad();
-                //State.Controls["cluster_right"] = new ControlButtonQuad();
-                //State.Controls["bumpers"] = new ControlButtonPair();
-                ////State.Controls["triggers"] = new ControlButtonPair(HasStage2: false);
-                //State.Controls["menu"] = new ControlButtonPair();
-                //State.Controls["home"] = new ControlButton();
-                //State.Controls["stick_left"] = new ControlStick(HasClick: true);
-                //State.Controls["stick_right"] = new ControlStick(HasClick: true);
-                //State.Controls["stick_right"] = new ControlStick(HasClick: true);
-                //if (ControllerAttribute?.PadIsClickOnly ?? false)
-                //{
-                //    State.Controls["touch_center"] = new ControlButton();
-                //}
-                //else
-                //{
-                //    State.Controls["touch_center"] = new ControlTouch(TouchCount: 2, HasClick: true);
-                //    (State.Controls["touch_center"] as ControlTouch).PhysicalWidth = ControllerAttribute.PhysicalWidth;
-                //    (State.Controls["touch_center"] as ControlTouch).PhysicalHeight = ControllerAttribute.PhysicalHeight;
-                //}
-                // According to this the normalized domain of the DS4 gyro is 1024 units per rad/s: https://gamedev.stackexchange.com/a/87178
-                //State.Controls["motion"] = new ControlMotion();
-                ControlsCreated = true;
-            }
-
-            //StateMutationLock.Wait();
-            try
-            {
-                if (ControllerAttribute.HasAnalogTrigger)
+                if (!(Indent ?? true))
                 {
-                    State.Controls["triggers"] = new ControlButtonPair(ButtonProperties.CMB_Trigger);
-                    Console.WriteLine("Trigger set to Analog");
+                    if (indent.ContainsKey(Thread.CurrentThread.ManagedThreadId))
+                    {
+                        indent[Thread.CurrentThread.ManagedThreadId]--;
+                        if (indent[Thread.CurrentThread.ManagedThreadId] == 0)
+                            indent.Remove(Thread.CurrentThread.ManagedThreadId);
+                    }
                 }
-                else
-                {
-                    State.Controls["triggers"] = new ControlButtonPair(ButtonProperties.CMB_Bumper);
-                    Console.WriteLine("Trigger set to Digital");
-                }
-                Console.ForegroundColor = ConsoleColor.Cyan;
-                Console.WriteLine($"Set State {State.Controls["triggers"]?.GetType()}");
+                Console.ForegroundColor = color;
+                Console.WriteLine($"{lineNumber.ToString().PadLeft(4)}  {Thread.CurrentThread.ManagedThreadId.ToString().PadLeft(4)}  {new string(' ', (indent.ContainsKey(Thread.CurrentThread.ManagedThreadId) ? indent[Thread.CurrentThread.ManagedThreadId] : 0) * 4)}  {line}");
                 Console.ResetColor();
-
-                if (ControllerAttribute.HasLogo)
+                if (Indent ?? false)
                 {
-                    State.Controls["logo"] = new ControlButton(ButtonProperties.CMB_Button);
-                }
-                else
-                {
-                    State.Controls["logo"] = null;
-                }
-
-                /*if (ControllerAttribute.HasTopMenu)
-                {
-                    State.Controls["mtop_back"] = new ControlButton();
-                    State.Controls["mtop_home"] = new ControlButton();
-                    State.Controls["mtop_pair"] = new ControlButton();
-                }
-                else
-                {
-                    State.Controls["mtop_back"] = null;
-                    State.Controls["mtop_home"] = null;
-                    State.Controls["mtop_pair"] = null;
-                }
-
-                if (ControllerAttribute.HasBottomMenu)
-                {
-                    State.Controls["m_back"] = new ControlButton();
-                    State.Controls["m_home"] = new ControlButton();
-                    State.Controls["m_pair"] = new ControlButton();
-                }
-                else
-                {
-                    State.Controls["m_back"] = null;
-                    State.Controls["m_home"] = null;
-                    State.Controls["m_pair"] = null;
-                }*/
-                if (ControllerAttribute.HasTopMenu || ControllerAttribute.HasBottomMenu)
-                {
-                    State.Controls["cluster_middle"] = new ControlButtonGrid(3, 1);
-                }
-                else
-                {
-                    State.Controls["cluster_middle"] = null;
-                }
-
-                if (ControllerAttribute.HasCZBottom)
-                {
-                    State.Controls["c"] = new ControlButton(ButtonProperties.CMB_Button);
-                    State.Controls["z"] = new ControlButton(ButtonProperties.CMB_Button);
-                }
-                else
-                {
-                    State.Controls["c"] = null;
-                    State.Controls["z"] = null;
-                }
-
-                if (ControllerAttribute.HasCZTop)
-                {
-                    State.Controls["c_top"] = new ControlButton(ButtonProperties.CMB_Button);
-                    State.Controls["z_top"] = new ControlButton(ButtonProperties.CMB_Button);
-                }
-                else
-                {
-                    State.Controls["c_top"] = null;
-                    State.Controls["z_top"] = null;
-                }
-
-                if (ControllerAttribute.HasMRockers)
-                {
-                    State.Controls["grip"] = new ControlPair<ControlRocker>(new ControlRocker(), new ControlRocker());
-                }
-                else if (ControllerAttribute.HasMButtons)
-                {
-                    State.Controls["grip"] = new ControlPair<ControlButtonPair>(new ControlButtonPair(ButtonProperties.CMB_Button), new ControlButtonPair(ButtonProperties.CMB_Button));
-                }
-                else
-                {
-                    State.Controls["grip"] = null;
-                }
-
-                if (ControllerAttribute.HasBumper2)
-                {
-                    State.Controls["shoulder_a"] = new ControlButtonPair(ButtonProperties.CMB_Bumper);
-                }
-                else
-                {
-                    State.Controls["shoulder_a"] = null;
-                }
-
-                if (ControllerAttribute.HasWheel)
-                {
-                    State.Controls["cluster_right"] = new ControlButtonQuad(); // wheel
-                }
-                else
-                {
-                    State.Controls["cluster_right"] = new ControlButtonQuad();
+                    if (!indent.ContainsKey(Thread.CurrentThread.ManagedThreadId))
+                        indent[Thread.CurrentThread.ManagedThreadId] = 0;
+                    indent[Thread.CurrentThread.ManagedThreadId]++;
                 }
             }
-            finally
-            {
-                //StateMutationLock.Release();
-            }
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine($"CreateControls End for {ControllerSubType}");
-            Console.ResetColor();
         }
     }
 }

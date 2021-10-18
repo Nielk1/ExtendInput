@@ -1250,9 +1250,14 @@ namespace ExtendInput.Controller
                     Interlocked.Exchange(ref reportUsageLock, 0);
                 }
 
-                // TODO: change how this works because we don't want to lock, we need to actually change the polling rate in the device
                 if (ConnectionType == EConnectionType.Dongle && DisconnectedBit)
-                    Thread.Sleep(_SLOW_POLL_MS); // if we're a dongle and we're not connected we might only be partially initalized, so slow roll our read
+                {
+                    _device.PollingRate = _SLOW_POLL_MS; // if we're a dongle and we're not connected we might only be partially initalized, so slow roll our read
+                }
+                else
+                {
+                    _device.PollingRate = 0;
+                }
             }
         }
 
