@@ -436,14 +436,15 @@ namespace ExtendInput.Controller
                     {
                         for (; ; )
                         {
-                            if (ControllerSubType != FlyDigiSubType.None && LastData.AddSeconds(PollingState == EPollingState.SlowPoll ? (_SLOW_POLL_MS + 100) / 1000f : 0.2) < DateTime.UtcNow)
+                            //if (ControllerSubType != FlyDigiSubType.None && LastData.AddSeconds(PollingState == EPollingState.SlowPoll ? (_SLOW_POLL_MS + 100) / 1000f : 0.2) < DateTime.UtcNow)
+                            if (ControllerSubType != FlyDigiSubType.None && LastData.AddSeconds((_SLOW_POLL_MS + 100) / 1000f) < DateTime.UtcNow)
                             {
-                                Log("No report within timeout");
+                                Log($"No report within timeout {(DateTime.UtcNow - LastData).TotalSeconds}", ConsoleColor.Cyan);
                                 ChangeControllerSubType(FlyDigiSubType.None);
                                 /*
                                 ControllerSubType = FlyDigiSubType.None;
                                 ControllerAttribute = ControllerSubType.GetAttribute<ControllerSubTypeAttribute>();
-                                MetadataMutationLock.Wait();
+                                MetadataMutationLock.Wait(); NoteMetadataMutationLock();
                                 try
                                 {
                                     DetectedDeviceId = null;
@@ -616,7 +617,7 @@ namespace ExtendInput.Controller
                                     {
                                         // Clone the current state before altering it since the OldState is likely a shared reference
                                         ControllerState StateInFlight = null;
-                                        StateMutationLock.Wait();
+                                        StateMutationLock.Wait(); NoteStateMutationLock();
                                         try
                                         {
 //                                            Log($"Clone State {State.Controls["triggers"]?.GetType()}", ConsoleColor.Cyan);
@@ -791,7 +792,7 @@ namespace ExtendInput.Controller
                                             StateMutationLock.Release();
                                         }
 
-                                        MetadataMutationLock.Wait();
+                                        MetadataMutationLock.Wait(); NoteMetadataMutationLock();
                                         try
                                         {
                                             byte? OldReportFESubType = ReportFESubType;
@@ -810,7 +811,10 @@ namespace ExtendInput.Controller
                                              || OldFixedValueFromByte28 != FixedValueFromByte28)
                                                 ////|| OldVersionFromByte30 != VersionFromByte30
                                                 //|| OldFixedValueFromByte31 != FixedValueFromByte31)
+                                            {
                                                 lock (ResetControllerInfoNeededLock) ResetControllerInfoNeeded = true; // ResetControllerInfo();
+                                                Log("ResetControllerInfo Requested", ConsoleColor.Red);
+                                            }
                                         }
                                         finally
                                         {
@@ -838,6 +842,7 @@ namespace ExtendInput.Controller
                                                     PollingState = EPollingState.SlowPoll;
                                                     Log($"Polling state set to SlowPoll", ConsoleColor.Yellow);
                                                     lock (ResetControllerInfoNeededLock) ResetControllerInfoNeeded = true; // ResetControllerInfo();
+                                                    Log("ResetControllerInfo Requested", ConsoleColor.Red);
                                                 }
                                             }
                                             // USB mode we expect data, so don't stop if we get a normal report, we should keep our RunUntilReady until we see what we want
@@ -902,13 +907,17 @@ namespace ExtendInput.Controller
                                     //Log("Controller firmware version: V" + FirmwareMajor + "." + FirmwareMinor + "." + FirmwareBuild + "." + FirmwareRevision);
                                     //Log("Controller Power: " + batteryPercent);
 
-                                    MetadataMutationLock.Wait();
+                                    MetadataMutationLock.Wait(); NoteMetadataMutationLock();
                                     try
                                     {
                                         byte? OldDetectedDeviceId = DetectedDeviceId;
                                         DetectedDeviceId = reportData.ReportBytes[2];
+                                        Log($"DetectedDeviceId set to {reportData.ReportBytes[2]:X2}", ConsoleColor.DarkYellow);
                                         if (OldDetectedDeviceId != DetectedDeviceId)
+                                        {
                                             lock (ResetControllerInfoNeededLock) ResetControllerInfoNeeded = true; // ResetControllerInfo();
+                                            Log("ResetControllerInfo Requested", ConsoleColor.Red);
+                                        }
                                     }
                                     finally
                                     {
@@ -983,11 +992,12 @@ namespace ExtendInput.Controller
         {
             Log("getDeviceInfoInAndroid");
 
-            /*if (!NoMetaForThisController && ConnectionType == EConnectionType.Dongle && PollingState == EPollingState.SlowPoll)
+            //if (!NoMetaForThisController && ConnectionType == EConnectionType.Dongle && PollingState == EPollingState.SlowPoll)
+            if (ConnectionType == EConnectionType.Dongle && PollingState == EPollingState.SlowPoll)
             {
                 PollingState = EPollingState.RunUntilReady;
                 Log($"Polling state set to RunUntilReady");
-            }*/
+            }
 
             byte[] array = new byte[12];
             array[0] = 5;
@@ -1330,7 +1340,7 @@ namespace ExtendInput.Controller
                 return;
             }
 
-            StateMutationLock.Wait();
+            StateMutationLock.Wait(); NoteStateMutationLock();
 
             ControllerSubType = NewControllerSubType;
             ControllerAttribute = ControllerSubType.GetAttribute<ControllerSubTypeAttribute>();
@@ -1339,9 +1349,10 @@ namespace ExtendInput.Controller
             {
                 if (NewControllerSubType == FlyDigiSubType.None)
                 {
-                    MetadataMutationLock.Wait();
+                    MetadataMutationLock.Wait(); NoteMetadataMutationLock();
                     try
                     {
+                        Log("DetectedDeviceId set to null", ConsoleColor.DarkYellow);
                         DetectedDeviceId = null;
                         ReportFESubType = null;
                         FixedValueFromByte28 = null;
@@ -1487,6 +1498,18 @@ namespace ExtendInput.Controller
                     indent[Thread.CurrentThread.ManagedThreadId]++;
                 }
             }
+        }
+
+
+        int _NoteStateMutationLock = 0;
+        private void NoteStateMutationLock([System.Runtime.CompilerServices.CallerLineNumber] int lineNumber = 0)
+        {
+            _NoteStateMutationLock = lineNumber;
+        }
+        int _NoteMetadataMutationLock = 0;
+        private void NoteMetadataMutationLock([System.Runtime.CompilerServices.CallerLineNumber] int lineNumber = 0)
+        {
+            _NoteMetadataMutationLock = lineNumber;
         }
     }
 }
