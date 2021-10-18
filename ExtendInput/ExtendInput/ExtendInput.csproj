@@ -90,6 +90,8 @@
     <Compile Include="Controller\IControllerFactory.cs" />
     <Compile Include="Controller\SixtyBeatGamepadControllerFactory.cs" />
     <Compile Include="Controller\SixtyBeatGamepadController.cs" />
+    <Compile Include="Controls\ControlPair.cs" />
+    <Compile Include="Controls\ControlRocker.cs" />
     <Compile Include="DeviceProvider\ReportData.cs" />
     <Compile Include="Wrapper.cs" />
     <Compile Include="Controls\ControlButton.cs" />

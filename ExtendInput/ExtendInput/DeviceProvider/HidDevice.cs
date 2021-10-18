@@ -48,7 +48,9 @@ namespace ExtendInput.DeviceProvider
         private HidSharp.HidStream GetStream()
         {
             if (!IsOpen || stream == null)
+            {
                 stream = internalDevice.Open();
+            }
             return stream;
         }
 
@@ -187,7 +189,11 @@ namespace ExtendInput.DeviceProvider
                                 byte[] data = _stream.Read();
 
                                 DeviceReportEvent threadSafeEvent = DeviceReport;
-                                threadSafeEvent?.Invoke(new HidReport() { ReportId = data[0], ReportType = HidReportType.Input, ReportBytes = data.Skip(1).ToArray() });
+                                new Thread(() =>
+                                {
+                                    threadSafeEvent?.Invoke(new HidReport() { ReportId = data[0], ReportType = HidReportType.Input, ReportBytes = data.Skip(1).ToArray() });
+                                }).Start();
+
                             }
                         }
                         catch (System.TimeoutException)

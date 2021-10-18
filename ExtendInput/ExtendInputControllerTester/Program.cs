@@ -151,6 +151,9 @@ namespace ExtendInputControllerTester
 
         private static async Task PollOther(IHttpContext context)
         {
+            if (DeviceManager == null)
+                return;
+
             await ControllersLock.WaitAsync();
             try
             {

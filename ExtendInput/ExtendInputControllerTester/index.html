@@ -218,14 +218,23 @@
                                         }
                                         var ctrl = $('#control_render_' + control_id);
                                         switch (control.Data.Direction) {
+                                            case "None":
                                             case 0: ctrl.find('.btn_n,.btn_e,.btn_s,.btn_w').removeClass('active'); break;
+                                            case "North":
                                             case 1: ctrl.find('       .btn_e,.btn_s,.btn_w').removeClass('active'); ctrl.find('.btn_n                     ').addClass('active'); break;
+                                            case "NorthEast":
                                             case 2: ctrl.find('              .btn_s,.btn_w').removeClass('active'); ctrl.find('.btn_n,.btn_e              ').addClass('active'); break;
+                                            case "East":
                                             case 3: ctrl.find('.btn_n,       .btn_s,.btn_w').removeClass('active'); ctrl.find('       .btn_e              ').addClass('active'); break;
+                                            case "SouthEast":
                                             case 4: ctrl.find('.btn_n,              .btn_w').removeClass('active'); ctrl.find('       .btn_e,.btn_s       ').addClass('active'); break;
+                                            case "South":
                                             case 5: ctrl.find('.btn_n,.btn_e,       .btn_w').removeClass('active'); ctrl.find('              .btn_s       ').addClass('active'); break;
+                                            case "SouthWest":
                                             case 6: ctrl.find('.btn_n,.btn_e              ').removeClass('active'); ctrl.find('              .btn_s,.btn_w').addClass('active'); break;
+                                            case "West":
                                             case 7: ctrl.find('.btn_n,.btn_e,.btn_s       ').removeClass('active'); ctrl.find('                     .btn_w').addClass('active'); break;
+                                            case "NorthWest":
                                             case 8: ctrl.find('       .btn_e,.btn_s       ').removeClass('active'); ctrl.find('.btn_n,              .btn_w').addClass('active'); break;
                                         }
                                     }
