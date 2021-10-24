@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ExtendInput.DeviceProvider
 {
-    public interface IDevice : IEquatable<IDevice>
+    public interface IDevice : IEquatable<IDevice>, IDisposable
     {
         string DevicePath { get; }
         int ProductId { get; }

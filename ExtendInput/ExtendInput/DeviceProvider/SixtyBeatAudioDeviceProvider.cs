@@ -21,6 +21,10 @@ namespace ExtendInput.DeviceProvider
         {
         }
 
+        public void Dispose()
+        {
+        }
+
         public void ScanNow()
         {
         }

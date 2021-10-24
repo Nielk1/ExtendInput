@@ -17,7 +17,7 @@ namespace ExtendInput.DeviceProvider
         public Dictionary<string, dynamic> Properties { get; private set; }
 
 
-        private SharpDX.XInput.Controller internalDevice;
+        public SharpDX.XInput.Controller internalDevice; // this should be private but we have hackery to fix
         private bool IsOpen = false;
 
         public XInputDevice(SharpDX.XInput.Controller internalDevice)

@@ -23,6 +23,10 @@ namespace ExtendInput.DeviceProvider
             HidSharp.DeviceList.Local.Changed += DeviceListChanged;
         }
 
+        public void Dispose()
+        {
+        }
+
         public void ScanNow()
         {
             lock (lock_device_list)
@@ -110,7 +114,7 @@ namespace ExtendInput.DeviceProvider
     }
 
     public delegate void DeviceChangeEventHandler(object sender, IDevice e);
-    public interface IDeviceProvider
+    public interface IDeviceProvider : IDisposable
     {
         event DeviceChangeEventHandler DeviceAdded;
         event DeviceChangeEventHandler DeviceRemoved;

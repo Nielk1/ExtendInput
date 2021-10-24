@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading;
 
 namespace ExtendInput.DeviceProvider
 {
@@ -20,8 +21,31 @@ namespace ExtendInput.DeviceProvider
         SharpDX.XInput.Controller[] Controllers = new SharpDX.XInput.Controller[MAX_SLOT];
         bool[] ControllerActive = new bool[MAX_SLOT];
 
+        bool AbortStatusThread = false;
+        Thread CheckControllerStatusThread;
+
         public XInputDeviceProvider()
         {
+            for (int i = 0; i < MAX_SLOT; i++)
+            {
+                Controllers[i] = new SharpDX.XInput.Controller((SharpDX.XInput.UserIndex)i);
+            }
+            CheckControllerStatusThread = new Thread(() =>
+            {
+                for (; ; )
+                {
+                    Thread.Sleep(1000);
+                    ScanNow();
+                    if (AbortStatusThread)
+                        return;
+                }
+            });
+            CheckControllerStatusThread.Start();
+        }
+
+        public void Dispose()
+        {
+            AbortStatusThread = true;
         }
 
         public void ScanNow()
@@ -32,10 +56,7 @@ namespace ExtendInput.DeviceProvider
                 {
                     for(int i=0;i< MAX_SLOT;i++)
                     {
-                        if (Controllers[i] == null)
-                            Controllers[i] = new SharpDX.XInput.Controller((SharpDX.XInput.UserIndex)i);
-
-                        if(ControllerActive[i] != Controllers[i].IsConnected)
+                        if (ControllerActive[i] != Controllers[i].IsConnected)
                         {
                             if(Controllers[i].IsConnected)
                             {

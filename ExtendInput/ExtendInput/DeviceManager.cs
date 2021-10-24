@@ -14,7 +14,7 @@ namespace ExtendInput
         SafeWriteOnly,
         FullControl,
     }
-    public class DeviceManager
+    public class DeviceManager : IDisposable
     {
         List<IDeviceProvider> DeviceProviders;
         List<IControllerFactory> ControllerFactories;
@@ -23,6 +23,14 @@ namespace ExtendInput
         public event DeviceChangeEventHandler ControllerRemoved;
 
         private AccesMode AccessMode;
+
+
+
+
+        public void Dispose()
+        {
+            throw new NotImplementedException();
+        }
 
         public DeviceManager(AccesMode AccessMode = AccesMode.SafeWriteOnly)
         {
