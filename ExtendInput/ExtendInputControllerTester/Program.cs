@@ -17,6 +17,7 @@ using System.Web;
 using ExtendInput.DeviceProvider;
 using Newtonsoft.Json;
 using Swan.Logging;
+using System.Text.RegularExpressions;
 
 namespace ExtendInputControllerTester
 {
@@ -131,7 +132,10 @@ namespace ExtendInputControllerTester
                 foreach (string key in State.Controls.Keys)
                 {
                     JObject obj = new JObject();
-                    obj["Type"] = State.Controls[key]?.GetType()?.ToString();
+                    string TypeCodeString = State.Controls[key]?.GetType()?.ToString();
+                    if (!string.IsNullOrWhiteSpace(TypeCodeString))
+                        TypeCodeString = Regex.Replace(TypeCodeString, @"`[^\[\]]+\[", "[");
+                    obj["Type"] = TypeCodeString;
                     obj["Data"] = State.Controls[key] != null ? JObject.FromObject(State.Controls[key], serializer) : null;
                     controls[key] = obj;
                 }
