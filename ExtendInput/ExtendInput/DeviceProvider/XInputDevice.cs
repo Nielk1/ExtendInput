@@ -11,8 +11,34 @@ namespace ExtendInput.DeviceProvider
     public class XInputDevice : IDevice
     {
         public string DevicePath { get { return $"SharpDX.XInput.Controller({internalDevice.UserIndex})"; } }// internalDevice.DevicePath; } }
-        public int ProductId { get { return 0; } }//internalDevice.ProductID; } }
-        public int VendorId { get { return 0; } }//internalDevice.VendorID; } }
+        public int ProductId
+        {
+            get
+            {
+                try
+                {
+                    XInputNative.XInputCapabilitiesEx data = new XInputNative.XInputCapabilitiesEx();
+                    if (XInputNative.XInputGetCapabilitiesEx(1, (int)internalDevice.UserIndex, 0, ref data) == 0)
+                        return data.PID;
+                }
+                catch { }
+                return 0;
+            }
+        }
+        public int VendorId
+        {
+            get
+            {
+                try
+                {
+                    XInputNative.XInputCapabilitiesEx data = new XInputNative.XInputCapabilitiesEx();
+                    if (XInputNative.XInputGetCapabilitiesEx(1, (int)internalDevice.UserIndex, 0, ref data) == 0)
+                        return data.VID;
+                }
+                catch { }
+                return 0;
+            }
+        }
 
         public Dictionary<string, dynamic> Properties { get; private set; }
 

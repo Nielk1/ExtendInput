@@ -129,6 +129,7 @@
     <Compile Include="DeviceProvider\XInputDeviceProvider.cs" />
     <Compile Include="DeviceProvider\XInputDevice.cs" />
     <Compile Include="RingBuffer.cs" />
+    <Compile Include="XInputNative.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

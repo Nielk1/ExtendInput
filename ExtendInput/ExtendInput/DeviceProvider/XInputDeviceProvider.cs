@@ -29,6 +29,10 @@ namespace ExtendInput.DeviceProvider
             for (int i = 0; i < MAX_SLOT; i++)
             {
                 Controllers[i] = new SharpDX.XInput.Controller((SharpDX.XInput.UserIndex)i);
+                //XInputNative.XInputCapabilitiesEx data = new XInputNative.XInputCapabilitiesEx();
+                //if (XInputNative.XInputGetCapabilitiesEx(1, i, 0, ref data) == 0) { }
+                //XInputNative.XInputBaseBusInformation data2 = new XInputNative.XInputBaseBusInformation();
+                //if (XInputNative.XInputGetBaseBusInformation(i, ref data2) == 0) { }
             }
             CheckControllerStatusThread = new Thread(() =>
             {
