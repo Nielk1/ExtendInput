@@ -24,7 +24,8 @@ namespace ExtendInput.Controller
         {
             get
             {
-                return new string[] { _device?.DevicePath ?? _device2.DevicePath };
+                //return new string[] { _device?.DevicePath ?? _device2.DevicePath };
+                return new string[] { _device.DevicePath };
             }
         }
         public bool HasSelectableAlternatives => false;
@@ -44,7 +45,8 @@ namespace ExtendInput.Controller
             {
                 //if (!string.IsNullOrWhiteSpace(SerialNumber))
                 //    return SerialNumber;
-                return _device?.UniqueKey ?? _device2.UniqueKey;
+                //return _device?.UniqueKey ?? _device2.UniqueKey;
+                return _device.UniqueKey;
             }
         }
         public string DeviceUniqueID
@@ -62,7 +64,7 @@ namespace ExtendInput.Controller
 
 
         bool Initalized;
-        public BetopController(HidDevice device)
+        public BetopController(HidDevice deviceVendor, HidDevice deviceGamepad)
         {
             ConnectionTypeCode = new string[] { "CONNECTION_WIRE_35MM_PHONE_TRRS", "CONNECTION_WIRE" };
             ControllerTypeCode = new string[] { "DEVICE_SIXTYBEAT_GAMEPAD", "DEVICE_GAMEPAD" };
@@ -87,7 +89,29 @@ namespace ExtendInput.Controller
                 }
             });
 
-            AddDevice(device);
+            //if (device.DevicePath.Contains("&col05"))
+            {
+                _device = deviceVendor;
+                Initalized = false;
+
+                _device.DeviceReport += OnReport;
+
+                _device.StartReading();
+
+                CheckControllerStatusThread.Start();
+
+                EnableKeyEvent();
+                //QC();
+            }
+            // ignore this sub-device when we have full control and thus can ask the controller to send us its more raw data
+            /*//if (device.DevicePath.Contains("&col04"))
+            {
+                _device2 = deviceGamepad;
+
+                _device2.DeviceReport += OnReport;
+
+                _device2.StartReading();
+            }*/
         }
         bool AbortStatusThread = false;
         Thread CheckControllerStatusThread;
@@ -144,30 +168,23 @@ namespace ExtendInput.Controller
             Console.ResetColor();
         }
 
-        public void AddDevice(HidDevice device)
+        /*private void QC()
         {
-            if (device.DevicePath.Contains("&col05"))
-            {
-                _device = device;
-                Initalized = false;
-
-                _device.DeviceReport += OnReport;
-
-                _device.StartReading();
-
-                CheckControllerStatusThread.Start();
-
-                EnableKeyEvent();
-            }
-            if (device.DevicePath.Contains("&col04"))
-            {
-                _device2 = device;
-
-                _device2.DeviceReport += OnReport;
-
-                _device2.StartReading();
-            }
-        }
+            requestId++; // might be Asura3 only
+            byte[] data = new byte[64];
+            data[0] = 0x05;
+            //data[1] = 0x00;
+            //data[2] = 0x00;
+            data[1] = (byte)(requestId & 0xFF); // might be Asura3 only
+            data[2] = (byte)((requestId >> 8) & 0xFF); // might be Asura3 only
+            data[3] = 0xDC;
+            data[4] = 0x01;
+            //data[5] = 0x02;
+            _device.WriteReport(data);
+            Console.ForegroundColor = ConsoleColor.DarkGray;
+            Console.WriteLine($"{BitConverter.ToString(data)}");
+            Console.ResetColor();
+        }*/
 
         public ControllerState GetState()
         {

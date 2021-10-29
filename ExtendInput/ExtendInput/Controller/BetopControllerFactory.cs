@@ -8,8 +8,14 @@ namespace ExtendInput.Controller
 {
     public class BetopControllerFactory : IControllerFactory
     {
-        Dictionary<Guid, WeakReference<BetopController>> Controllers = new Dictionary<Guid, WeakReference<BetopController>>();
-
+        Dictionary<Guid, ControllerPair> Controllers = new Dictionary<Guid, ControllerPair>();
+        public class ControllerPair
+        {
+            public bool bVendor;
+            public bool bGamepad;
+            public WeakReference<HidDevice> Vendor;
+            public WeakReference<HidDevice> Gamepad;
+        }
 
         public Dictionary<string, dynamic>[] DeviceWhitelist => new Dictionary<string, dynamic>[]
         {
@@ -100,36 +106,55 @@ namespace ExtendInput.Controller
                 // instead of this look for Capabilities.Usage of 3
                 if (device.DevicePath.Contains("&col05") || device.DevicePath.Contains("&col04"))
                 {
-                    BetopController ctrl = null;
                     {
                         string deviceInstanceId = DevPKey.PnpDevicePropertyAPI.devicePathToInstanceId(_device.DevicePath);
                         Guid? ContrainerID = DevPKey.PnpDevicePropertyAPI.GetDeviceContainerId(deviceInstanceId);
                         if (ContrainerID.HasValue)
                             lock (Controllers)
                             {
-                                bool newController = false;
-                                if (!Controllers.ContainsKey(ContrainerID.Value) || !Controllers[ContrainerID.Value].TryGetTarget(out ctrl))
+                                if (!Controllers.ContainsKey(ContrainerID.Value))
+                                    Controllers[ContrainerID.Value] = new ControllerPair();
+
+                                if (device.DevicePath.Contains("&col05"))
                                 {
-                                    ctrl = new BetopController(_device);
-                                    Controllers.Add(ContrainerID.Value, new WeakReference<BetopController>(ctrl));
-                                    newController = true;
+                                    Controllers[ContrainerID.Value].bVendor = true;
+                                    Controllers[ContrainerID.Value].Vendor = new WeakReference<HidDevice>(_device);
+                                }
+                                if (device.DevicePath.Contains("&col04"))
+                                {
+                                    Controllers[ContrainerID.Value].bGamepad = true;
+                                    Controllers[ContrainerID.Value].Gamepad = new WeakReference<HidDevice>(_device);
                                 }
 
                                 Console.WriteLine(ContrainerID.Value.ToString());
 
+                                BetopController ctrl = null;
+                                if (Controllers[ContrainerID.Value].bGamepad && Controllers[ContrainerID.Value].bVendor)
+                                {
+                                    HidDevice deviceVendor = null;
+                                    HidDevice deviceGamepad = null;
+                                    Controllers[ContrainerID.Value]?.Vendor.TryGetTarget(out deviceVendor);
+                                    Controllers[ContrainerID.Value]?.Gamepad.TryGetTarget(out deviceGamepad);
+
+                                    if (deviceVendor != null && deviceGamepad != null)
+                                    {
+                                        ctrl = new BetopController(deviceVendor, deviceGamepad);
+                                    }
+                                    else
+                                    {
+                                        Controllers.Remove(ContrainerID.Value); // wtf this should never happen
+                                    }
+                                }
+
                                 // clear any dead refs
                                 foreach (Guid key in Controllers.Keys.ToList()) // ToList to clone the key list so we can modify it
-                                    if (!Controllers[key].TryGetTarget(out _))
+                                {
+                                    ControllerPair candidate = Controllers[key];
+                                    if ((!candidate.bVendor && !candidate.bGamepad) || ((!candidate.Vendor?.TryGetTarget(out _) ?? false) && (!candidate.Gamepad?.TryGetTarget(out _) ?? false)))
                                         Controllers.Remove(key);
+                                }
 
-                                if (newController)
-                                {
-                                    return ctrl;
-                                }
-                                else
-                                {
-                                    ctrl.AddDevice(_device);
-                                }
+                                return ctrl;
                             }
                     }
                 }
