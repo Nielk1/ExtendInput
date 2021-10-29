@@ -7,7 +7,7 @@ using System.Threading;
 
 namespace ExtendInput.Controller
 {
-    public class SteamControllerControllerFactory : IControllerFactory
+    public class SteamControllerFactory : IControllerFactory
     {
         //Dictionary<string, WeakReference<SemaphoreSlim>> SharedDongleLocks = new Dictionary<string, WeakReference<SemaphoreSlim>>();
         Dictionary<Guid, WeakReference<SemaphoreSlim>> SharedDongleLocks = new Dictionary<Guid, WeakReference<SemaphoreSlim>>();
