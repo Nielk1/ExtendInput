@@ -15,6 +15,7 @@ namespace ExtendInput.Controller
 
         public const int VENDOR_BETOP = 0x20bc;
         public const int PRODUCT_BETOP_ASURA3 = 0x5036;
+        public const int PRODUCT_BETOP_ASURA3_DONGLE = 0x5037;
 
 
         public string[] ConnectionTypeCode { get; private set; }
@@ -95,11 +96,14 @@ namespace ExtendInput.Controller
                 Initalized = false;
 
                 _device.DeviceReport += OnReport;
+                if (deviceGamepad != null) deviceGamepad.DeviceReport += OnReport;
 
                 _device.StartReading();
+                deviceGamepad?.StartReading();
 
                 CheckControllerStatusThread.Start();
 
+                EnableConfigMode();
                 EnableKeyEvent();
                 //QC();
             }
@@ -132,8 +136,11 @@ namespace ExtendInput.Controller
             _device.WriteReport(data);
         }
 
-        private void EnableConfigMode(byte param1, byte param2)
+        // Config Mode is needed to get raw controller data from the vendor specific endpoint, it is enabled automatically be XInput switch mode
+        private void EnableConfigMode()//byte param1, byte param2)
         {
+            // rumble toggling has this already applied, but we can just request it if it's alyready active anyway
+
             requestId++; // might be Asura3 only
             byte[] data = new byte[64];
             data[0] = 0x05;
@@ -144,8 +151,8 @@ namespace ExtendInput.Controller
             data[3] = 0x80;
             data[4] = 0x03;
             data[5] = 0x02;
-            _device.WriteReport(data);
-            Console.ForegroundColor = ConsoleColor.DarkGray;
+            bool success = _device.WriteReport(data);
+            Console.ForegroundColor = success ? ConsoleColor.DarkGray : ConsoleColor.DarkRed;
             Console.WriteLine($"{BitConverter.ToString(data)}");
             Console.ResetColor();
         }
@@ -162,8 +169,8 @@ namespace ExtendInput.Controller
             data[3] = 0xA0;
             data[4] = 0x03;
             data[5] = 0x02;
-            _device.WriteReport(data);
-            Console.ForegroundColor = ConsoleColor.DarkGray;
+            bool success = _device.WriteReport(data);
+            Console.ForegroundColor = success ? ConsoleColor.DarkGray : ConsoleColor.DarkRed;
             Console.WriteLine($"{BitConverter.ToString(data)}");
             Console.ResetColor();
         }
@@ -207,6 +214,8 @@ namespace ExtendInput.Controller
 
             // this logic appears to be for a 0x20BC/0x5044
 
+            //Console.WriteLine($"{reportData.ReportId:X2} {BitConverter.ToString(reportData.ReportBytes)}");
+
             if (reportData.ReportId == 0x05)
             {
                 lock (ReportLock)
@@ -245,6 +254,12 @@ namespace ExtendInput.Controller
                     {
                         counter = 0;
                     }
+
+                    if(reportData.ReportBytes[2] == 0x8C)
+                    {
+                        
+                    }
+
 
                     /*{
                         byte[] data = new byte[64];

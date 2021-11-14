@@ -77,11 +77,14 @@ namespace ExtendInput
                         {
                             ParameterInfo[] @params = con.GetParameters();
                             object[] paramList = new object[@params.Length];
-                            // don't worry about paramaters for now
-                            //for (int i = 0; i < @params.Length; i++)
-                            //{
-                            //    paramList[i] = ServiceProvider.GetService(@params[i].ParameterType);
-                            //}
+                            for (int i = 0; i < @params.Length; i++)
+                            {
+                                //paramList[i] = ServiceProvider.GetService(@params[i].ParameterType);
+                                if (@params[i].ParameterType == typeof(AccesMode))
+                                {
+                                    paramList[i] = AccessMode;
+                                }
+                            }
 
                             IControllerFactory plugin = (IControllerFactory)Activator.CreateInstance(item, paramList);
                             ControllerFactories.Add(plugin);

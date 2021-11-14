@@ -8,6 +8,12 @@ namespace ExtendInput.Controller
 {
     public class BetopControllerFactory : IControllerFactory
     {
+        private AccesMode AccessMode;
+        public BetopControllerFactory(AccesMode AccessMode)
+        {
+            this.AccessMode = AccessMode;
+        }
+
         Dictionary<Guid, ControllerPair> Controllers = new Dictionary<Guid, ControllerPair>();
         public class ControllerPair
         {
@@ -19,8 +25,12 @@ namespace ExtendInput.Controller
 
         public Dictionary<string, dynamic>[] DeviceWhitelist => new Dictionary<string, dynamic>[]
         {
-            new Dictionary<string, dynamic>(){ { "VID", BetopController.VENDOR_BETOP }, { "PID", BetopController.PRODUCT_BETOP_ASURA3 } },
+            new Dictionary<string, dynamic>(){ { "VID", BetopController.VENDOR_BETOP }, { "PID", BetopController.PRODUCT_BETOP_ASURA3 } }, // asume USB, if ever anything else code changes needed
+            new Dictionary<string, dynamic>(){ { "VID", BetopController.VENDOR_BETOP }, { "PID", BetopController.PRODUCT_BETOP_ASURA3_DONGLE } },
             new Dictionary<string, dynamic>(){ { "VID", 0x045E }, { "PID", 0x028E } },
+
+            // temporary
+            //new Dictionary<string, dynamic>(){ { "VID", 0x057E }, { "PID", 0x2009 } },
         };
 
         const int XINPUT_PLAYER_COUNT = 4;
@@ -64,6 +74,21 @@ namespace ExtendInput.Controller
             HidDevice _device = device as HidDevice;
             XInputDevice _deviceX = device as XInputDevice;
 
+            /*if(_device != null && _device.VendorId == 0x057E && _device.ProductId == 0x2009)
+            {
+                //HidSharp.OpenConfiguration config = new HidSharp.OpenConfiguration();
+                //config.SetOption(HidSharp.OpenOption.Exclusive, true);
+                //config.SetOption(HidSharp.OpenOption.Interruptible, false);
+                //using (var stream = _device.HackDevice.Open(config))
+                //{
+                //    Thread.Sleep(1000 * 10);
+                //}
+                byte[] dat = new byte[64];
+                dat[0] = 0x80;
+                dat[1] = 0x06;
+                bool stat = _device.WriteReport(dat);
+            }*/
+
             if (_device == null && _deviceX == null)
                 return null;
 
@@ -79,18 +104,29 @@ namespace ExtendInput.Controller
             {
                 if (device.VendorId == 0x045E && device.ProductId == 0x028E)
                 {
-                    if (device.Properties["ProductName"].Contains(" A2 GAMEPAD ")
+                    if (this.AccessMode != AccesMode.FullControl)
+                        return null;
+
+                    if (device.Properties["ProductName"].Contains(" A2 GAMEPAD ") // ASURA3
                      || device.Properties["ProductName"].Contains(" BD4E "))
                     {
+                        // hold logo to switch modes, or allow this code below to run (they don't have a choice)
                         lock (CandidateXInputLock)
                             SawCandidateHidDeviceForXInput = DateTime.UtcNow;
                         CheckXInputData();
+                    }
+                    else if (device.Properties["ProductName"].Contains(" A2 RECEIVER ")) // ASURA3_DONGLE
+                    {
+                        // hold logo to switch modes
                     }
                     return null;
                 }
             }
             else if (_deviceX != null)
             {
+                if (this.AccessMode != AccesMode.FullControl)
+                    return null;
+
                 lock (CandidateXInputLock)
                 {
                     CandidateXInputDevicesX[(byte)_deviceX.internalDevice.UserIndex] = new WeakReference<XInputDevice>(_deviceX);
@@ -100,7 +136,8 @@ namespace ExtendInput.Controller
                 return null;
             }
 
-            if (device.VendorId == BetopController.VENDOR_BETOP && device.ProductId == BetopController.PRODUCT_BETOP_ASURA3)
+            if (device.VendorId == BetopController.VENDOR_BETOP && (device.ProductId == BetopController.PRODUCT_BETOP_ASURA3
+                                                                 || device.ProductId == BetopController.PRODUCT_BETOP_ASURA3_DONGLE))
             {
 
                 // instead of this look for Capabilities.Usage of 3

@@ -36,7 +36,7 @@ namespace ExtendInputControllerTester
             Swan.Logging.Logger.UnregisterLogger<ConsoleLogger>();
             server.RunAsync();
 
-            DeviceManager = new DeviceManager();
+            DeviceManager = new DeviceManager(AccesMode.FullControl);
             DeviceManager.ControllerAdded += DeviceManager_ControllerAdded;
             DeviceManager.ControllerRemoved += DeviceManager_ControllerRemoved;
 

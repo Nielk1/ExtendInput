@@ -8,6 +8,12 @@ namespace ExtendInput.Controller
 {
     public class FlydigiControllerFactory : IControllerFactory
     {
+        private AccesMode AccessMode;
+        public FlydigiControllerFactory(AccesMode AccessMode)
+        {
+            this.AccessMode = AccessMode;
+        }
+
         public Dictionary<string, dynamic>[] DeviceWhitelist => new Dictionary<string, dynamic>[]
         {
             new Dictionary<string, dynamic>(){ { "VID", FlydigiController.VENDOR_FLYDIGI }, { "PID", FlydigiController.PRODUCT_FLYDIGI_DONGLE_1 } },
@@ -72,6 +78,9 @@ namespace ExtendInput.Controller
             {
                 if (device.VendorId == 0x045E && device.ProductId == 0x028E)
                 {
+                    if (this.AccessMode != AccesMode.FullControl)
+                        return null;
+
                     if (device.Properties["ProductName"] == "Controller (Flydigi 2.4G x360)"
                      || device.Properties["ProductName"] == "Controller (Flydigi 2.4G Android)") // APEX2 on USB does this for some reason
                     {
@@ -84,6 +93,9 @@ namespace ExtendInput.Controller
             }
             else if (_deviceX != null)
             {
+                if (this.AccessMode != AccesMode.FullControl)
+                    return null;
+
                 lock (CandidateXInputLock)
                 {
                     CandidateXInputDevicesX[(byte)_deviceX.internalDevice.UserIndex] = new WeakReference<XInputDevice>(_deviceX);
