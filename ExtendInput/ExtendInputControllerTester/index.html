@@ -175,22 +175,38 @@
                                 renderElement.empty().append(
                                     '<svg id="control_render_' + control_id + '" width="182" height="182" xmlns="http://www.w3.org/2000/svg">' +
                                     '<g>' +
-                                    '<ellipse class="btn_n" ry="30" rx="30" cy="151" cx="091" stroke="#000" fill="#fff" />' +
-                                    //DrawButtonSvg("btn_n", 091, 151) +
-                                    '<ellipse class="btn_e" ry="30" rx="30" cy="091" cx="151" stroke="#000" fill="#fff" />' +
-                                    //DrawButtonSvg("btn_n", 151, 091) +
-                                    '<ellipse class="btn_s" ry="30" rx="30" cy="031" cx="091" stroke="#000" fill="#fff" />' +
-                                    //DrawButtonSvg("btn_n", 091, 031) +
-                                    '<ellipse class="btn_w" ry="30" rx="30" cy="091" cx="031" stroke="#000" fill="#fff" />' +
-                                    //DrawButtonSvg("btn_n", 031, 091) +
+                                    DrawButtonSvg("btn_n", 91, 31) +
+                                    DrawButtonSvg("btn_e", 151, 91) +
+                                    DrawButtonSvg("btn_s", 91, 151) +
+                                    DrawButtonSvg("btn_w", 31, 91) +
                                     '</g>' +
                                     '</svg>');
                             }
                             var ctrl = $('#control_render_' + control_id);
-                            if (controlData.ButtonS) ctrl.find('.btn_n').addClass('active'); else ctrl.find('.btn_n').removeClass('active');
-                            if (controlData.ButtonE) ctrl.find('.btn_e').addClass('active'); else ctrl.find('.btn_e').removeClass('active');
-                            if (controlData.ButtonN) ctrl.find('.btn_s').addClass('active'); else ctrl.find('.btn_s').removeClass('active');
-                            if (controlData.ButtonW) ctrl.find('.btn_w').addClass('active'); else ctrl.find('.btn_w').removeClass('active');
+                            if (controlData.ButtonN) {
+                                ctrl.find('.btn_n_data').attr('rx', 25).attr('ry', 25);
+                            } else {
+                                ctrl.find('.btn_n_data').attr('rx', 0).attr('ry', 0);
+                                //ctrl.find('.btn_n_data').attr('rx', controlData.Analog * 25).attr('ry', controlData.Analog * 25);
+                            }
+                            if (controlData.ButtonE) {
+                                ctrl.find('.btn_e_data').attr('rx', 25).attr('ry', 25);
+                            } else {
+                                ctrl.find('.btn_e_data').attr('rx', 0).attr('ry', 0);
+                                //ctrl.find('.btn_e_data').attr('rx', controlData.Analog * 25).attr('ry', controlData.Analog * 25);
+                            }
+                            if (controlData.ButtonS) {
+                                ctrl.find('.btn_s_data').attr('rx', 25).attr('ry', 25);
+                            } else {
+                                ctrl.find('.btn_s_data').attr('rx', 0).attr('ry', 0);
+                                //ctrl.find('.btn_s_data').attr('rx', controlData.Analog * 25).attr('ry', controlData.Analog * 25);
+                            }
+                            if (controlData.ButtonW) {
+                                ctrl.find('.btn_w_data').attr('rx', 25).attr('ry', 25);
+                            } else {
+                                ctrl.find('.btn_w_data').attr('rx', 0).attr('ry', 0);
+                                //ctrl.find('.btn_w_data').attr('rx', controlData.Analog * 25).attr('ry', controlData.Analog * 25);
+                            }
                         }
                         break;
                     case 'ExtendInput.Controls.ControlDPad':
@@ -239,16 +255,24 @@
                                 renderElement.empty().append(
                                     '<svg id="control_render_' + control_id + '" width="62" height="62" xmlns="http://www.w3.org/2000/svg">' +
                                     '<g>' +
-                                    '<ellipse class="btn_x" ry="30" rx="30" cy="31" cx="031" stroke="#000" fill="#fff" />' +
+
+                                    DrawButtonSvg("btn_x", 31, 31) +
+
                                     '</g>' +
                                     '</svg>');
                             }
                             var ctrl = $('#control_render_' + control_id);
-                            if (controlData.Button0) ctrl.find('.btn_x').addClass('active'); else ctrl.find('.btn_x').removeClass('active');
+                            if (controlData.Button0) {
+                                ctrl.find('.btn_x_data').attr('rx', 25).attr('ry', 25);
+                            } else {
+                                ctrl.find('.btn_x_data').attr('rx', controlData.Analog * 25).attr('ry', controlData.Analog * 25);
+                            }
+                            if (controlData.HasStage2 == "Digital") if (controlData.Stage2) ctrl.find('.btn_x_click').addClass('active-o'); else ctrl.find('.btn_x_click').removeClass('active-o', 'disable-o'); else ctrl.find('.btn_x_click').addClass('disable-o');
+
                         }
                         break;
                     case 'ExtendInput.Controls.ControlButtonPair':
-                    case 'ExtendInput.Controls.ControlTriggerPair':
+                        //case 'ExtendInput.Controls.ControlTriggerPair':
                         {
                             var renderElement = wrapper.find('.control-value');
                             renderElement.addClass('text-center');
@@ -257,15 +281,15 @@
                                     '<svg id="control_render_' + control_id + '" width="182" height="62" xmlns="http://www.w3.org/2000/svg">' +
                                     '<g>' +
 
-                                    //'<ellipse class="btn_r_click" ry="29" rx="29" cy="31" cx="151" stroke="#ccc" fill="none" stroke-width="3" />' +
-                                    //'<ellipse class="" ry="25" rx="25" cy="31" cx="151" stroke="#000" fill="#fff" />' +
-                                    //'<ellipse class="btn_r_data" ry="0" rx="0" cy="31" cx="151" stroke="#000" fill="#333" />' +
-                                    DrawButtonSvg("btn_r", 151, 31) +
-
                                     //'<ellipse class="btn_l_click" ry="29" rx="29" cy="31" cx="031" stroke="#ccc" fill="none" stroke-width="3" />' +
                                     //'<ellipse class="" ry="25" rx="25" cy="31" cx="031" stroke="#000" fill="#fff" />' +
                                     //'<ellipse class="btn_l_data" ry="0" rx="0" cy="31" cx="031" stroke="#000" fill="#333" />' +
                                     DrawButtonSvg("btn_l", 31, 31) +
+
+                                    //'<ellipse class="btn_r_click" ry="29" rx="29" cy="31" cx="151" stroke="#ccc" fill="none" stroke-width="3" />' +
+                                    //'<ellipse class="" ry="25" rx="25" cy="31" cx="151" stroke="#000" fill="#fff" />' +
+                                    //'<ellipse class="btn_r_data" ry="0" rx="0" cy="31" cx="151" stroke="#000" fill="#333" />' +
+                                    DrawButtonSvg("btn_r", 151, 31) +
 
                                     '</g>' +
                                     '</svg>');
@@ -281,8 +305,8 @@
                             } else {
                                 ctrl.find('.btn_r_data').attr('rx', controlData.Right.Analog * 25).attr('ry', controlData.Right.Analog * 25);
                             }
-                            if (controlData.Left.HasStage2) if (controlData.Left.Stage2) ctrl.find('.btn_l_click').addClass('active-o'); else ctrl.find('.btn_l_click').removeClass('active-o', 'disable-o'); else ctrl.find('.btn_l_click').addClass('disable-o');
-                            if (controlData.Right.HasStage2) if (controlData.Right.Stage2) ctrl.find('.btn_r_click').addClass('active-o'); else ctrl.find('.btn_r_click').removeClass('active-o', 'disable-o'); else ctrl.find('.btn_r_click').addClass('disable-o');
+                            if (controlData.Left.HasStage2 == "Digital") if (controlData.Left.Stage2) ctrl.find('.btn_l_click').addClass('active-o'); else ctrl.find('.btn_l_click').removeClass('active-o', 'disable-o'); else ctrl.find('.btn_l_click').addClass('disable-o');
+                            if (controlData.Right.HasStage2 == "Digital") if (controlData.Right.Stage2) ctrl.find('.btn_r_click').addClass('active-o'); else ctrl.find('.btn_r_click').removeClass('active-o', 'disable-o'); else ctrl.find('.btn_r_click').addClass('disable-o');
                         }
                         break;
                     case 'ExtendInput.Controls.ControlPair':

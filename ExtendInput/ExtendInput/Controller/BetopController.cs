@@ -4,12 +4,21 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Text;
 using System.Threading;
 
 namespace ExtendInput.Controller
 {
     public class BetopController : IController
     {
+        enum ControllerSubtype
+        {
+            Unknown,
+            Asura3Wired,
+            Asura3Dongle,
+        }
+        private ControllerSubtype SubType = ControllerSubtype.Unknown;
+
         public EConnectionType ConnectionType => EConnectionType.Unknown;
 
 
@@ -26,14 +35,14 @@ namespace ExtendInput.Controller
             get
             {
                 //return new string[] { _device?.DevicePath ?? _device2.DevicePath };
-                return new string[] { _device.DevicePath };
+                return new string[] { deviceVendor.DevicePath };
             }
         }
         public bool HasSelectableAlternatives => false;
         public Dictionary<string, string> Alternates => null;
-        public IDevice DeviceHackRef => _device;
-        private HidDevice _device;
-        private HidDevice _device2;
+        public IDevice DeviceHackRef => deviceVendor;
+        private HidDevice deviceVendor;
+        private HidDevice deviceGamepad;
         int reportUsageLock = 0;
 
         public event ControllerNameUpdateEvent ControllerMetadataUpdate;
@@ -47,7 +56,7 @@ namespace ExtendInput.Controller
                 //if (!string.IsNullOrWhiteSpace(SerialNumber))
                 //    return SerialNumber;
                 //return _device?.UniqueKey ?? _device2.UniqueKey;
-                return _device.UniqueKey;
+                return deviceVendor.UniqueKey;
             }
         }
         public string DeviceUniqueID
@@ -63,21 +72,51 @@ namespace ExtendInput.Controller
         public bool IsPresent => true;
         public bool IsVirtual => false;
 
+        private bool ConfigMode = false;
+        private bool ConfigModeKeyData = false;
 
+
+        private AccesMode AccessMode;
         bool Initalized;
-        public BetopController(HidDevice deviceVendor, HidDevice deviceGamepad)
+        public BetopController(AccesMode AccessMode, HidDevice deviceVendor, HidDevice deviceGamepad)
         {
-            ConnectionTypeCode = new string[] { "CONNECTION_WIRE_35MM_PHONE_TRRS", "CONNECTION_WIRE" };
-            ControllerTypeCode = new string[] { "DEVICE_SIXTYBEAT_GAMEPAD", "DEVICE_GAMEPAD" };
+            this.AccessMode = AccessMode;
 
-            /*State.Controls["cluster_left"] = new ControlButtonQuad();
+            if(deviceVendor.ProductId == PRODUCT_BETOP_ASURA3)
+            {
+                SubType = ControllerSubtype.Asura3Wired;
+                ControllerTypeCode = new string[] { "DEVICE_ASURA3", "DEVICE_GAMEPAD" };
+                ConnectionTypeCode = new string[] { "CONNECTION_WIRE_USB", "CONNECTION_WIRE" };
+            }
+            else if (deviceVendor.ProductId == PRODUCT_BETOP_ASURA3_DONGLE)
+            {
+                SubType = ControllerSubtype.Asura3Dongle;
+                ControllerTypeCode = new string[] { "DEVICE_ASURA3", "DEVICE_GAMEPAD" };
+                ConnectionTypeCode = new string[] { "CONNECTION_DONGLE_ASURA3", "CONNECTION_DONGLE" };
+            }
+            else
+            {
+                SubType = ControllerSubtype.Unknown;
+                ControllerTypeCode = new string[] { "DEVICE_UNKNOWN" };
+                ConnectionTypeCode = new string[] { "CONNECTION_UNKNOWN" };
+            }
+
+
+
+            State.Controls["cluster_left"] = new ControlDPad();
             State.Controls["cluster_right"] = new ControlButtonQuad();
             State.Controls["bumpers"] = new ControlButtonPair(ButtonProperties.CMB_Bumper);
-            State.Controls["triggers"] = new ControlButtonPair(ButtonProperties.CMB_Bumper);
+            State.Controls["triggers"] = new ControlButtonPair(ButtonProperties.CMB_Trigger);
             State.Controls["menu"] = new ControlButtonPair(ButtonProperties.CMB_Button);
             State.Controls["home"] = new ControlButton(ButtonProperties.CMB_Button);
             State.Controls["stick_left"] = new ControlStick(HasClick: true);
-            State.Controls["stick_right"] = new ControlStick(HasClick: true);*/
+            State.Controls["stick_right"] = new ControlStick(HasClick: true);
+
+            if (deviceGamepad.ProductId == PRODUCT_BETOP_ASURA3 && (AccessMode == AccesMode.FullControl || AccessMode == AccesMode.SafeWriteOnly))
+            {
+                State.Controls["menu2"] = new ControlButtonPair(ButtonProperties.CMB_Button);
+                State.Controls["grip"] = new ControlButtonPair(ButtonProperties.CMB_Button);
+            }
 
             CheckControllerStatusThread = new Thread(() =>
             {
@@ -92,20 +131,21 @@ namespace ExtendInput.Controller
 
             //if (device.DevicePath.Contains("&col05"))
             {
-                _device = deviceVendor;
+                this.deviceVendor = deviceVendor;
+                this.deviceGamepad = deviceGamepad;
                 Initalized = false;
 
-                _device.DeviceReport += OnReport;
-                if (deviceGamepad != null) deviceGamepad.DeviceReport += OnReport;
+                this.deviceVendor.DeviceReport += OnReport;
+                if (this.deviceGamepad != null) this.deviceGamepad.DeviceReport += OnReport;
 
-                _device.StartReading();
-                deviceGamepad?.StartReading();
-
-                CheckControllerStatusThread.Start();
-
-                EnableConfigMode();
-                EnableKeyEvent();
-                //QC();
+                //_device.StartReading();
+                //_device2?.StartReading();
+                //
+                //CheckControllerStatusThread.Start();
+                //
+                //EnableConfigMode();
+                ////EnableKeyEvent();
+                ////QC();
             }
             // ignore this sub-device when we have full control and thus can ask the controller to send us its more raw data
             /*//if (device.DevicePath.Contains("&col04"))
@@ -133,7 +173,7 @@ namespace ExtendInput.Controller
             data[2] = 0x00;
             data[3] = 0xB0;
             data[4] = param;
-            _device.WriteReport(data);
+            deviceVendor.WriteReport(data);
         }
 
         // Config Mode is needed to get raw controller data from the vendor specific endpoint, it is enabled automatically be XInput switch mode
@@ -151,12 +191,13 @@ namespace ExtendInput.Controller
             data[3] = 0x80;
             data[4] = 0x03;
             data[5] = 0x02;
-            bool success = _device.WriteReport(data);
+            bool success = deviceVendor.WriteReport(data);
             Console.ForegroundColor = success ? ConsoleColor.DarkGray : ConsoleColor.DarkRed;
             Console.WriteLine($"{BitConverter.ToString(data)}");
             Console.ResetColor();
         }
 
+        // This enables raw key events for config mode
         private void EnableKeyEvent()
         {
             requestId++; // might be Asura3 only
@@ -169,7 +210,7 @@ namespace ExtendInput.Controller
             data[3] = 0xA0;
             data[4] = 0x03;
             data[5] = 0x02;
-            bool success = _device.WriteReport(data);
+            bool success = deviceVendor.WriteReport(data);
             Console.ForegroundColor = success ? ConsoleColor.DarkGray : ConsoleColor.DarkRed;
             Console.WriteLine($"{BitConverter.ToString(data)}");
             Console.ResetColor();
@@ -218,9 +259,14 @@ namespace ExtendInput.Controller
 
             if (reportData.ReportId == 0x05)
             {
-                lock (ReportLock)
+                /*int reportLength = reportData.ReportBytes.Reverse().SkipWhile(dr => dr == 0x00).Count();
+                if (reportLength > 0
+                     && reportData.ReportBytes[2] != 0xBC)
+                    Console.WriteLine($"{reportData.ReportId:X2} {BitConverter.ToString(reportData.ReportBytes)}");*/
+
+                //lock (ReportLock)
                 {
-                    int _v21 = 2;
+                    /*int _v21 = 2;
                     int reportLength = reportData.ReportBytes.Reverse().SkipWhile(dr => dr == 0x00).Count();
 
                     if (reportLength > 0
@@ -258,7 +304,7 @@ namespace ExtendInput.Controller
                     if(reportData.ReportBytes[2] == 0x8C)
                     {
                         
-                    }
+                    }*/
 
 
                     /*{
@@ -403,7 +449,29 @@ namespace ExtendInput.Controller
             }
             else
             {
-                Console.WriteLine($"{reportData.ReportId:X2} {BitConverter.ToString(reportData.ReportBytes)}");
+                //Console.WriteLine($"{reportData.ReportId:X2} {BitConverter.ToString(reportData.ReportBytes)}");
+            }
+
+            switch (reportData.ReportId)
+            {
+                case 0x05:
+                    switch (reportData.ReportBytes[2])
+                    {
+                        case 0x3D: // config data came in, so obviously we have it enabled
+                            ConfigMode = true;
+                            break;
+                        case 0x8C: // ACK for config mode enable
+                            ConfigMode = true;
+                            EnableKeyEvent();
+                            break;
+                        case 0xAC: // ACK for KeyData for ConfigMode
+                            ConfigModeKeyData = true;
+                            break;
+                        case 0xAD: // KeyData for ConfigMode
+                            ConfigModeKeyData = true;
+                            break;
+                    }
+                    break;
             }
 
             if (0 == Interlocked.Exchange(ref reportUsageLock, 1))
@@ -411,7 +479,193 @@ namespace ExtendInput.Controller
                 try
                 {
                     // Clone the current state before altering it since the OldState is likely a shared reference
-                    ControllerState StateInFlight = (ControllerState)State.Clone();
+                    //ControllerState StateInFlight = (ControllerState)State.Clone();
+
+                    //if(_device.VendorId == VENDOR_BETOP && _device.ProductId == PRODUCT_BETOP_ASURA3)
+                    {
+                        //if(_device2 != null) // device2 is the vendor specific device that handles config events
+                        {
+                            switch(reportData.ReportId)
+                            {
+                                case 0x03:
+                                    if (!ConfigModeKeyData)
+                                    {
+                                        ControllerState StateInFlight = (ControllerState)State.Clone();
+
+                                        (StateInFlight.Controls["cluster_right"] as ControlButtonQuad).ButtonN = (reportData.ReportBytes[2] & 0x10) == 0x10;
+                                        (StateInFlight.Controls["cluster_right"] as ControlButtonQuad).ButtonE = (reportData.ReportBytes[2] & 0x02) == 0x02;
+                                        (StateInFlight.Controls["cluster_right"] as ControlButtonQuad).ButtonS = (reportData.ReportBytes[2] & 0x01) == 0x01;
+                                        (StateInFlight.Controls["cluster_right"] as ControlButtonQuad).ButtonW = (reportData.ReportBytes[2] & 0x08) == 0x08;
+
+                                        switch(reportData.ReportBytes[1])
+                                        {
+                                            case 0x0f: (StateInFlight.Controls["cluster_left"] as ControlDPad).Direction = EDPadDirection.None; break;
+                                            case 0x00: (StateInFlight.Controls["cluster_left"] as ControlDPad).Direction = EDPadDirection.North; break;
+                                            case 0x01: (StateInFlight.Controls["cluster_left"] as ControlDPad).Direction = EDPadDirection.NorthEast; break;
+                                            case 0x02: (StateInFlight.Controls["cluster_left"] as ControlDPad).Direction = EDPadDirection.East; break;
+                                            case 0x03: (StateInFlight.Controls["cluster_left"] as ControlDPad).Direction = EDPadDirection.SouthEast; break;
+                                            case 0x04: (StateInFlight.Controls["cluster_left"] as ControlDPad).Direction = EDPadDirection.South; break;
+                                            case 0x05: (StateInFlight.Controls["cluster_left"] as ControlDPad).Direction = EDPadDirection.SouthWest; break;
+                                            case 0x06: (StateInFlight.Controls["cluster_left"] as ControlDPad).Direction = EDPadDirection.West; break;
+                                            case 0x07: (StateInFlight.Controls["cluster_left"] as ControlDPad).Direction = EDPadDirection.NorthWest; break;
+                                        }
+                                        (StateInFlight.Controls["bumpers"] as ControlButtonPair).Left.Digital = (reportData.ReportBytes[2] & 0x40) == 0x40;
+                                        (StateInFlight.Controls["bumpers"] as ControlButtonPair).Right.Digital = (reportData.ReportBytes[2] & 0x80) == 0x80;
+
+                                        (StateInFlight.Controls["triggers"] as ControlButtonPair).Left.Analog = (float)(reportData.ReportBytes[8] > 0 ? reportData.ReportBytes[8] : (reportData.ReportBytes[3] & 0x01) == 0x01 ? byte.MaxValue : 0) / byte.MaxValue;
+                                        (StateInFlight.Controls["triggers"] as ControlButtonPair).Right.Analog = (float)(reportData.ReportBytes[9] > 0 ? reportData.ReportBytes[9] : (reportData.ReportBytes[3] & 0x02) == 0x02 ? byte.MaxValue : 0) / byte.MaxValue;
+
+                                        (StateInFlight.Controls["stick_left"] as ControlStick).X = ControllerMathTools.QuickStickToFloat(reportData.ReportBytes[4]);
+                                        (StateInFlight.Controls["stick_left"] as ControlStick).Y = ControllerMathTools.QuickStickToFloat(reportData.ReportBytes[5]);
+                                        (StateInFlight.Controls["stick_left"] as ControlStick).Click = (reportData.ReportBytes[3] & 0x20) == 0x20;
+                                        (StateInFlight.Controls["stick_right"] as ControlStick).X = ControllerMathTools.QuickStickToFloat(reportData.ReportBytes[6]);
+                                        (StateInFlight.Controls["stick_right"] as ControlStick).Y = ControllerMathTools.QuickStickToFloat(reportData.ReportBytes[7]);
+                                        (StateInFlight.Controls["stick_right"] as ControlStick).Click = (reportData.ReportBytes[3] & 0x40) == 0x40;
+
+                                        (StateInFlight.Controls["menu"] as ControlButtonPair).Left.Digital = (reportData.ReportBytes[3] & 0x04) == 0x04;
+                                        (StateInFlight.Controls["menu"] as ControlButtonPair).Right.Digital = (reportData.ReportBytes[3] & 0x08) == 0x08;
+
+                                        (StateInFlight.Controls["home"] as ControlButton).Digital = (reportData.ReportBytes[3] & 0x10) == 0x10;
+
+                                        State = StateInFlight;
+
+                                        ControllerStateUpdate?.Invoke(this, State);
+                                    }
+                                    break;
+                                case 0x05:
+                                    switch(reportData.ReportBytes[2])
+                                    {
+                                        case 0x3D:
+                                            {
+                                                byte DataLen = reportData.ReportBytes[3];
+                                                StringBuilder bld = new StringBuilder();
+                                                for (int i = 0; i < DataLen - 2; i += 2)
+                                                {
+                                                    switch (reportData.ReportBytes[4 + i])
+                                                    {
+                                                        case 0x10: // light
+                                                            bld.AppendLine($"{reportData.ReportBytes[4 + i + 1]:X2} light");
+                                                            break;
+                                                        case 0x20: // lightdir
+                                                            bld.AppendLine($"{reportData.ReportBytes[4 + i + 1]:X2} lightdir");
+                                                            break;
+                                                        case 0x30: // lightcolor
+                                                            bld.AppendLine($"{reportData.ReportBytes[4 + i + 1]:X2} lightcolor");
+                                                            break;
+                                                        case 0x40: // lightlevel
+                                                            bld.AppendLine($"{reportData.ReportBytes[4 + i + 1]:X2} lightlevel");
+                                                            break;
+                                                        case 0x50: // freqlevel
+                                                            bld.AppendLine($"{reportData.ReportBytes[4 + i + 1]:X2} freqlevel");
+                                                            break;
+                                                        case 0x60: // viblevel
+                                                            bld.AppendLine($"{reportData.ReportBytes[4 + i + 1]:X2} viblevel");
+                                                            break;
+                                                        case 0x70: // viblight
+                                                            bld.AppendLine($"{reportData.ReportBytes[4 + i + 1]:X2} viblight");
+                                                            break;
+                                                        case 0x80: // battery
+                                                            bld.AppendLine($"{reportData.ReportBytes[4 + i + 1]:X2} battery");
+                                                            break;
+                                                        case 0x90: // leftsense
+                                                            bld.AppendLine($"{reportData.ReportBytes[4 + i + 1]:X2} leftsense  |{new string('=', reportData.ReportBytes[4 + i + 1] - 1)}{new string('-', 7 - reportData.ReportBytes[4 + i + 1])}|");
+                                                            break;
+                                                        case 0xA0: // rightsense
+                                                            bld.AppendLine($"{reportData.ReportBytes[4 + i + 1]:X2} rightsense |{new string('=', reportData.ReportBytes[4 + i + 1] - 1)}{new string('-', 7 - reportData.ReportBytes[4 + i + 1])}|");
+                                                            break;
+                                                        case 0xB0: // ltlevel
+                                                            bld.AppendLine($"{reportData.ReportBytes[4 + i + 1]:X2} ltlevel");
+                                                            break;
+                                                        case 0xC0: // rtlevel
+                                                            bld.AppendLine($"{reportData.ReportBytes[4 + i + 1]:X2} rtlevel");
+                                                            break;
+                                                    }
+                                                }
+                                                Console.WriteLine(bld.ToString());
+                                            }
+                                            break;
+                                        case 0xAD:
+                                            {
+                                                ControllerState StateInFlight = (ControllerState)State.Clone();
+
+                                                (StateInFlight.Controls["cluster_right"] as ControlButtonQuad).ButtonN = (reportData.ReportBytes[4] == 0x01);
+                                                (StateInFlight.Controls["cluster_right"] as ControlButtonQuad).ButtonE = (reportData.ReportBytes[6] == 0x01);
+                                                (StateInFlight.Controls["cluster_right"] as ControlButtonQuad).ButtonS = (reportData.ReportBytes[5] == 0x01);
+                                                (StateInFlight.Controls["cluster_right"] as ControlButtonQuad).ButtonW = (reportData.ReportBytes[3] == 0x01);
+                                                {
+                                                    bool buttonUp = (reportData.ReportBytes[15] == 0x01);
+                                                    bool buttonRight = (reportData.ReportBytes[18] == 0x01);
+                                                    bool buttonDown = (reportData.ReportBytes[16] == 0x01);
+                                                    bool buttonLeft = (reportData.ReportBytes[17] == 0x01);
+                                                    int padH = 0;
+                                                    int padV = 0;
+                                                    if (buttonUp) padV++;
+                                                    if (buttonDown) padV--;
+                                                    if (buttonRight) padH++;
+                                                    if (buttonLeft) padH--;
+                                                    if (padH > 0)
+                                                        if (padV > 0)
+                                                            (StateInFlight.Controls["cluster_left"] as ControlDPad).Direction = EDPadDirection.NorthEast;
+                                                        else if (padV < 0)
+                                                            (StateInFlight.Controls["cluster_left"] as ControlDPad).Direction = EDPadDirection.SouthEast;
+                                                        else
+                                                            (StateInFlight.Controls["cluster_left"] as ControlDPad).Direction = EDPadDirection.East;
+                                                    else if (padH < 0)
+                                                        if (padV > 0)
+                                                            (StateInFlight.Controls["cluster_left"] as ControlDPad).Direction = EDPadDirection.NorthWest;
+                                                        else if (padV < 0)
+                                                            (StateInFlight.Controls["cluster_left"] as ControlDPad).Direction = EDPadDirection.SouthWest;
+                                                        else
+                                                            (StateInFlight.Controls["cluster_left"] as ControlDPad).Direction = EDPadDirection.West;
+                                                    else
+                                                        if (padV > 0)
+                                                        (StateInFlight.Controls["cluster_left"] as ControlDPad).Direction = EDPadDirection.North;
+                                                    else if (padV < 0)
+                                                        (StateInFlight.Controls["cluster_left"] as ControlDPad).Direction = EDPadDirection.South;
+                                                    else
+                                                        (StateInFlight.Controls["cluster_left"] as ControlDPad).Direction = EDPadDirection.None;
+                                                }
+
+                                                (StateInFlight.Controls["bumpers"] as ControlButtonPair).Left.Digital = (reportData.ReportBytes[7] == 0x01);
+                                                (StateInFlight.Controls["bumpers"] as ControlButtonPair).Right.Digital = (reportData.ReportBytes[8] == 0x01);
+
+                                                (StateInFlight.Controls["triggers"] as ControlButtonPair).Left.Analog = (float)reportData.ReportBytes[9] / byte.MaxValue;
+                                                (StateInFlight.Controls["triggers"] as ControlButtonPair).Right.Analog = (float)reportData.ReportBytes[10] / byte.MaxValue;
+
+                                                (StateInFlight.Controls["stick_left"] as ControlStick).X = ControllerMathTools.QuickStickToFloat(reportData.ReportBytes[21]);
+                                                (StateInFlight.Controls["stick_left"] as ControlStick).Y = ControllerMathTools.QuickStickToFloat(reportData.ReportBytes[22]);
+                                                (StateInFlight.Controls["stick_left"] as ControlStick).Click = reportData.ReportBytes[11] == 0x01;
+                                                (StateInFlight.Controls["stick_right"] as ControlStick).X = ControllerMathTools.QuickStickToFloat(reportData.ReportBytes[23]);
+                                                (StateInFlight.Controls["stick_right"] as ControlStick).Y = ControllerMathTools.QuickStickToFloat(reportData.ReportBytes[24]);
+                                                (StateInFlight.Controls["stick_right"] as ControlStick).Click = reportData.ReportBytes[12] == 0x01;
+
+                                                (StateInFlight.Controls["menu"] as ControlButtonPair).Left.Digital = reportData.ReportBytes[14] == 0x01;
+                                                (StateInFlight.Controls["menu"] as ControlButtonPair).Right.Digital = reportData.ReportBytes[13] == 0x01;
+
+                                                (StateInFlight.Controls["menu2"] as ControlButtonPair).Left.Digital = reportData.ReportBytes[28] == 0x01;
+                                                (StateInFlight.Controls["menu2"] as ControlButtonPair).Right.Digital = reportData.ReportBytes[27] == 0x01;
+
+                                                (StateInFlight.Controls["grip"] as ControlButtonPair).Left.Digital = reportData.ReportBytes[25] == 0x01;
+                                                (StateInFlight.Controls["grip"] as ControlButtonPair).Right.Digital = reportData.ReportBytes[26] == 0x01;
+
+                                                (StateInFlight.Controls["home"] as ControlButton).Digital = reportData.ReportBytes[29] == 0x01;
+
+
+                                                State = StateInFlight;
+
+                                                ControllerStateUpdate?.Invoke(this, State);
+                                            }
+                                            break;
+                                    }
+                                    break;
+                            }
+                        }
+                        //else
+                        //{
+                        //
+                        //}
+                    }
+
                     /*
                     byte SBJoystick_rawRightY = reverseByte(reportData.ReportBytes[2]);
                     byte SBJoystick_rawRightX = reverseByte(reportData.ReportBytes[3]);
@@ -450,9 +704,9 @@ namespace ExtendInput.Controller
 
 
                     // bring OldState in line with new State
-                    State = StateInFlight;
+                    //State = StateInFlight;
 
-                    ControllerStateUpdate?.Invoke(this, State);
+                    //ControllerStateUpdate?.Invoke(this, State);
                 }
                 finally
                 {
@@ -469,21 +723,35 @@ namespace ExtendInput.Controller
 
         public void Initalize()
         {
+            if (Initalized)
+                return;
+
             //Log("Initalize");
             //if (PollingState == EPollingState.Active) return;
 
             //PollingState = EPollingState.Active;
             //Log($"Polling state set to Active", ConsoleColor.Yellow);
-            _device.StartReading();
+            deviceVendor.StartReading();
+            deviceGamepad?.StartReading();
+            EnableConfigMode();
+            AbortStatusThread = false;
+            CheckControllerStatusThread.Start();
+
+            Initalized = true;
         }
 
         public void DeInitalize()
         {
+            if (!Initalized)
+                return;
+
             //Log("DeInitalize");
             //if (PollingState == EPollingState.Inactive) return;
             //if (PollingState == EPollingState.SlowPoll) return;
             ////if (PollingState == EPollingState.RunOnce) return;
             //if (PollingState == EPollingState.RunUntilReady) return;
+
+            AbortStatusThread = true;
 
             // dongles switch back to slow poll instead of going inactive
             //if (ConnectionType == EConnectionType.Dongle)
@@ -493,12 +761,18 @@ namespace ExtendInput.Controller
             //}
             //else
             //{
-                _device.StopReading();
+            deviceVendor.StopReading();
+            deviceGamepad?.StopReading();
 
             //    PollingState = EPollingState.Inactive;
             //    Log($"Polling state set to Inactive", ConsoleColor.Yellow);
-                _device.CloseDevice();
+            deviceVendor.CloseDevice();
+            deviceGamepad?.CloseDevice();
             //}
+            ConfigMode = false;
+            ConfigModeKeyData = false;
+
+            Initalized = false;
         }
 
         public void SetActiveAlternateController(string ControllerID) { }

@@ -175,7 +175,7 @@ namespace ExtendInput.Controller
 
                                     if (deviceVendor != null && deviceGamepad != null)
                                     {
-                                        ctrl = new BetopController(deviceVendor, deviceGamepad);
+                                        ctrl = new BetopController(AccessMode, deviceVendor, deviceGamepad);
                                     }
                                     else
                                     {
