@@ -13,13 +13,14 @@ namespace ExtendInput.DeviceProvider
     {
         private const int MAX_SLOT = 4;
 
-        public event DeviceChangeEventHandler DeviceAdded;
-        public event DeviceChangeEventHandler DeviceRemoved;
+        public event DeviceAddedEventHandler DeviceAdded;
+        public event DeviceRemovedEventHandler DeviceRemoved;
 
         //HashSet<HidSharp.HidDevice> KnownDevices = new HashSet<HidSharp.HidDevice>();
         object lock_device_list = new object();
         SharpDX.XInput.Controller[] Controllers = new SharpDX.XInput.Controller[MAX_SLOT];
-        bool[] ControllerActive = new bool[MAX_SLOT];
+        XInputDevice[] DeviceCache = new XInputDevice[MAX_SLOT];
+        //bool[] ControllerActive = new bool[MAX_SLOT];
 
         bool AbortStatusThread = false;
         Thread CheckControllerStatusThread;
@@ -60,7 +61,7 @@ namespace ExtendInput.DeviceProvider
                 {
                     for(int i=0;i< MAX_SLOT;i++)
                     {
-                        if (ControllerActive[i] != Controllers[i].IsConnected)
+                        /*if (ControllerActive[i] != Controllers[i].IsConnected)
                         {
                             if(Controllers[i].IsConnected)
                             {
@@ -73,6 +74,12 @@ namespace ExtendInput.DeviceProvider
                                 threadSafeEventHandler?.Invoke(this, new XInputDevice(Controllers[i]));
                             }
                             ControllerActive[i] = Controllers[i].IsConnected;
+                        }*/
+                        if(DeviceCache[i] == null && Controllers[i].IsConnected)
+                        {
+                            DeviceCache[i] = new XInputDevice(Controllers[i]);
+                            DeviceAddedEventHandler threadSafeEventHandler = DeviceAdded;
+                            threadSafeEventHandler?.Invoke(this, DeviceCache[i]);
                         }
                     }
                 }

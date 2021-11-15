@@ -9,6 +9,8 @@ namespace ExtendInput.DeviceProvider
 {
     public class HidDevice : IDevice
     {
+        public static string GetUniqueKey(string DevicePath) => $"HidDevice::{DevPKey.PnpDevicePropertyAPI.devicePathToInstanceId(DevicePath)}";
+
         public string DevicePath { get { return internalDevice.DevicePath; } }
         public int ProductId { get { return internalDevice.ProductID; } }
         public int VendorId { get { return internalDevice.VendorID; } }
@@ -16,6 +18,8 @@ namespace ExtendInput.DeviceProvider
 
         public Dictionary<string, dynamic> Properties { get; private set; }
 
+
+        public uint[] Usages { get; private set; }
 
         private HidSharp.HidDevice internalDevice;
         private bool IsOpen = false;
@@ -60,7 +64,10 @@ namespace ExtendInput.DeviceProvider
                     catch { }
                 }
                 if (FoundAny)
-                    Properties["Usages"] = Usages.ToArray();
+                {
+                    this.Usages = Usages.ToArray();
+                    Properties["Usages"] = this.Usages;
+                }
             }
             catch { }
 
@@ -248,7 +255,7 @@ namespace ExtendInput.DeviceProvider
             }
         }
 
-        public string UniqueKey => $"HidDevice {DevPKey.PnpDevicePropertyAPI.devicePathToInstanceId(this.DevicePath)}";
+        public string UniqueKey => GetUniqueKey(this.DevicePath);
 
         public int PollingRate { get; internal set; }
 

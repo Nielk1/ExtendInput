@@ -23,5 +23,11 @@ namespace ExtendInput.Controller
                 return ctrl;
             }
         }
+
+        public string RemoveDevice(string UniqueKey)
+        {
+            // TODO IMPLEMENT
+            return null;
+        }
     }
 }

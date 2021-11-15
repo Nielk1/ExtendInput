@@ -14,8 +14,8 @@ namespace ExtendInput.DeviceProvider
     public class SixtyBeatAudioDeviceProvider : IDeviceProvider
     {
 
-        public event DeviceChangeEventHandler DeviceAdded;
-        public event DeviceChangeEventHandler DeviceRemoved;
+        public event DeviceAddedEventHandler DeviceAdded;
+        public event DeviceRemovedEventHandler DeviceRemoved;
 
         public SixtyBeatAudioDeviceProvider()
         {
@@ -33,7 +33,7 @@ namespace ExtendInput.DeviceProvider
         {
             if (Option != null)
             {
-                DeviceChangeEventHandler threadSafeEventHandler = DeviceAdded;
+                DeviceAddedEventHandler threadSafeEventHandler = DeviceAdded;
                 SixtyBeatAudioDevice device = SixtyBeatAudioDevice.Create(Option.Tag as string);
                 if (device != null)
                     threadSafeEventHandler?.Invoke(this, device);

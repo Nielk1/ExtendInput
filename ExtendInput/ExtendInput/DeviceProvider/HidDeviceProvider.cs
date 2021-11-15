@@ -10,8 +10,8 @@ namespace ExtendInput.DeviceProvider
     [DeviceProvider(TypeString = "HID", TypeCode = "HID", SupportsAutomaticDetection = true, SupportsManualyQuery = true, RequiresManualConfiguration = false)]
     public class HidDeviceProvider : IDeviceProvider
     {
-        public event DeviceChangeEventHandler DeviceAdded;
-        public event DeviceChangeEventHandler DeviceRemoved;
+        public event DeviceAddedEventHandler DeviceAdded;
+        public event DeviceRemovedEventHandler DeviceRemoved;
 
         HashSet<HidSharp.HidDevice> KnownDevices = new HashSet<HidSharp.HidDevice>();
         object lock_device_list = new object();
@@ -49,8 +49,8 @@ namespace ExtendInput.DeviceProvider
                             Debug.WriteLine($"Device Removed: {device.DevicePath.PadRight(100)} \"{device}\"");
 
                             KnownDevices.Remove(device);
-                            DeviceChangeEventHandler threadSafeEventHandler = DeviceRemoved;
-                            threadSafeEventHandler?.Invoke(this, new HidDevice(device));
+                            DeviceRemovedEventHandler threadSafeEventHandler = DeviceRemoved;
+                            threadSafeEventHandler?.Invoke(this, HidDevice.GetUniqueKey(device.DevicePath));
                         }
                     }
 
@@ -63,12 +63,12 @@ namespace ExtendInput.DeviceProvider
                             {
                                 FriendlyName = device.GetFriendlyName();
                             }
-                            catch(IOException) { }
+                            catch (IOException) { }
                             Debug.WriteLine($"Device Added: {device.DevicePath.PadRight(100)} \"{FriendlyName}\"");
                             Debug.WriteLine($"Device Added: {device.DevicePath.PadRight(100)} \"{device}\"");
 
                             KnownDevices.Add(device);
-                            DeviceChangeEventHandler threadSafeEventHandler = DeviceAdded;
+                            DeviceAddedEventHandler threadSafeEventHandler = DeviceAdded;
                             threadSafeEventHandler?.Invoke(this, new HidDevice(device));
                         }
                     }
@@ -113,11 +113,12 @@ namespace ExtendInput.DeviceProvider
         }
     }
 
-    public delegate void DeviceChangeEventHandler(object sender, IDevice e);
+    public delegate void DeviceAddedEventHandler(object sender, IDevice e);
+    public delegate void DeviceRemovedEventHandler(object sender, string UniqueKey);
     public interface IDeviceProvider : IDisposable
     {
-        event DeviceChangeEventHandler DeviceAdded;
-        event DeviceChangeEventHandler DeviceRemoved;
+        event DeviceAddedEventHandler DeviceAdded;
+        event DeviceRemovedEventHandler DeviceRemoved;
 
         void ScanNow();
         IDeviceManualTriggerContext ManualTrigger(DeviceManualTriggerContextOption Option);

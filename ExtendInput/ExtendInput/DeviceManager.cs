@@ -19,8 +19,8 @@ namespace ExtendInput
         List<IDeviceProvider> DeviceProviders;
         List<IControllerFactory> ControllerFactories;
 
-        public event ControllerChangeEventHandler ControllerAdded;
-        public event DeviceChangeEventHandler ControllerRemoved;
+        public event ControllerAddedEventHandler ControllerAdded;
+        public event ControllerRemovedEventHandler ControllerRemoved;
 
         private AccesMode AccessMode;
 
@@ -113,7 +113,7 @@ namespace ExtendInput
                 IController d = factory.NewDevice(e);
                 if (d != null)
                 {
-                    ControllerChangeEventHandler threadSafeEventHandler = ControllerAdded;
+                    ControllerAddedEventHandler threadSafeEventHandler = ControllerAdded;
                     threadSafeEventHandler?.Invoke(this, d);
 
                     Debug.WriteLine($"New Device<{e.GetType()}>({e.UniqueKey}) with Properties:{string.Join(string.Empty, e.Properties?.Select(dr => $"\r\n[{dr.Key}]={dr.Value}"))}\r\n");
@@ -121,11 +121,17 @@ namespace ExtendInput
             }
         }
 
-        private void DeviceRemoved(object sender, IDevice e)
+        private void DeviceRemoved(object sender, string UniqueKey)
         {
-            DeviceChangeEventHandler threadSafeEventHandler = ControllerRemoved;
-            // TODO Must Dispose controller here, which means we need to keep a device to controller map.  Should probably make the factories do it
-            threadSafeEventHandler?.Invoke(this, e);
+            foreach (IControllerFactory factory in ControllerFactories)
+            {
+                string RemovedKey = factory.RemoveDevice(UniqueKey);
+                if (RemovedKey != null)
+                {
+                    ControllerRemovedEventHandler threadSafeEventHandler = ControllerRemoved;
+                    threadSafeEventHandler?.Invoke(this, RemovedKey);
+                }
+            }
         }
 
         public void ScanNow()
@@ -142,6 +148,6 @@ namespace ExtendInput
         }
     }
 
-    public delegate void ControllerChangeEventHandler(object sender, IController e);
-    public delegate void DeviceChangeEventHandler(object sender, IDevice e);
+    public delegate void ControllerAddedEventHandler(object sender, IController e);
+    public delegate void ControllerRemovedEventHandler(object sender, string UniqueKey);
 }

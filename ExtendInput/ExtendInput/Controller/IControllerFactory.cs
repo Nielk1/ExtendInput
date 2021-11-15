@@ -8,5 +8,6 @@ namespace ExtendInput.Controller
         Dictionary<string, dynamic>[] DeviceWhitelist { get; }
 
         IController NewDevice(IDevice device);
+        string RemoveDevice(string UniqueKey);
     }
 }

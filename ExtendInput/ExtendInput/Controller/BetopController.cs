@@ -35,30 +35,31 @@ namespace ExtendInput.Controller
             get
             {
                 //return new string[] { _device?.DevicePath ?? _device2.DevicePath };
-                return new string[] { deviceVendor.DevicePath };
+                return new string[] { devices.First().DevicePath };
             }
         }
         public bool HasSelectableAlternatives => false;
         public Dictionary<string, string> Alternates => null;
-        public IDevice DeviceHackRef => deviceVendor;
-        private HidDevice deviceVendor;
-        private HidDevice deviceGamepad;
+        public IDevice DeviceHackRef => devices.First();
+        private HashSet<HidDevice> devices;
         int reportUsageLock = 0;
 
         public event ControllerNameUpdateEvent ControllerMetadataUpdate;
         public event ControllerStateUpdateEvent ControllerStateUpdate;
 
         ControllerState State = new ControllerState();
-        public string ConnectionUniqueID
+        public string ConnectionUniqueID { get; private set; }
+        /*public string ConnectionUniqueID
         {
             get
             {
                 //if (!string.IsNullOrWhiteSpace(SerialNumber))
                 //    return SerialNumber;
                 //return _device?.UniqueKey ?? _device2.UniqueKey;
-                return deviceVendor.UniqueKey;
+                //return deviceVendor.UniqueKey;
+                return devices.First().UniqueKey;
             }
-        }
+        }*/
         public string DeviceUniqueID
         {
             get
@@ -76,19 +77,24 @@ namespace ExtendInput.Controller
         private bool ConfigModeKeyData = false;
 
 
+        private HidDevice deviceVendor => devices.Where(dr => dr.Usages?.Contains(0xff000003u) ?? false).FirstOrDefault();
+
+
         private AccesMode AccessMode;
         bool Initalized;
-        public BetopController(AccesMode AccessMode, HidDevice deviceVendor, HidDevice deviceGamepad)
+        public BetopController(string UniqueKey, AccesMode AccessMode, HidDevice device)
         {
+            ConnectionUniqueID = UniqueKey;
             this.AccessMode = AccessMode;
+            devices = new HashSet<HidDevice>();
 
-            if(deviceVendor.ProductId == PRODUCT_BETOP_ASURA3)
+            if (device.ProductId == PRODUCT_BETOP_ASURA3)
             {
                 SubType = ControllerSubtype.Asura3Wired;
                 ControllerTypeCode = new string[] { "DEVICE_ASURA3", "DEVICE_GAMEPAD" };
                 ConnectionTypeCode = new string[] { "CONNECTION_WIRE_USB", "CONNECTION_WIRE" };
             }
-            else if (deviceVendor.ProductId == PRODUCT_BETOP_ASURA3_DONGLE)
+            else if (device.ProductId == PRODUCT_BETOP_ASURA3_DONGLE)
             {
                 SubType = ControllerSubtype.Asura3Dongle;
                 ControllerTypeCode = new string[] { "DEVICE_ASURA3", "DEVICE_GAMEPAD" };
@@ -112,7 +118,7 @@ namespace ExtendInput.Controller
             State.Controls["stick_left"] = new ControlStick(HasClick: true);
             State.Controls["stick_right"] = new ControlStick(HasClick: true);
 
-            if (deviceGamepad.ProductId == PRODUCT_BETOP_ASURA3 && (AccessMode == AccesMode.FullControl || AccessMode == AccesMode.SafeWriteOnly))
+            if (device.ProductId == PRODUCT_BETOP_ASURA3 && (AccessMode == AccesMode.FullControl || AccessMode == AccesMode.SafeWriteOnly))
             {
                 State.Controls["menu2"] = new ControlButtonPair(ButtonProperties.CMB_Button);
                 State.Controls["grip"] = new ControlButtonPair(ButtonProperties.CMB_Button);
@@ -129,8 +135,10 @@ namespace ExtendInput.Controller
                 }
             });
 
+            AddDevice(device);
+
             //if (device.DevicePath.Contains("&col05"))
-            {
+            /*{
                 this.deviceVendor = deviceVendor;
                 this.deviceGamepad = deviceGamepad;
                 Initalized = false;
@@ -146,7 +154,7 @@ namespace ExtendInput.Controller
                 //EnableConfigMode();
                 ////EnableKeyEvent();
                 ////QC();
-            }
+            }*/
             // ignore this sub-device when we have full control and thus can ask the controller to send us its more raw data
             /*//if (device.DevicePath.Contains("&col04"))
             {
@@ -156,6 +164,7 @@ namespace ExtendInput.Controller
 
                 _device2.StartReading();
             }*/
+            Initalized = false;
         }
         bool AbortStatusThread = false;
         Thread CheckControllerStatusThread;
@@ -165,8 +174,25 @@ namespace ExtendInput.Controller
             AbortStatusThread = true;
         }
 
+        public void AddDevice(HidDevice device)
+        {
+            lock (InitalizationLock)
+            {
+                devices.Add(device);
+                device.DeviceReport += OnReport;
+
+                if (Initalized)
+                {
+                    EnableConfigMode();
+                    device.StartReading();
+                }
+            }
+        }
+
         private void SendConnectivity(byte param)
         {
+            if (deviceVendor == null)
+                return;
             byte[] data = new byte[64];
             data[0] = 0x05;
             data[1] = 0x00;
@@ -179,6 +205,9 @@ namespace ExtendInput.Controller
         // Config Mode is needed to get raw controller data from the vendor specific endpoint, it is enabled automatically be XInput switch mode
         private void EnableConfigMode()//byte param1, byte param2)
         {
+            if (deviceVendor == null)
+                return;
+
             // rumble toggling has this already applied, but we can just request it if it's alyready active anyway
 
             requestId++; // might be Asura3 only
@@ -734,8 +763,10 @@ namespace ExtendInput.Controller
 
                 //PollingState = EPollingState.Active;
                 //Log($"Polling state set to Active", ConsoleColor.Yellow);
-                deviceVendor.StartReading();
-                deviceGamepad?.StartReading();
+                //deviceVendor.StartReading();
+                //deviceGamepad?.StartReading();
+                foreach (var device in devices)
+                    device.StartReading();
                 EnableConfigMode();
                 CheckControllerStatusThread?.Abort();
                 AbortStatusThread = false;
@@ -778,13 +809,17 @@ namespace ExtendInput.Controller
                 //}
                 //else
                 //{
-                deviceVendor.StopReading();
-                deviceGamepad?.StopReading();
+                //deviceVendor.StopReading();
+                //deviceGamepad?.StopReading();
+                foreach (var device in devices)
+                    device.StopReading();
 
                 //    PollingState = EPollingState.Inactive;
                 //    Log($"Polling state set to Inactive", ConsoleColor.Yellow);
-                deviceVendor.CloseDevice();
-                deviceGamepad?.CloseDevice();
+                //deviceVendor.CloseDevice();
+                //deviceGamepad?.CloseDevice();
+                foreach (var device in devices)
+                    device.CloseDevice();
                 //}
                 ConfigMode = false;
                 ConfigModeKeyData = false;

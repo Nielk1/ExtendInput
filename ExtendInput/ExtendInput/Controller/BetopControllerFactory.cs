@@ -9,12 +9,15 @@ namespace ExtendInput.Controller
     public class BetopControllerFactory : IControllerFactory
     {
         private AccesMode AccessMode;
+        //private object DeviceControllerMapLock = new object(); // use the locking of Controllers with these for now
+        private Dictionary<string, Guid> DeviceToControllerKeyMap = new Dictionary<string, Guid>();
+        private Dictionary<Guid, HashSet<string>> ControllerToDeviceKeyMap = new Dictionary<Guid, HashSet<string>>();
         public BetopControllerFactory(AccesMode AccessMode)
         {
             this.AccessMode = AccessMode;
         }
 
-        Dictionary<Guid, ControllerPair> Controllers = new Dictionary<Guid, ControllerPair>();
+        Dictionary<Guid, BetopController> Controllers = new Dictionary<Guid, BetopController>();
         public class ControllerPair
         {
             public bool bVendor;
@@ -134,10 +137,27 @@ namespace ExtendInput.Controller
                         if (ContrainerID.HasValue)
                             lock (Controllers)
                             {
-                                if (!Controllers.ContainsKey(ContrainerID.Value))
-                                    Controllers[ContrainerID.Value] = new ControllerPair();
+                                BetopController ctrl = null;
+                                if (Controllers.ContainsKey(ContrainerID.Value))
+                                {
+                                    ctrl = Controllers[ContrainerID.Value];
+                                    ctrl.AddDevice(deviceHid);
+                                }
+                                else
+                                {
+                                    Controllers[ContrainerID.Value] = new BetopController(ContrainerID.Value.ToString(), AccessMode, deviceHid);
+                                    ctrl = Controllers[ContrainerID.Value];
+                                }
 
-                                if (Usages.Contains(0xff000003u))
+                                DeviceToControllerKeyMap[device.UniqueKey] = ContrainerID.Value;
+                                if (!ControllerToDeviceKeyMap.ContainsKey(ContrainerID.Value))
+                                    ControllerToDeviceKeyMap[ContrainerID.Value] = new HashSet<string>();
+                                ControllerToDeviceKeyMap[ContrainerID.Value].Add(device.UniqueKey);
+
+                                return ctrl;
+
+
+                                /*if (Usages.Contains(0xff000003u))
                                 //if (device.DevicePath.Contains("&col05"))
                                 {
                                     Controllers[ContrainerID.Value].bVendor = true;
@@ -178,13 +198,38 @@ namespace ExtendInput.Controller
                                         Controllers.Remove(key);
                                 }
 
-                                return ctrl;
+                                return ctrl;*/
                             }
                     }
                 }
             }
 
             return null;
+        }
+
+        public string RemoveDevice(string UniqueKey)
+        {
+            lock (Controllers)
+            {
+                if (!DeviceToControllerKeyMap.ContainsKey(UniqueKey))
+                    return null;
+
+                Guid DeviceParent = DeviceToControllerKeyMap[UniqueKey];
+
+                foreach(string DeviceKey in ControllerToDeviceKeyMap[DeviceParent])
+                    if (DeviceToControllerKeyMap.ContainsKey(DeviceKey))
+                        DeviceToControllerKeyMap.Remove(DeviceKey);
+
+                BetopController ctrl = Controllers[DeviceParent];
+                string UniqueControllerId = ctrl.ConnectionUniqueID;
+
+                ctrl.DeInitalize();
+                ctrl.Dispose();
+                Controllers.Remove(DeviceParent);
+                ControllerToDeviceKeyMap.Remove(DeviceParent);
+
+                return UniqueControllerId;
+            }
         }
     }
 }

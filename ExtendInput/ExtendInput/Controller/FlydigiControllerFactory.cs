@@ -157,5 +157,11 @@ namespace ExtendInput.Controller
             FlydigiController ctrl = new FlydigiController(_device, ConType);
             return ctrl;
         }
+
+        public string RemoveDevice(string UniqueKey)
+        {
+            // TODO IMPLEMENT
+            return null;
+        }
     }
 }

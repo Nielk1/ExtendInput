@@ -67,11 +67,11 @@ namespace ExtendInputControllerTester
 
         }
 
-        private static void DeviceManager_ControllerRemoved(object sender, ExtendInput.DeviceProvider.IDevice e)
+        private static void DeviceManager_ControllerRemoved(object sender, string UniqueKey)
         {
             ControllersLock.Wait();
             {
-                string md5 = CreateMD5(e.UniqueKey);
+                string md5 = CreateMD5(UniqueKey);
                 if (Controllers.ContainsKey(md5))
                     Controllers[md5].Dispose(); // hack solution until this is added to the DeviceManager
                 Controllers.Remove(md5);

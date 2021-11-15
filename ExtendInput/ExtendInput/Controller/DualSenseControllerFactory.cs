@@ -48,5 +48,11 @@ namespace ExtendInput.Controller
             ctrl.HalfInitalize();
             return ctrl;
         }
+
+        public string RemoveDevice(string UniqueKey)
+        {
+            // TODO IMPLEMENT
+            return null;
+        }
     }
 }
