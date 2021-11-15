@@ -67,12 +67,23 @@ namespace ExtendInput
                     return false;
                 XInputGamepad source = (XInputGamepad)obj;
                 return ((sThumbLX == source.sThumbLX)
-                && (sThumbLY == source.sThumbLY)
-                && (sThumbRX == source.sThumbRX)
-                && (sThumbRY == source.sThumbRY)
-                && (bLeftTrigger == source.bLeftTrigger)
-                && (bRightTrigger == source.bRightTrigger)
-                && (wButtons == source.wButtons));
+                     && (sThumbLY == source.sThumbLY)
+                     && (sThumbRX == source.sThumbRX)
+                     && (sThumbRY == source.sThumbRY)
+                     && (bLeftTrigger == source.bLeftTrigger)
+                     && (bRightTrigger == source.bRightTrigger)
+                     && (wButtons == source.wButtons));
+            }
+
+            public override int GetHashCode()
+            {
+                return sThumbLX.GetHashCode()
+                     ^ sThumbLY.GetHashCode()
+                     ^ sThumbRX.GetHashCode()
+                     ^ sThumbRY.GetHashCode()
+                     ^ bLeftTrigger.GetHashCode()
+                     ^ bRightTrigger.GetHashCode()
+                     ^ wButtons.GetHashCode();
             }
         }
 

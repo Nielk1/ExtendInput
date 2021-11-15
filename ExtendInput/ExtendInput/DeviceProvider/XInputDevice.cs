@@ -22,7 +22,7 @@ namespace ExtendInput.DeviceProvider
                         return data.PID;
                 }
                 catch { }
-                return 0;
+                return -1;
             }
         }
         public int VendorId
@@ -36,15 +36,19 @@ namespace ExtendInput.DeviceProvider
                         return data.VID;
                 }
                 catch { }
-                return 0;
+                return -1;
             }
         }
 
+        public bool IsConnected => internalDevice.IsConnected;
+        public byte UserIndex => (byte)internalDevice.UserIndex;
+
         public Dictionary<string, dynamic> Properties { get; private set; }
 
-
-        public SharpDX.XInput.Controller internalDevice; // this should be private but we have hackery to fix
-        private bool IsOpen = false;
+        [Obsolete("Refactor any uses of this out")]
+        public SharpDX.XInput.Controller internalDeviceHackRef => internalDevice;
+        private SharpDX.XInput.Controller internalDevice; // this should be private but we have hackery to fix
+        //private bool IsOpen = false;
 
         public XInputDevice(SharpDX.XInput.Controller internalDevice)
         {

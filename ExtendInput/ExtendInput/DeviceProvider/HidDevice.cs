@@ -43,6 +43,27 @@ namespace ExtendInput.DeviceProvider
             }
             catch { }
 
+            try
+            {
+                bool FoundAny = false;
+                HashSet<uint> Usages = new HashSet<uint>();
+                foreach(var descriptor in internalDevice.GetReportDescriptor().DeviceItems)
+                {
+                    try
+                    {
+                        foreach (uint usage in descriptor.Usages.GetAllValues())
+                        {
+                            Usages.Add(usage);
+                            FoundAny = true;
+                        }
+                    }
+                    catch { }
+                }
+                if (FoundAny)
+                    Properties["Usages"] = Usages.ToArray();
+            }
+            catch { }
+
             this.internalDevice = internalDevice;
         }
         private HidSharp.HidStream GetStream()
@@ -208,7 +229,7 @@ namespace ExtendInput.DeviceProvider
                         }
                         catch (System.TimeoutException)
                         { }
-                        catch (Exception ex) // for example System.IO.IOException: 'Operation failed after some time.'
+                        catch (Exception) // for example System.IO.IOException: 'Operation failed after some time.'
                         {
                             reading = false;
                         }

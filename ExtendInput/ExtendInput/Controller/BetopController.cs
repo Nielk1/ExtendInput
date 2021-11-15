@@ -192,9 +192,9 @@ namespace ExtendInput.Controller
             data[4] = 0x03;
             data[5] = 0x02;
             bool success = deviceVendor.WriteReport(data);
-            Console.ForegroundColor = success ? ConsoleColor.DarkGray : ConsoleColor.DarkRed;
-            Console.WriteLine($"{BitConverter.ToString(data)}");
-            Console.ResetColor();
+            //Console.ForegroundColor = success ? ConsoleColor.DarkGray : ConsoleColor.DarkRed;
+            //Console.WriteLine($"{BitConverter.ToString(data)}");
+            //Console.ResetColor();
         }
 
         // This enables raw key events for config mode
@@ -211,9 +211,9 @@ namespace ExtendInput.Controller
             data[4] = 0x03;
             data[5] = 0x02;
             bool success = deviceVendor.WriteReport(data);
-            Console.ForegroundColor = success ? ConsoleColor.DarkGray : ConsoleColor.DarkRed;
-            Console.WriteLine($"{BitConverter.ToString(data)}");
-            Console.ResetColor();
+            //Console.ForegroundColor = success ? ConsoleColor.DarkGray : ConsoleColor.DarkRed;
+            //Console.WriteLine($"{BitConverter.ToString(data)}");
+            //Console.ResetColor();
         }
 
         /*private void QC()
@@ -721,58 +721,76 @@ namespace ExtendInput.Controller
         }
 
 
+        object InitalizationLock = new object();
         public void Initalize()
         {
-            if (Initalized)
-                return;
+            lock (InitalizationLock)
+            {
+                if (Initalized)
+                    return;
 
-            //Log("Initalize");
-            //if (PollingState == EPollingState.Active) return;
+                //Log("Initalize");
+                //if (PollingState == EPollingState.Active) return;
 
-            //PollingState = EPollingState.Active;
-            //Log($"Polling state set to Active", ConsoleColor.Yellow);
-            deviceVendor.StartReading();
-            deviceGamepad?.StartReading();
-            EnableConfigMode();
-            AbortStatusThread = false;
-            CheckControllerStatusThread.Start();
+                //PollingState = EPollingState.Active;
+                //Log($"Polling state set to Active", ConsoleColor.Yellow);
+                deviceVendor.StartReading();
+                deviceGamepad?.StartReading();
+                EnableConfigMode();
+                CheckControllerStatusThread?.Abort();
+                AbortStatusThread = false;
+                CheckControllerStatusThread = new Thread(() =>
+                {
+                    for (; ; )
+                    {
+                        SendConnectivity(0x02);
+                        if (AbortStatusThread)
+                            return;
+                        Thread.Sleep(1000);
+                    }
+                });
+                CheckControllerStatusThread.Start();
 
-            Initalized = true;
+                Initalized = true;
+            }
         }
 
         public void DeInitalize()
         {
-            if (!Initalized)
-                return;
+            lock (InitalizationLock)
+            {
+                if (!Initalized)
+                    return;
 
-            //Log("DeInitalize");
-            //if (PollingState == EPollingState.Inactive) return;
-            //if (PollingState == EPollingState.SlowPoll) return;
-            ////if (PollingState == EPollingState.RunOnce) return;
-            //if (PollingState == EPollingState.RunUntilReady) return;
+                //Log("DeInitalize");
+                //if (PollingState == EPollingState.Inactive) return;
+                //if (PollingState == EPollingState.SlowPoll) return;
+                ////if (PollingState == EPollingState.RunOnce) return;
+                //if (PollingState == EPollingState.RunUntilReady) return;
 
-            AbortStatusThread = true;
+                AbortStatusThread = true;
 
-            // dongles switch back to slow poll instead of going inactive
-            //if (ConnectionType == EConnectionType.Dongle)
-            //{
-            //    PollingState = EPollingState.SlowPoll;
-            //    Log($"Polling state set to SlowPoll", ConsoleColor.Yellow);
-            //}
-            //else
-            //{
-            deviceVendor.StopReading();
-            deviceGamepad?.StopReading();
+                // dongles switch back to slow poll instead of going inactive
+                //if (ConnectionType == EConnectionType.Dongle)
+                //{
+                //    PollingState = EPollingState.SlowPoll;
+                //    Log($"Polling state set to SlowPoll", ConsoleColor.Yellow);
+                //}
+                //else
+                //{
+                deviceVendor.StopReading();
+                deviceGamepad?.StopReading();
 
-            //    PollingState = EPollingState.Inactive;
-            //    Log($"Polling state set to Inactive", ConsoleColor.Yellow);
-            deviceVendor.CloseDevice();
-            deviceGamepad?.CloseDevice();
-            //}
-            ConfigMode = false;
-            ConfigModeKeyData = false;
+                //    PollingState = EPollingState.Inactive;
+                //    Log($"Polling state set to Inactive", ConsoleColor.Yellow);
+                deviceVendor.CloseDevice();
+                deviceGamepad?.CloseDevice();
+                //}
+                ConfigMode = false;
+                ConfigModeKeyData = false;
 
-            Initalized = false;
+                Initalized = false;
+            }
         }
 
         public void SetActiveAlternateController(string ControllerID) { }

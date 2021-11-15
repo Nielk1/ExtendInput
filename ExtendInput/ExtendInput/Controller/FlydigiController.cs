@@ -1232,7 +1232,7 @@ namespace ExtendInput.Controller
                 const int HAS_MATCHING_AUTH_HASH = 0x020000;
                 const int HAS_NO_AUTH_HASH = 0x010000;*/
                 const int REPORT_BYTES_MATCH = 0x000100;
-                const int TYPE_AUTH = 0x0000FF;
+                //const int TYPE_AUTH = 0x0000FF;
                 /*
                 bool FromDongle = false;
                 if (_device != null && VID == VENDOR_FLYDIGI && (  (PID == PRODUCT_FLYDIGI_DONGLE_1 && REV == REVISION_FLYDIGI_DONGLE_1)

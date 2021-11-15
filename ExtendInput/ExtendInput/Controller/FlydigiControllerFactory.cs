@@ -42,15 +42,15 @@ namespace ExtendInput.Controller
                         {
                             XInputDevice candidate = null;
                             CandidateXInputDevicesX[i]?.TryGetTarget(out candidate);
-                            if(candidate != null && candidate.internalDevice.IsConnected && (byte)candidate.internalDevice.UserIndex == i)
+                            if(candidate != null && candidate.internalDeviceHackRef.IsConnected && (byte)candidate.internalDeviceHackRef.UserIndex == i)
                             {
-                                candidate.internalDevice.SetVibration(new SharpDX.XInput.Vibration() { LeftMotorSpeed = 0xAA00, RightMotorSpeed = 0xBB00 });
+                                candidate.internalDeviceHackRef.SetVibration(new SharpDX.XInput.Vibration() { LeftMotorSpeed = 0xAA00, RightMotorSpeed = 0xBB00 });
                                 Thread.Sleep(100);
-                                candidate.internalDevice.SetVibration(new SharpDX.XInput.Vibration() { LeftMotorSpeed = 0xBB00, RightMotorSpeed = 0xAA00 });
+                                candidate.internalDeviceHackRef.SetVibration(new SharpDX.XInput.Vibration() { LeftMotorSpeed = 0xBB00, RightMotorSpeed = 0xAA00 });
                                 Thread.Sleep(100);
-                                candidate.internalDevice.SetVibration(new SharpDX.XInput.Vibration() { LeftMotorSpeed = 0xAA00, RightMotorSpeed = 0xBB00 });
+                                candidate.internalDeviceHackRef.SetVibration(new SharpDX.XInput.Vibration() { LeftMotorSpeed = 0xAA00, RightMotorSpeed = 0xBB00 });
                                 Thread.Sleep(100);
-                                candidate.internalDevice.SetVibration(new SharpDX.XInput.Vibration() { LeftMotorSpeed = 0x0000, RightMotorSpeed = 0x0000 });
+                                candidate.internalDeviceHackRef.SetVibration(new SharpDX.XInput.Vibration() { LeftMotorSpeed = 0x0000, RightMotorSpeed = 0x0000 });
                             }
                         }
                     }
@@ -98,8 +98,8 @@ namespace ExtendInput.Controller
 
                 lock (CandidateXInputLock)
                 {
-                    CandidateXInputDevicesX[(byte)_deviceX.internalDevice.UserIndex] = new WeakReference<XInputDevice>(_deviceX);
-                    CandidateXInputDevicesLastSeen[(byte)_deviceX.internalDevice.UserIndex] = DateTime.UtcNow;
+                    CandidateXInputDevicesX[(byte)_deviceX.internalDeviceHackRef.UserIndex] = new WeakReference<XInputDevice>(_deviceX);
+                    CandidateXInputDevicesLastSeen[(byte)_deviceX.internalDeviceHackRef.UserIndex] = DateTime.UtcNow;
                 }
                 CheckXInputData();
                 return null;
@@ -122,7 +122,7 @@ namespace ExtendInput.Controller
                 return null;
             }
 
-            string bt_hid_id = @"00001124-0000-1000-8000-00805f9b34fb";
+            //string bt_hid_id = @"00001124-0000-1000-8000-00805f9b34fb";
 
             string devicePath = _device.DevicePath.ToString();
 

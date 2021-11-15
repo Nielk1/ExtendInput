@@ -52,16 +52,12 @@ namespace ExtendInput.Controller
                 {
                     case EConnectionType.USB:
                         return new string[] { "CONNECTION_WIRE_USB", "CONNECTION_WIRE" };
-                        break;
                     case EConnectionType.Bluetooth:
                         return new string[] { "CONNECTION_BT" };
-                        break;
                     case EConnectionType.Dongle:
                         return new string[] { "CONNECTION_DONGLE_SC", "CONNECTION_DONGLE" };
-                        break;
                     default:
                         return new string[] { "CONNECTION_UNKNOWN" };
-                        break;
                 }
             }
         }
@@ -688,7 +684,6 @@ namespace ExtendInput.Controller
                         }
                         return retVal;
                     }
-                    break;
                 case EConnectionType.Dongle:
                     {
                         bool retVal = false;
@@ -701,7 +696,6 @@ namespace ExtendInput.Controller
                         }
                         return retVal;
                     }
-                    break;
             }
             return _device.WriteFeatureData(Buffer);
         }
