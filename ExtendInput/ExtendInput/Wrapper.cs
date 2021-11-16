@@ -7,5 +7,8 @@
         {
             this.Value = Value;
         }
+
+        public static implicit operator T(Wrapper<T> d) => d.Value;
+        public static implicit operator Wrapper<T>(T b) => new Wrapper<T>(b);
     }
 }

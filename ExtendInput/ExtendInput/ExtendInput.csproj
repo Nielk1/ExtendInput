@@ -95,6 +95,7 @@
     <Compile Include="Controls\ControlPair.cs" />
     <Compile Include="Controls\ControlRocker.cs" />
     <Compile Include="DeviceProvider\ReportData.cs" />
+    <Compile Include="QueueWorker.cs" />
     <Compile Include="Wrapper.cs" />
     <Compile Include="Controls\ControlButton.cs" />
     <Compile Include="Controls\ControlButtonGrid.cs" />

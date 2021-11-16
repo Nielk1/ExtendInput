@@ -758,15 +758,9 @@ namespace ExtendInput.Controller
                 if (Initalized)
                     return;
 
-                //Log("Initalize");
-                //if (PollingState == EPollingState.Active) return;
-
-                //PollingState = EPollingState.Active;
-                //Log($"Polling state set to Active", ConsoleColor.Yellow);
-                //deviceVendor.StartReading();
-                //deviceGamepad?.StartReading();
                 foreach (var device in devices)
                     device.StartReading();
+
                 EnableConfigMode();
                 CheckControllerStatusThread?.Abort();
                 AbortStatusThread = false;
@@ -793,34 +787,14 @@ namespace ExtendInput.Controller
                 if (!Initalized)
                     return;
 
-                //Log("DeInitalize");
-                //if (PollingState == EPollingState.Inactive) return;
-                //if (PollingState == EPollingState.SlowPoll) return;
-                ////if (PollingState == EPollingState.RunOnce) return;
-                //if (PollingState == EPollingState.RunUntilReady) return;
-
                 AbortStatusThread = true;
 
-                // dongles switch back to slow poll instead of going inactive
-                //if (ConnectionType == EConnectionType.Dongle)
-                //{
-                //    PollingState = EPollingState.SlowPoll;
-                //    Log($"Polling state set to SlowPoll", ConsoleColor.Yellow);
-                //}
-                //else
-                //{
-                //deviceVendor.StopReading();
-                //deviceGamepad?.StopReading();
                 foreach (var device in devices)
+                {
                     device.StopReading();
-
-                //    PollingState = EPollingState.Inactive;
-                //    Log($"Polling state set to Inactive", ConsoleColor.Yellow);
-                //deviceVendor.CloseDevice();
-                //deviceGamepad?.CloseDevice();
-                foreach (var device in devices)
                     device.CloseDevice();
-                //}
+                }
+
                 ConfigMode = false;
                 ConfigModeKeyData = false;
 

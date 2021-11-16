@@ -30,6 +30,8 @@ namespace ExtendInput.DeviceProvider
 
         public HidDevice(HidSharp.HidDevice internalDevice)
         {
+            
+
             Properties = new Dictionary<string, dynamic>();
 
             Properties["MaxFeatureReportLength"] = internalDevice.GetMaxFeatureReportLength();
@@ -188,6 +190,9 @@ namespace ExtendInput.DeviceProvider
         bool reading = false;
         object readingLock = new object();
         Thread readingThread = null;
+
+        private QueueWorker<Wrapper<HidReport>> sendingQueue = null;
+
         public void StartReading()
         {
             lock (readingLock)
@@ -199,6 +204,15 @@ namespace ExtendInput.DeviceProvider
                     return;
 
                 reading = true;
+
+                sendingQueue = new QueueWorker<Wrapper<HidReport>>(5, (report) =>
+                {
+                    if (report != null)
+                    {
+                        DeviceReportEvent threadSafeEvent = DeviceReport;
+                        threadSafeEvent?.Invoke(report.Value);
+                    }
+                }, $"ReportThread {GetUniqueKey(DevicePath)}");
 
                 readingThread = new Thread(() =>
                 {
@@ -216,12 +230,18 @@ namespace ExtendInput.DeviceProvider
                             {
                                 byte[] data = _stream.Read();
 
-                                DeviceReportEvent threadSafeEvent = DeviceReport;
-                                new Thread(() =>
-                                {
-                                    threadSafeEvent?.Invoke(new HidReport() { ReportId = data[0], ReportType = HidReportType.Input, ReportBytes = data.Skip(1).ToArray() });
-                                }).Start();
+                                //DeviceReportEvent threadSafeEvent = DeviceReport;
+                                ////new Thread(() =>
+                                ////{
+                                ////    threadSafeEvent?.Invoke(new HidReport() { ReportId = data[0], ReportType = HidReportType.Input, ReportBytes = data.Skip(1).ToArray() });
+                                ////}).Start();
+                                //
+                                //ThreadPool.QueueUserWorkItem((stateInfo) =>
+                                //{
+                                //    threadSafeEvent?.Invoke(new HidReport() { ReportId = data[0], ReportType = HidReportType.Input, ReportBytes = data.Skip(1).ToArray() });
+                                //});
 
+                                sendingQueue.EnqueueTask(new HidReport() { ReportId = data[0], ReportType = HidReportType.Input, ReportBytes = data.Skip(1).ToArray() });
                             }
                             if (PollingRate > 0)
                             {
