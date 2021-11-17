@@ -116,7 +116,7 @@ namespace ExtendInput
                     ControllerAddedEventHandler threadSafeEventHandler = ControllerAdded;
                     threadSafeEventHandler?.Invoke(this, d);
 
-                    Debug.WriteLine($"New Device<{e.GetType()}>({e.UniqueKey}) with Properties:{string.Join(string.Empty, e.Properties?.Select(dr => $"\r\n[{dr.Key}]={dr.Value}"))}\r\n");
+                    Debug.WriteLine($"New Device<{e.GetType()}>({e.UniqueKey}) with Properties:{string.Join(string.Empty, e.Properties?.Select(dr => $"\r\n[{dr.Key}]={(dr.Value is UInt32[] ? string.Join(",", (dr.Value as UInt32[])) : dr.Value)}"))}\r\n");
                 }
             }
         }

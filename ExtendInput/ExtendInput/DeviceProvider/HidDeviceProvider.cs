@@ -45,8 +45,7 @@ namespace ExtendInput.DeviceProvider
                                 FriendlyName = device.GetFriendlyName();
                             }
                             catch (IOException) { }
-                            Debug.WriteLine($"Device Removed: {device.DevicePath.PadRight(100)} \"{FriendlyName}\"");
-                            Debug.WriteLine($"Device Removed: {device.DevicePath.PadRight(100)} \"{device}\"");
+                            Debug.WriteLine($"Device Removed: {device.DevicePath.PadRight(100)} \"{FriendlyName}\"\r\n                {device.DevicePath.PadRight(100)} \"{device}\"");
 
                             KnownDevices.Remove(device);
                             DeviceRemovedEventHandler threadSafeEventHandler = DeviceRemoved;
@@ -64,8 +63,7 @@ namespace ExtendInput.DeviceProvider
                                 FriendlyName = device.GetFriendlyName();
                             }
                             catch (IOException) { }
-                            Debug.WriteLine($"Device Added: {device.DevicePath.PadRight(100)} \"{FriendlyName}\"");
-                            Debug.WriteLine($"Device Added: {device.DevicePath.PadRight(100)} \"{device}\"");
+                            Debug.WriteLine($"Device Added: {device.DevicePath.PadRight(100)} \"{FriendlyName}\"\r\n              {device.DevicePath.PadRight(100)} \"{device}\"");
 
                             KnownDevices.Add(device);
                             DeviceAddedEventHandler threadSafeEventHandler = DeviceAdded;

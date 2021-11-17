@@ -83,15 +83,15 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Controller\BetopController.cs" />
-    <Compile Include="Controller\BetopControllerFactory.cs" />
-    <Compile Include="Controller\DualSenseController.cs" />
-    <Compile Include="Controller\DualSenseControllerFactory.cs" />
-    <Compile Include="Controller\FlydigiController.cs" />
-    <Compile Include="Controller\FlydigiControllerFactory.cs" />
+    <Compile Include="Controller\Betop\BetopController.cs" />
+    <Compile Include="Controller\Betop\BetopControllerFactory.cs" />
+    <Compile Include="Controller\Sony\DualSenseController.cs" />
+    <Compile Include="Controller\Sony\DualSenseControllerFactory.cs" />
+    <Compile Include="Controller\Flydigi\FlydigiController.cs" />
+    <Compile Include="Controller\Flydigi\FlydigiControllerFactory.cs" />
     <Compile Include="Controller\IControllerFactory.cs" />
-    <Compile Include="Controller\SixtyBeatGamepadControllerFactory.cs" />
-    <Compile Include="Controller\SixtyBeatGamepadController.cs" />
+    <Compile Include="Controller\SixtyBeat\SixtyBeatGamepadControllerFactory.cs" />
+    <Compile Include="Controller\SixtyBeat\SixtyBeatGamepadController.cs" />
     <Compile Include="Controls\ControlPair.cs" />
     <Compile Include="Controls\ControlRocker.cs" />
     <Compile Include="DeviceProvider\ReportData.cs" />
@@ -103,13 +103,13 @@
     <Compile Include="Controls\ControlButtonQuad.cs" />
     <Compile Include="Controls\ControlDPad.cs" />
     <Compile Include="Controls\ControllerState.cs" />
-    <Compile Include="Controller\DualShock4Controller.cs" />
-    <Compile Include="Controller\DualShock4ControllerFactory.cs" />
+    <Compile Include="Controller\Sony\DualShock4Controller.cs" />
+    <Compile Include="Controller\Sony\DualShock4ControllerFactory.cs" />
     <Compile Include="Controller\IController.cs" />
-    <Compile Include="Controller\SteamController.cs" />
-    <Compile Include="Controller\SteamControllerFactory.cs" />
-    <Compile Include="Controller\XInputController.cs" />
-    <Compile Include="Controller\XInputControllerFactory.cs" />
+    <Compile Include="Controller\Valve\SteamController.cs" />
+    <Compile Include="Controller\Valve\SteamControllerFactory.cs" />
+    <Compile Include="Controller\Microsoft\XInputController.cs" />
+    <Compile Include="Controller\Microsoft\XInputControllerFactory.cs" />
     <Compile Include="Controls\ControlCollection.cs" />
     <Compile Include="Controls\ControlMotion.cs" />
     <Compile Include="Controls\ControlStick.cs" />

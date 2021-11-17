@@ -9,6 +9,8 @@ namespace ExtendInput.Controller
     public class FlydigiControllerFactory : IControllerFactory
     {
         private AccesMode AccessMode;
+        private Dictionary<string, FlydigiController> Controllers = new Dictionary<string, FlydigiController>();
+
         public FlydigiControllerFactory(AccesMode AccessMode)
         {
             this.AccessMode = AccessMode;
@@ -20,7 +22,7 @@ namespace ExtendInput.Controller
             new Dictionary<string, dynamic>(){ { "VID", FlydigiController.VENDOR_FLYDIGI }, { "PID", FlydigiController.PRODUCT_FLYDIGI_DONGLE_2 } },
             new Dictionary<string, dynamic>(){ { "VID", FlydigiController.VENDOR_FLYDIGI }, { "PID", FlydigiController.PRODUCT_FLYDIGI_DONGLE_3 } },
             new Dictionary<string, dynamic>(){ { "VID", FlydigiController.VENDOR_FLYDIGI }, { "PID", FlydigiController.PRODUCT_FLYDIGI_USB } },
-            new Dictionary<string, dynamic>(){ { "VID", 0x045E }, { "PID", 0x028E } },
+            new Dictionary<string, dynamic>(){ { "VID", 0x045E }, { "PID", 0x028E } }, // Microsoft XBox 360 Controller
         };
 
         const int XINPUT_PLAYER_COUNT = 4;
@@ -143,7 +145,7 @@ namespace ExtendInput.Controller
                         //    ConType = EConnectionType.USB;
                         //}
                     }
-                    else if(_device.ProductId == FlydigiController.PRODUCT_FLYDIGI_USB && devicePath.Contains("mi_00"))
+                    else if (_device.ProductId == FlydigiController.PRODUCT_FLYDIGI_USB && devicePath.Contains("mi_00"))
                     {
 
                     }
@@ -154,13 +156,32 @@ namespace ExtendInput.Controller
                     break;
             }
 
-            FlydigiController ctrl = new FlydigiController(_device, ConType);
-            return ctrl;
+            lock (Controllers)
+            {
+                FlydigiController ctrl = new FlydigiController(_device, ConType);
+                Controllers[_device.UniqueKey] = ctrl;
+                //Console.WriteLine($"Controllers[\"{_device.UniqueKey}\"] = {ctrl};");
+                return ctrl;
+            }
         }
 
         public string RemoveDevice(string UniqueKey)
         {
-            // TODO IMPLEMENT
+            lock (Controllers)
+            {
+                //Console.WriteLine($"Removing {UniqueKey}");
+                if (Controllers.ContainsKey(UniqueKey))
+                {
+                    FlydigiController ctrl = Controllers[UniqueKey];
+                    string UniqueControllerId = ctrl.ConnectionUniqueID;
+
+                    ctrl.DeInitalize();
+                    ctrl.Dispose();
+                    Controllers.Remove(UniqueKey);
+
+                    return UniqueControllerId;
+                }
+            }
             return null;
         }
     }
