@@ -115,6 +115,8 @@ namespace ExtendInput.DeviceProvider
         bool reading = false;
         object readingLock = new object();
         Thread readingThread = null;
+
+        private QueueWorker<Wrapper<XInputReport>> sendingQueue = null;
         public void StartReading()
         {
             lock (readingLock)
@@ -126,6 +128,15 @@ namespace ExtendInput.DeviceProvider
                     return;
 
                 reading = true;
+
+                sendingQueue = new QueueWorker<Wrapper<XInputReport>>(1, (report) =>
+                {
+                    if (report != null)
+                    {
+                        DeviceReportEvent threadSafeEvent = DeviceReport;
+                        threadSafeEvent?.Invoke(report.Value);
+                    }
+                }, $"ReportThread {DevicePath}");
 
                 readingThread = new Thread(() =>
                 {
@@ -140,9 +151,8 @@ namespace ExtendInput.DeviceProvider
                         {
                             var State = internalDevice.GetState();
 
-                            DeviceReportEvent threadSafeEvent = DeviceReport;
-
-                            threadSafeEvent?.Invoke(new XInputReport() {
+                            sendingQueue.EnqueueTask(new XInputReport()
+                            {
                                 Connected = internalDevice.IsConnected,
                                 wButtons = (UInt16)State.Gamepad.Buttons,
                                 bLeftTrigger = State.Gamepad.LeftTrigger,
@@ -152,8 +162,6 @@ namespace ExtendInput.DeviceProvider
                                 sThumbRX = State.Gamepad.RightThumbX,
                                 sThumbRY = State.Gamepad.RightThumbY,
                             });
-
-                            Thread.Sleep(1000 / 60);
                         }
                         catch
                         {
