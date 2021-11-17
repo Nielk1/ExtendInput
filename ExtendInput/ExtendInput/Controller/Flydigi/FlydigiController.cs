@@ -6,7 +6,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 
-namespace ExtendInput.Controller
+namespace ExtendInput.Controller.Flydigi
 {
     class ControllerSubTypeAttribute : Attribute
     {

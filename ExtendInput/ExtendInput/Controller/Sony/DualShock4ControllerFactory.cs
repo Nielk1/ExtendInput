@@ -3,7 +3,7 @@ using ExtendInput.DeviceProvider;
 using System.Linq;
 using System.Collections.Generic;
 
-namespace ExtendInput.Controller
+namespace ExtendInput.Controller.Sony
 {
     public class DualShock4ControllerFactory : IControllerFactory
     {

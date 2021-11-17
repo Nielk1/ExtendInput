@@ -9,7 +9,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace ExtendInput.Controller
+namespace ExtendInput.Controller.Sony
 {
     public class DualShock4Controller : IController
     {

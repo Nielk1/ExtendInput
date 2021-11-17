@@ -6,7 +6,7 @@ using System.Drawing;
 using System.Linq;
 using System.Threading;
 
-namespace ExtendInput.Controller
+namespace ExtendInput.Controller.Microsoft
 {
     public class XInputController : IController
     {

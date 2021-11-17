@@ -5,7 +5,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 
-namespace ExtendInput.Controller
+namespace ExtendInput.Controller.Valve
 {
     public class SteamControllerFactory : IControllerFactory
     {

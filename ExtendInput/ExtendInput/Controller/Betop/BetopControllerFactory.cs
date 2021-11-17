@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 
-namespace ExtendInput.Controller
+namespace ExtendInput.Controller.Betop
 {
     public class BetopControllerFactory : IControllerFactory
     {

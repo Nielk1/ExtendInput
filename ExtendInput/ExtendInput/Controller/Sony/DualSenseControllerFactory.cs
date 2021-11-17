@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace ExtendInput.Controller
+namespace ExtendInput.Controller.Sony
 {
     public class DualSenseControllerFactory : IControllerFactory
     {

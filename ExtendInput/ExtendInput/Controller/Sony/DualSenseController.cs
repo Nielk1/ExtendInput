@@ -7,7 +7,7 @@ using System.Drawing;
 using System.Linq;
 using System.Threading;
 
-namespace ExtendInput.Controller
+namespace ExtendInput.Controller.Sony
 {
     public class DualSenseController : IController
     {

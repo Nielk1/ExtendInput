@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 
-namespace ExtendInput.Controller
+namespace ExtendInput.Controller.Valve
 {
     public class SteamController : IController
     {
