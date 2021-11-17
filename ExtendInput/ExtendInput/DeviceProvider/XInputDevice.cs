@@ -143,6 +143,7 @@ namespace ExtendInput.DeviceProvider
                             DeviceReportEvent threadSafeEvent = DeviceReport;
 
                             threadSafeEvent?.Invoke(new XInputReport() {
+                                Connected = internalDevice.IsConnected,
                                 wButtons = (UInt16)State.Gamepad.Buttons,
                                 bLeftTrigger = State.Gamepad.LeftTrigger,
                                 bRightTrigger = State.Gamepad.RightTrigger,
@@ -163,6 +164,16 @@ namespace ExtendInput.DeviceProvider
                 });
                 readingThread.Start();
             }
+        }
+
+        public void NotifyOfConnectEvent()
+        {
+            DeviceReportEvent threadSafeEvent = DeviceReport;
+
+            threadSafeEvent?.Invoke(new XInputReport()
+            {
+                Connected = internalDevice.IsConnected,
+            });
         }
 
         public void StopReading()

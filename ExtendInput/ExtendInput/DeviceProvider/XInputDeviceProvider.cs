@@ -20,7 +20,7 @@ namespace ExtendInput.DeviceProvider
         object lock_device_list = new object();
         SharpDX.XInput.Controller[] Controllers = new SharpDX.XInput.Controller[MAX_SLOT];
         XInputDevice[] DeviceCache = new XInputDevice[MAX_SLOT];
-        //bool[] ControllerActive = new bool[MAX_SLOT];
+        bool[] ControllerActive = new bool[MAX_SLOT];
 
         bool AbortStatusThread = false;
         Thread CheckControllerStatusThread;
@@ -80,6 +80,12 @@ namespace ExtendInput.DeviceProvider
                             DeviceCache[i] = new XInputDevice(Controllers[i]);
                             DeviceAddedEventHandler threadSafeEventHandler = DeviceAdded;
                             threadSafeEventHandler?.Invoke(this, DeviceCache[i]);
+                            ControllerActive[i] = true;
+                        }
+                        if (DeviceCache[i] != null && ControllerActive[i] != Controllers[i].IsConnected)
+                        {
+                            ControllerActive[i] = Controllers[i].IsConnected;
+                            DeviceCache[i].NotifyOfConnectEvent();
                         }
                     }
                 }

@@ -9,7 +9,7 @@ namespace ExtendInput.DeviceProvider
     public enum REPORT_TYPE : UInt32
     {
         XINP = 0x504e4958, // 'XINP'
-        HID  = 0x504e4958, // 'HID~'
+        HID  = 0x7e444948, // 'HID~'
         GENB = 0x424e4547, // 'GENB'
     }
 
@@ -36,13 +36,14 @@ namespace ExtendInput.DeviceProvider
     public struct XInputReport : IReport
     {
         public REPORT_TYPE ReportTypeCode => REPORT_TYPE.XINP;
-        public UInt16 wButtons;
-        public byte bLeftTrigger;
-        public byte bRightTrigger;
-        public Int32 sThumbLX;
-        public Int32 sThumbLY;
-        public Int32 sThumbRX;
-        public Int32 sThumbRY;
+        public bool Connected;
+        public UInt16? wButtons;
+        public byte? bLeftTrigger;
+        public byte? bRightTrigger;
+        public Int32? sThumbLX;
+        public Int32? sThumbLY;
+        public Int32? sThumbRX;
+        public Int32? sThumbRY;
     }
 
     public struct GenericBytesReport : IReport
