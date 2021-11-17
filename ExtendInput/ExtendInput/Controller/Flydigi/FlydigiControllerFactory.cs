@@ -128,14 +128,21 @@ namespace ExtendInput.Controller.Flydigi
 
             string devicePath = _device.DevicePath.ToString();
 
+            uint[] Usages = device.Properties.ContainsKey("Usages") ? device.Properties["Usages"] as uint[] : null;
             EConnectionType ConType = EConnectionType.Unknown;
             switch (_device.VendorId)
             {
                 case FlydigiController.VENDOR_FLYDIGI:
-                    if (_device.Properties.ContainsKey("ProductName")
-                          && (((_device.Properties["ProductName"] as string)?.ToLowerInvariant()?.Contains("flydigi") ?? false) || ((_device.Properties["ProductName"] as string)?.ToLowerInvariant()?.Contains("feizhi") ?? false))
-                          && devicePath.Contains("mi_02"))
+                    if (_device.Properties.ContainsKey("ProductName") && (((_device.Properties["ProductName"] as string)?.ToLowerInvariant()?.Contains("flydigi") ?? false) || ((_device.Properties["ProductName"] as string)?.ToLowerInvariant()?.Contains("feizhi") ?? false)))
                     {
+                        //&& devicePath.Contains("mi_02")
+                        if (Usages.Contains(0xffa00001u))
+                        {
+                        }
+                        else
+                        {
+                            return null;
+                        }
                         //if (devicePath.Contains(bt_hid_id))
                         //{
                         //    ConType = EConnectionType.Bluetooth;
@@ -145,10 +152,10 @@ namespace ExtendInput.Controller.Flydigi
                         //    ConType = EConnectionType.USB;
                         //}
                     }
-                    else if (_device.ProductId == FlydigiController.PRODUCT_FLYDIGI_USB && devicePath.Contains("mi_00"))
-                    {
-
-                    }
+                    //else if (_device.ProductId == FlydigiController.PRODUCT_FLYDIGI_USB && devicePath.Contains("mi_00"))
+                    //{
+                    //
+                    //}
                     else
                     {
                         return null;

@@ -126,7 +126,6 @@ namespace ExtendInput.Controller.Betop
             if (device.VendorId == BetopController.VENDOR_BETOP && (device.ProductId == BetopController.PRODUCT_BETOP_ASURA3
                                                                  || device.ProductId == BetopController.PRODUCT_BETOP_ASURA3_DONGLE))
             {
-                // instead of this look for Capabilities.Usage of 3
                 uint[] Usages = device.Properties.ContainsKey("Usages") ? device.Properties["Usages"] as uint[] : null;
                 if (Usages != null && (Usages.Contains(0xff000003u) || Usages.Contains(0x00010005u)))
                 //if (device.DevicePath.Contains("&col05") || device.DevicePath.Contains("&col04"))
