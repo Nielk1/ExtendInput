@@ -60,7 +60,8 @@ namespace ExtendInput.Controller.Microsoft
         {
             get
             {
-                return _device.DevicePath;
+                //return _device.DevicePath;
+                return $"USB\\VID_{_device.VendorId:X4}&PID_{_device.ProductId:X4}\\{(_device.XID & 0x0FFFFFFF):X7}";
             }
         }
         public string[] NameDetails
@@ -245,8 +246,9 @@ namespace ExtendInput.Controller.Microsoft
                         (StateInFlight.Controls["menu"       ] as ControlButtonPair).Left.Digital  = (reportData.wButtons.Value & 0x0020) == 0x0020;
                         (StateInFlight.Controls["bumpers"    ] as ControlButtonPair).Right.Digital = (reportData.wButtons.Value & 0x0200) == 0x0200;
                         (StateInFlight.Controls["bumpers"    ] as ControlButtonPair).Left.Digital  = (reportData.wButtons.Value & 0x0100) == 0x0100;
+                        (StateInFlight.Controls["home"       ] as ControlButton).Digital = (reportData.wButtons.Value & 0x0400) == 0x0400;
                     }
-                    
+
                     //(State.Controls["home"] as ControlButton).Button0 = (buttons & 0x1) == 0x1;
                     if (reportData.bLeftTrigger.HasValue)  (StateInFlight.Controls["triggers"] as ControlButtonPair).Left.Analog  = (float)reportData.bLeftTrigger.Value  / byte.MaxValue;
                     if (reportData.bRightTrigger.HasValue) (StateInFlight.Controls["triggers"] as ControlButtonPair).Right.Analog = (float)reportData.bRightTrigger.Value / byte.MaxValue;

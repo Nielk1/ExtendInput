@@ -39,6 +39,34 @@ namespace ExtendInput.DeviceProvider
                 return -1;
             }
         }
+        public int Revision
+        {
+            get
+            {
+                try
+                {
+                    XInputNative.XInputCapabilitiesEx data = new XInputNative.XInputCapabilitiesEx();
+                    if (XInputNative.XInputGetCapabilitiesEx(1, (int)internalDevice.UserIndex, 0, ref data) == 0)
+                        return data.REV;
+                }
+                catch { }
+                return -1;
+            }
+        }
+        public uint XID
+        {
+            get
+            {
+                try
+                {
+                    XInputNative.XInputCapabilitiesEx data = new XInputNative.XInputCapabilitiesEx();
+                    if (XInputNative.XInputGetCapabilitiesEx(1, (int)internalDevice.UserIndex, 0, ref data) == 0)
+                        return data.XID;
+                }
+                catch { }
+                return 0xFFFFFFFF;
+            }
+        }
 
         public bool IsConnected => internalDevice.IsConnected;
         public byte UserIndex => (byte)internalDevice.UserIndex;
@@ -149,7 +177,26 @@ namespace ExtendInput.DeviceProvider
 
                         try
                         {
-                            var State = internalDevice.GetState();
+                            //XInputNative.XInputCapabilitiesEx data = new XInputNative.XInputCapabilitiesEx();
+                            //if (XInputNative.XInputGetCapabilitiesEx(1, (int)internalDevice.UserIndex, 0, ref data) == 0)
+
+                            XInputNative.XInputState data = new XInputNative.XInputState();
+                            if (XInputNative.XInputGetStateEx((int)internalDevice.UserIndex, ref data) == 0)
+                            {
+                                sendingQueue.EnqueueTask(new XInputReport()
+                                {
+                                    Connected = internalDevice.IsConnected,
+                                    wButtons = (UInt16)data.Gamepad.wButtons,
+                                    bLeftTrigger = data.Gamepad.bLeftTrigger,
+                                    bRightTrigger = data.Gamepad.bRightTrigger,
+                                    sThumbLX = data.Gamepad.sThumbLX,
+                                    sThumbLY = data.Gamepad.sThumbLY,
+                                    sThumbRX = data.Gamepad.sThumbRX,
+                                    sThumbRY = data.Gamepad.sThumbRY,
+                                });
+                            }
+
+                            /*var State = internalDevice.GetState();
 
                             sendingQueue.EnqueueTask(new XInputReport()
                             {
@@ -161,7 +208,7 @@ namespace ExtendInput.DeviceProvider
                                 sThumbLY = State.Gamepad.LeftThumbY,
                                 sThumbRX = State.Gamepad.RightThumbX,
                                 sThumbRY = State.Gamepad.RightThumbY,
-                            });
+                            });*/
                         }
                         catch
                         {

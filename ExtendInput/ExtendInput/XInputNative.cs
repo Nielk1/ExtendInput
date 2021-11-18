@@ -132,7 +132,7 @@ namespace ExtendInput
             [MarshalAs(UnmanagedType.U2)]
             public UInt16 REV;
             [MarshalAs(UnmanagedType.U4)]
-            public UInt32 a4;
+            public UInt32 XID;
         };
 
 
@@ -176,5 +176,29 @@ namespace ExtendInput
         }
         [DllImport("xinput1_4.dll", EntryPoint = "#104")]
         public static extern int XInputGetBaseBusInformation(int dwUserIndex, ref XInputBaseBusInformation pInfo);
+
+
+
+
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct XInputState
+        {
+            public UInt32 dwPacketNumber;
+            public XInputGamepad Gamepad;
+        }
+        [DllImport("xinput1_4.dll")]
+        public static extern int XInputGetState
+        (
+            int dwUserIndex,   // [in] Index of the gamer associated with the device
+            ref XInputState pState  // [out] Receives the state
+        );
+
+        [DllImport("xinput1_4.dll", EntryPoint = "#100")]
+        public static extern int XInputGetStateEx
+        (
+            int dwUserIndex,   // [in] Index of the gamer associated with the device
+            ref XInputState pState  // [out] Receives the state
+        );
     }
 }
