@@ -89,7 +89,7 @@ namespace ExtendInput.Controller.Microsoft
         public bool IsPresent { get; set; }
         public bool IsVirtual => false;
 
-        bool Connected;
+        //bool Connected;
         SemaphoreSlim ConnectedState = new SemaphoreSlim(1, 1);
         int Initalized;
         public XInputController(XInputDevice device)
@@ -114,10 +114,12 @@ namespace ExtendInput.Controller.Microsoft
             State.Controls["stick_right"] = new ControlStick(HasClick: true);
 
             IsPresent = true;
-            Connected = true;
+            //Connected = true;
 
             _device = device;
             Initalized = 0;
+
+            ControllerTypeCode = _DEVICE_XBOX360;
 
             _device.DeviceReport += OnReport;
         }
@@ -136,7 +138,7 @@ namespace ExtendInput.Controller.Microsoft
             if (rawReportData.ReportTypeCode != REPORT_TYPE.XINP) return;
             XInputReport reportData = (XInputReport)rawReportData;
 
-            if (reportData.Connected != Connected)
+            /*if (reportData.Connected != Connected)
             {
                 ConnectedState.Wait();
                 try
@@ -160,7 +162,7 @@ namespace ExtendInput.Controller.Microsoft
                 {
                     ConnectedState.Release();
                 }
-            }
+            }*/
 
             if (Initalized < 1) return;
 

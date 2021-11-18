@@ -40,6 +40,7 @@ namespace ExtendInput.Controller.Betop
         const int XINPUT_PLAYER_COUNT = 4;
         object CandidateXInputLock = new object();
         WeakReference<XInputDevice>[] CandidateXInputDevicesX = new WeakReference<XInputDevice>[XINPUT_PLAYER_COUNT];
+        // TODO: Store a XInputDevice.UniqueKey to UserIndex map so we can handle XInputDevice removals, make the above WeakReference into a strong reference
         DateTime[] CandidateXInputDevicesLastSeen = new DateTime[XINPUT_PLAYER_COUNT];
         DateTime SawCandidateHidDeviceForXInput = DateTime.MinValue;
 
@@ -57,7 +58,7 @@ namespace ExtendInput.Controller.Betop
                             XInputDevice candidate = null;
                             CandidateXInputDevicesX[i]?.TryGetTarget(out candidate);
                             // If the candidate still exists, is connected, and has the expected player number
-                            if (candidate != null && candidate.IsConnected && (byte)candidate.UserIndex == i)
+                            if (candidate != null /*&& candidate.IsConnected*/ && (byte)candidate.UserIndex == i)
                             {
                                 Thread.Sleep(20);
                                 candidate.SetVibration(0x0100, 0x0600);

@@ -54,8 +54,6 @@ namespace ExtendInput.DeviceProvider
                     {
                         XInputNative.XInputCapabilities data = new XInputNative.XInputCapabilities();
 
-                        // XInputDevices hang around forever once they are initalized, so we only need to handle the first discovery event
-                        // this might change in the future, need to talk it over
                         if (DeviceCache[i] == null)
                         {
                             if (XInputNative.XInputGetCapabilities(i + 1, 0, ref data) == 0)
@@ -69,9 +67,12 @@ namespace ExtendInput.DeviceProvider
                         else
                         {
                             bool connected = XInputNative.XInputGetCapabilities(i + 1, 0, ref data) == 0;
-                            DeviceCache[i].SetConnectionStatus(connected);
-                            DeviceRemovedEventHandler threadSafeEventHandler = DeviceRemoved;
-                            //threadSafeEventHandler?.Invoke(this, DeviceCache[i].UniqueKey);
+                            if (!connected)
+                            {
+                                DeviceRemovedEventHandler threadSafeEventHandler = DeviceRemoved;
+                                threadSafeEventHandler?.Invoke(this, DeviceCache[i].UniqueKey);
+                                DeviceCache[i] = null;
+                            }
                         }
                     }
                 }

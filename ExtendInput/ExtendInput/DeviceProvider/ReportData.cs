@@ -36,7 +36,7 @@ namespace ExtendInput.DeviceProvider
     public struct XInputReport : IReport
     {
         public REPORT_TYPE ReportTypeCode => REPORT_TYPE.XINP;
-        public bool Connected;
+        //public bool Connected;
         public UInt16? wButtons;
         public byte? bLeftTrigger;
         public byte? bRightTrigger;

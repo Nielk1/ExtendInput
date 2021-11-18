@@ -68,7 +68,7 @@ namespace ExtendInput.DeviceProvider
             }
         }
 
-        public bool IsConnected { get; private set; }
+        //public bool IsConnected { get; private set; }
         public byte UserIndex { get; private set; }
 
         public Dictionary<string, dynamic> Properties { get; private set; }
@@ -78,7 +78,7 @@ namespace ExtendInput.DeviceProvider
         {
             Properties = new Dictionary<string, dynamic>();
             this.UserIndex = UserIndex;
-            this.IsConnected = true;
+            //this.IsConnected = true;
         }
 
         public bool WriteReport(byte[] data)
@@ -91,24 +91,6 @@ namespace ExtendInput.DeviceProvider
             //catch
             {
                 return false;
-            }
-        }
-
-        public void SetConnectionStatus(bool connected)
-        {
-            if (this.IsConnected != connected)
-            {
-                if (connected)
-                {
-                    // rescan information about the controller here once we introduce the caching of the VID, PID, Properties, etc.
-                    // this should probably also be done on a timer too, it's a capabilities scan
-                }
-                this.IsConnected = connected;
-                CreateSendingQueue();
-                sendingQueue.EnqueueTask(new XInputReport()
-                {
-                    Connected = IsConnected,
-                });
             }
         }
 
@@ -204,14 +186,14 @@ namespace ExtendInput.DeviceProvider
                             XInputNative.XInputState data = new XInputNative.XInputState();
                             if (XInputNative.XInputGetStateEx(UserIndex + 1, ref data) == 0)
                             {
-                                if (!IsConnected)
-                                {
-                                    // TODO notify of unplug event
-                                    IsConnected = true;
-                                }
+                                //if (!IsConnected)
+                                //{
+                                //    // TODO notify of unplug event
+                                //    IsConnected = true;
+                                //}
                                 sendingQueue.EnqueueTask(new XInputReport()
                                 {
-                                    Connected = IsConnected,
+                                    //Connected = IsConnected,
                                     wButtons = (UInt16)data.Gamepad.wButtons,
                                     bLeftTrigger = data.Gamepad.bLeftTrigger,
                                     bRightTrigger = data.Gamepad.bRightTrigger,
@@ -221,7 +203,7 @@ namespace ExtendInput.DeviceProvider
                                     sThumbRY = data.Gamepad.sThumbRY,
                                 });
                             }
-                            else if (IsConnected)
+                            /*else if (IsConnected)
                             {
                                 IsConnected = false;
                                 sendingQueue.EnqueueTask(new XInputReport()
@@ -244,7 +226,7 @@ namespace ExtendInput.DeviceProvider
                                     }
                                     Thread.Sleep(PollingRate % 1000);
                                 }
-                            }
+                            }*/
 
                             /*var State = internalDevice.GetState();
 

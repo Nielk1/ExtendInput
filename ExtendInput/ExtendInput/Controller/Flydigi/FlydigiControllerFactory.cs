@@ -28,6 +28,7 @@ namespace ExtendInput.Controller.Flydigi
         const int XINPUT_PLAYER_COUNT = 4;
         object CandidateXInputLock = new object();
         WeakReference<XInputDevice>[] CandidateXInputDevicesX = new WeakReference<XInputDevice>[XINPUT_PLAYER_COUNT];
+        // TODO: Store a XInputDevice.UniqueKey to UserIndex map so we can handle XInputDevice removals, make the above WeakReference into a strong reference
         DateTime[] CandidateXInputDevicesLastSeen = new DateTime[XINPUT_PLAYER_COUNT];
         DateTime SawCandidateHidDeviceForXInput = DateTime.MinValue;
 
@@ -44,7 +45,7 @@ namespace ExtendInput.Controller.Flydigi
                         {
                             XInputDevice candidate = null;
                             CandidateXInputDevicesX[i]?.TryGetTarget(out candidate);
-                            if(candidate != null && candidate.IsConnected && (byte)candidate.UserIndex == i)
+                            if(candidate != null /*&& candidate.IsConnected*/ && (byte)candidate.UserIndex == i)
                             {
                                 candidate.SetVibration(0xAA00, 0xBB00);
                                 Thread.Sleep(100);
