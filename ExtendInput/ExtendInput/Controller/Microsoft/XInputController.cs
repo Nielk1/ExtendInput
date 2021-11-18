@@ -132,7 +132,6 @@ namespace ExtendInput.Controller.Microsoft
 
         private void OnReport(IReport rawReportData)
         {
-            if (Initalized < 1) return;
             //if (!(reportData is XInputReport)) return;
             if (rawReportData.ReportTypeCode != REPORT_TYPE.XINP) return;
             XInputReport reportData = (XInputReport)rawReportData;
@@ -162,6 +161,8 @@ namespace ExtendInput.Controller.Microsoft
                     ConnectedState.Release();
                 }
             }
+
+            if (Initalized < 1) return;
 
             if (0 == Interlocked.Exchange(ref reportUsageLock, 1))
             {

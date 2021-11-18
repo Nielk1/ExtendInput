@@ -50,15 +50,15 @@ namespace ExtendInput.DeviceProvider
             {
                 try
                 {
-                    int FoundDevices = 0;
                     for (byte i = 0; i < MAX_SLOT; i++)
                     {
+                        XInputNative.XInputCapabilities data = new XInputNative.XInputCapabilities();
+
                         // XInputDevices hang around forever once they are initalized, so we only need to handle the first discovery event
                         // this might change in the future, need to talk it over
                         if (DeviceCache[i] == null)
                         {
-                            XInputNative.XInputState data = new XInputNative.XInputState();
-                            if (XInputNative.XInputGetState(i, ref data) == 0)
+                            if (XInputNative.XInputGetCapabilities(i + 1, 0, ref data) == 0)
                             {
                                 if (DeviceCache[i] == null)
                                     DeviceCache[i] = new XInputDevice(i);
@@ -68,13 +68,11 @@ namespace ExtendInput.DeviceProvider
                         }
                         else
                         {
-                            FoundDevices++;
+                            bool connected = XInputNative.XInputGetCapabilities(i + 1, 0, ref data) == 0;
+                            DeviceCache[i].SetConnectionStatus(connected);
+                            DeviceRemovedEventHandler threadSafeEventHandler = DeviceRemoved;
+                            //threadSafeEventHandler?.Invoke(this, DeviceCache[i].UniqueKey);
                         }
-                    }
-                    if (FoundDevices == MAX_SLOT)
-                    {
-                        // Since XInput nodes only spawn when they are detected the first time, if all 4 devices exist it's time to stop scanning
-                        AbortStatusThread = true;
                     }
                 }
                 catch { }

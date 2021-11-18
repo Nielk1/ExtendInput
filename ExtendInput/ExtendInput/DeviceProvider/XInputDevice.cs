@@ -18,7 +18,7 @@ namespace ExtendInput.DeviceProvider
                 try
                 {
                     XInputNative.XInputCapabilitiesEx data = new XInputNative.XInputCapabilitiesEx();
-                    if (XInputNative.XInputGetCapabilitiesEx(1, (int)UserIndex, 0, ref data) == 0)
+                    if (XInputNative.XInputGetCapabilitiesEx(1, UserIndex + 1, 0, ref data) == 0)
                         return data.PID;
                 }
                 catch { }
@@ -32,7 +32,7 @@ namespace ExtendInput.DeviceProvider
                 try
                 {
                     XInputNative.XInputCapabilitiesEx data = new XInputNative.XInputCapabilitiesEx();
-                    if (XInputNative.XInputGetCapabilitiesEx(1, (int)UserIndex, 0, ref data) == 0)
+                    if (XInputNative.XInputGetCapabilitiesEx(1, UserIndex + 1, 0, ref data) == 0)
                         return data.VID;
                 }
                 catch { }
@@ -46,7 +46,7 @@ namespace ExtendInput.DeviceProvider
                 try
                 {
                     XInputNative.XInputCapabilitiesEx data = new XInputNative.XInputCapabilitiesEx();
-                    if (XInputNative.XInputGetCapabilitiesEx(1, (int)UserIndex, 0, ref data) == 0)
+                    if (XInputNative.XInputGetCapabilitiesEx(1, UserIndex + 1, 0, ref data) == 0)
                         return data.REV;
                 }
                 catch { }
@@ -60,7 +60,7 @@ namespace ExtendInput.DeviceProvider
                 try
                 {
                     XInputNative.XInputCapabilitiesEx data = new XInputNative.XInputCapabilitiesEx();
-                    if (XInputNative.XInputGetCapabilitiesEx(1, (int)UserIndex, 0, ref data) == 0)
+                    if (XInputNative.XInputGetCapabilitiesEx(1, UserIndex + 1, 0, ref data) == 0)
                         return data.XID;
                 }
                 catch { }
@@ -68,8 +68,8 @@ namespace ExtendInput.DeviceProvider
             }
         }
 
-        public bool IsConnected { get; set; }
-        public byte UserIndex { get; set; }
+        public bool IsConnected { get; private set; }
+        public byte UserIndex { get; private set; }
 
         public Dictionary<string, dynamic> Properties { get; private set; }
 
@@ -92,6 +92,38 @@ namespace ExtendInput.DeviceProvider
             {
                 return false;
             }
+        }
+
+        public void SetConnectionStatus(bool connected)
+        {
+            if (this.IsConnected != connected)
+            {
+                if (connected)
+                {
+                    // rescan information about the controller here once we introduce the caching of the VID, PID, Properties, etc.
+                    // this should probably also be done on a timer too, it's a capabilities scan
+                }
+                this.IsConnected = connected;
+                CreateSendingQueue();
+                sendingQueue.EnqueueTask(new XInputReport()
+                {
+                    Connected = IsConnected,
+                });
+            }
+        }
+
+        private void CreateSendingQueue()
+        {
+            if (sendingQueue != null)
+                return;
+            sendingQueue = new QueueWorker<Wrapper<XInputReport>>(1, (report) =>
+            {
+                if (report != null)
+                {
+                    DeviceReportEvent threadSafeEvent = DeviceReport;
+                    threadSafeEvent?.Invoke(report.Value);
+                }
+            }, $"ReportThread {DevicePath}");
         }
 
         public bool WriteFeatureData(byte[] data)
@@ -153,14 +185,7 @@ namespace ExtendInput.DeviceProvider
 
                 reading = true;
 
-                sendingQueue = new QueueWorker<Wrapper<XInputReport>>(1, (report) =>
-                {
-                    if (report != null)
-                    {
-                        DeviceReportEvent threadSafeEvent = DeviceReport;
-                        threadSafeEvent?.Invoke(report.Value);
-                    }
-                }, $"ReportThread {DevicePath}");
+                CreateSendingQueue();
 
                 readingThread = new Thread(() =>
                 {
@@ -177,7 +202,7 @@ namespace ExtendInput.DeviceProvider
                             //if (XInputNative.XInputGetCapabilitiesEx(1, (int)internalDevice.UserIndex, 0, ref data) == 0)
 
                             XInputNative.XInputState data = new XInputNative.XInputState();
-                            if (XInputNative.XInputGetStateEx(UserIndex, ref data) == 0)
+                            if (XInputNative.XInputGetStateEx(UserIndex + 1, ref data) == 0)
                             {
                                 if (!IsConnected)
                                 {
@@ -203,7 +228,9 @@ namespace ExtendInput.DeviceProvider
                                 {
                                     Connected = IsConnected,
                                 });
-
+                            }
+                            else
+                            {
                                 // poll every 1 second if the device's state is disconnected
                                 // might need to move polling rate out, which would require a temporary polling rate for an unpopulated node
                                 int PollingRate = 1000;
@@ -259,7 +286,7 @@ namespace ExtendInput.DeviceProvider
                 LeftMotorSpeed = Left,
                 RightMotorSpeed = Right,
             };
-            XInputNative.XInputSetState(UserIndex, ref pVibration);
+            XInputNative.XInputSetState(UserIndex + 1, ref pVibration);
         }
 
         //public string UniqueKey => $"XInputDevice {DevPKey.PnpDevicePropertyAPI.devicePathToInstanceId(this.DevicePath)}";
