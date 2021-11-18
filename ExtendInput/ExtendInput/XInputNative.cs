@@ -200,5 +200,14 @@ namespace ExtendInput
             int dwUserIndex,   // [in] Index of the gamer associated with the device
             ref XInputState pState  // [out] Receives the state
         );
+
+
+
+
+        [DllImport("xinput1_4.dll")]
+        public static extern int XInputSetState(
+            int dwUserIndex, // [in]s
+            ref XInputVibration pVibration // [in, out]
+        );
     }
 }

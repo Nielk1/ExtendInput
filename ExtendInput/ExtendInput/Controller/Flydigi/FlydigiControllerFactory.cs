@@ -44,15 +44,15 @@ namespace ExtendInput.Controller.Flydigi
                         {
                             XInputDevice candidate = null;
                             CandidateXInputDevicesX[i]?.TryGetTarget(out candidate);
-                            if(candidate != null && candidate.internalDeviceHackRef.IsConnected && (byte)candidate.internalDeviceHackRef.UserIndex == i)
+                            if(candidate != null && candidate.IsConnected && (byte)candidate.UserIndex == i)
                             {
-                                candidate.internalDeviceHackRef.SetVibration(new SharpDX.XInput.Vibration() { LeftMotorSpeed = 0xAA00, RightMotorSpeed = 0xBB00 });
+                                candidate.SetVibration(0xAA00, 0xBB00);
                                 Thread.Sleep(100);
-                                candidate.internalDeviceHackRef.SetVibration(new SharpDX.XInput.Vibration() { LeftMotorSpeed = 0xBB00, RightMotorSpeed = 0xAA00 });
+                                candidate.SetVibration(0xBB00, 0xAA00);
                                 Thread.Sleep(100);
-                                candidate.internalDeviceHackRef.SetVibration(new SharpDX.XInput.Vibration() { LeftMotorSpeed = 0xAA00, RightMotorSpeed = 0xBB00 });
+                                candidate.SetVibration(0xAA00, 0xBB00);
                                 Thread.Sleep(100);
-                                candidate.internalDeviceHackRef.SetVibration(new SharpDX.XInput.Vibration() { LeftMotorSpeed = 0x0000, RightMotorSpeed = 0x0000 });
+                                candidate.SetVibration(0x0000, 0x0000);
                             }
                         }
                     }
@@ -100,8 +100,8 @@ namespace ExtendInput.Controller.Flydigi
 
                 lock (CandidateXInputLock)
                 {
-                    CandidateXInputDevicesX[(byte)_deviceX.internalDeviceHackRef.UserIndex] = new WeakReference<XInputDevice>(_deviceX);
-                    CandidateXInputDevicesLastSeen[(byte)_deviceX.internalDeviceHackRef.UserIndex] = DateTime.UtcNow;
+                    CandidateXInputDevicesX[(byte)_deviceX.UserIndex] = new WeakReference<XInputDevice>(_deviceX);
+                    CandidateXInputDevicesLastSeen[(byte)_deviceX.UserIndex] = DateTime.UtcNow;
                 }
                 CheckXInputData();
                 return null;

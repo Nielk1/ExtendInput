@@ -18,7 +18,6 @@ namespace ExtendInput.DeviceProvider
 
         //HashSet<HidSharp.HidDevice> KnownDevices = new HashSet<HidSharp.HidDevice>();
         object lock_device_list = new object();
-        SharpDX.XInput.Controller[] Controllers = new SharpDX.XInput.Controller[MAX_SLOT];
         XInputDevice[] DeviceCache = new XInputDevice[MAX_SLOT];
         bool[] ControllerActive = new bool[MAX_SLOT];
 
@@ -27,14 +26,6 @@ namespace ExtendInput.DeviceProvider
 
         public XInputDeviceProvider()
         {
-            for (int i = 0; i < MAX_SLOT; i++)
-            {
-                Controllers[i] = new SharpDX.XInput.Controller((SharpDX.XInput.UserIndex)i);
-                //XInputNative.XInputCapabilitiesEx data = new XInputNative.XInputCapabilitiesEx();
-                //if (XInputNative.XInputGetCapabilitiesEx(1, i, 0, ref data) == 0) { }
-                //XInputNative.XInputBaseBusInformation data2 = new XInputNative.XInputBaseBusInformation();
-                //if (XInputNative.XInputGetBaseBusInformation(i, ref data2) == 0) { }
-            }
             CheckControllerStatusThread = new Thread(() =>
             {
                 for (; ; )
@@ -59,34 +50,31 @@ namespace ExtendInput.DeviceProvider
             {
                 try
                 {
-                    for(int i=0;i< MAX_SLOT;i++)
+                    int FoundDevices = 0;
+                    for (byte i = 0; i < MAX_SLOT; i++)
                     {
-                        /*if (ControllerActive[i] != Controllers[i].IsConnected)
+                        // XInputDevices hang around forever once they are initalized, so we only need to handle the first discovery event
+                        // this might change in the future, need to talk it over
+                        if (DeviceCache[i] == null)
                         {
-                            if(Controllers[i].IsConnected)
+                            XInputNative.XInputState data = new XInputNative.XInputState();
+                            if (XInputNative.XInputGetState(i, ref data) == 0)
                             {
-                                DeviceChangeEventHandler threadSafeEventHandler = DeviceAdded;
-                                threadSafeEventHandler?.Invoke(this, new XInputDevice(Controllers[i]));
+                                if (DeviceCache[i] == null)
+                                    DeviceCache[i] = new XInputDevice(i);
+                                DeviceAddedEventHandler threadSafeEventHandler = DeviceAdded;
+                                threadSafeEventHandler?.Invoke(this, DeviceCache[i]);
                             }
-                            else
-                            {
-                                DeviceChangeEventHandler threadSafeEventHandler = DeviceRemoved;
-                                threadSafeEventHandler?.Invoke(this, new XInputDevice(Controllers[i]));
-                            }
-                            ControllerActive[i] = Controllers[i].IsConnected;
-                        }*/
-                        if(DeviceCache[i] == null && Controllers[i].IsConnected)
-                        {
-                            DeviceCache[i] = new XInputDevice(Controllers[i]);
-                            DeviceAddedEventHandler threadSafeEventHandler = DeviceAdded;
-                            threadSafeEventHandler?.Invoke(this, DeviceCache[i]);
-                            ControllerActive[i] = true;
                         }
-                        if (DeviceCache[i] != null && ControllerActive[i] != Controllers[i].IsConnected)
+                        else
                         {
-                            ControllerActive[i] = Controllers[i].IsConnected;
-                            DeviceCache[i].NotifyOfConnectEvent();
+                            FoundDevices++;
                         }
+                    }
+                    if (FoundDevices == MAX_SLOT)
+                    {
+                        // Since XInput nodes only spawn when they are detected the first time, if all 4 devices exist it's time to stop scanning
+                        AbortStatusThread = true;
                     }
                 }
                 catch { }

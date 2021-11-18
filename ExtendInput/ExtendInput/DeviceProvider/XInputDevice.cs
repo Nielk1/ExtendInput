@@ -10,7 +10,7 @@ namespace ExtendInput.DeviceProvider
 {
     public class XInputDevice : IDevice
     {
-        public string DevicePath { get { return $"SharpDX.XInput.Controller({internalDevice.UserIndex})"; } }// internalDevice.DevicePath; } }
+        public string DevicePath { get { return $"SharpDX.XInput.Controller({UserIndex})"; } }
         public int ProductId
         {
             get
@@ -18,7 +18,7 @@ namespace ExtendInput.DeviceProvider
                 try
                 {
                     XInputNative.XInputCapabilitiesEx data = new XInputNative.XInputCapabilitiesEx();
-                    if (XInputNative.XInputGetCapabilitiesEx(1, (int)internalDevice.UserIndex, 0, ref data) == 0)
+                    if (XInputNative.XInputGetCapabilitiesEx(1, (int)UserIndex, 0, ref data) == 0)
                         return data.PID;
                 }
                 catch { }
@@ -32,7 +32,7 @@ namespace ExtendInput.DeviceProvider
                 try
                 {
                     XInputNative.XInputCapabilitiesEx data = new XInputNative.XInputCapabilitiesEx();
-                    if (XInputNative.XInputGetCapabilitiesEx(1, (int)internalDevice.UserIndex, 0, ref data) == 0)
+                    if (XInputNative.XInputGetCapabilitiesEx(1, (int)UserIndex, 0, ref data) == 0)
                         return data.VID;
                 }
                 catch { }
@@ -46,7 +46,7 @@ namespace ExtendInput.DeviceProvider
                 try
                 {
                     XInputNative.XInputCapabilitiesEx data = new XInputNative.XInputCapabilitiesEx();
-                    if (XInputNative.XInputGetCapabilitiesEx(1, (int)internalDevice.UserIndex, 0, ref data) == 0)
+                    if (XInputNative.XInputGetCapabilitiesEx(1, (int)UserIndex, 0, ref data) == 0)
                         return data.REV;
                 }
                 catch { }
@@ -60,7 +60,7 @@ namespace ExtendInput.DeviceProvider
                 try
                 {
                     XInputNative.XInputCapabilitiesEx data = new XInputNative.XInputCapabilitiesEx();
-                    if (XInputNative.XInputGetCapabilitiesEx(1, (int)internalDevice.UserIndex, 0, ref data) == 0)
+                    if (XInputNative.XInputGetCapabilitiesEx(1, (int)UserIndex, 0, ref data) == 0)
                         return data.XID;
                 }
                 catch { }
@@ -68,21 +68,17 @@ namespace ExtendInput.DeviceProvider
             }
         }
 
-        public bool IsConnected => internalDevice.IsConnected;
-        public byte UserIndex => (byte)internalDevice.UserIndex;
+        public bool IsConnected { get; set; }
+        public byte UserIndex { get; set; }
 
         public Dictionary<string, dynamic> Properties { get; private set; }
 
-        [Obsolete("Refactor any uses of this out")]
-        public SharpDX.XInput.Controller internalDeviceHackRef => internalDevice;
-        private SharpDX.XInput.Controller internalDevice; // this should be private but we have hackery to fix
-        //private bool IsOpen = false;
 
-        public XInputDevice(SharpDX.XInput.Controller internalDevice)
+        public XInputDevice(byte UserIndex)
         {
             Properties = new Dictionary<string, dynamic>();
-
-            this.internalDevice = internalDevice;
+            this.UserIndex = UserIndex;
+            this.IsConnected = true;
         }
 
         public bool WriteReport(byte[] data)
@@ -181,11 +177,16 @@ namespace ExtendInput.DeviceProvider
                             //if (XInputNative.XInputGetCapabilitiesEx(1, (int)internalDevice.UserIndex, 0, ref data) == 0)
 
                             XInputNative.XInputState data = new XInputNative.XInputState();
-                            if (XInputNative.XInputGetStateEx((int)internalDevice.UserIndex, ref data) == 0)
+                            if (XInputNative.XInputGetStateEx(UserIndex, ref data) == 0)
                             {
+                                if (!IsConnected)
+                                {
+                                    // TODO notify of unplug event
+                                    IsConnected = true;
+                                }
                                 sendingQueue.EnqueueTask(new XInputReport()
                                 {
-                                    Connected = internalDevice.IsConnected,
+                                    Connected = IsConnected,
                                     wButtons = (UInt16)data.Gamepad.wButtons,
                                     bLeftTrigger = data.Gamepad.bLeftTrigger,
                                     bRightTrigger = data.Gamepad.bRightTrigger,
@@ -194,6 +195,28 @@ namespace ExtendInput.DeviceProvider
                                     sThumbRX = data.Gamepad.sThumbRX,
                                     sThumbRY = data.Gamepad.sThumbRY,
                                 });
+                            }
+                            else if (IsConnected)
+                            {
+                                IsConnected = false;
+                                sendingQueue.EnqueueTask(new XInputReport()
+                                {
+                                    Connected = IsConnected,
+                                });
+
+                                // poll every 1 second if the device's state is disconnected
+                                // might need to move polling rate out, which would require a temporary polling rate for an unpopulated node
+                                int PollingRate = 1000;
+                                if (PollingRate > 0)
+                                {
+                                    int SleepTime = 0;
+                                    while (SleepTime < (PollingRate / 1000))
+                                    {
+                                        Thread.Sleep(1000);
+                                        SleepTime++;
+                                    }
+                                    Thread.Sleep(PollingRate % 1000);
+                                }
                             }
 
                             /*var State = internalDevice.GetState();
@@ -221,22 +244,22 @@ namespace ExtendInput.DeviceProvider
             }
         }
 
-        public void NotifyOfConnectEvent()
-        {
-            DeviceReportEvent threadSafeEvent = DeviceReport;
-
-            threadSafeEvent?.Invoke(new XInputReport()
-            {
-                Connected = internalDevice.IsConnected,
-            });
-        }
-
         public void StopReading()
         {
             lock (readingLock)
             {
                 reading = false;
             }
+        }
+
+        public void SetVibration(UInt16 Left, UInt16 Right)
+        {
+            XInputNative.XInputVibration pVibration = new XInputNative.XInputVibration()
+            {
+                LeftMotorSpeed = Left,
+                RightMotorSpeed = Right,
+            };
+            XInputNative.XInputSetState(UserIndex, ref pVibration);
         }
 
         //public string UniqueKey => $"XInputDevice {DevPKey.PnpDevicePropertyAPI.devicePathToInstanceId(this.DevicePath)}";

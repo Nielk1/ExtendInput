@@ -60,13 +60,13 @@ namespace ExtendInput.Controller.Betop
                             if (candidate != null && candidate.IsConnected && (byte)candidate.UserIndex == i)
                             {
                                 Thread.Sleep(20);
-                                candidate.internalDeviceHackRef.SetVibration(new SharpDX.XInput.Vibration() { LeftMotorSpeed = 0x0100, RightMotorSpeed = 0x0600 });
+                                candidate.SetVibration(0x0100, 0x0600);
                                 Thread.Sleep(20);
-                                candidate.internalDeviceHackRef.SetVibration(new SharpDX.XInput.Vibration() { LeftMotorSpeed = 0x0500, RightMotorSpeed = 0x0300 });
+                                candidate.SetVibration(0x0500, 0x0300);
                                 Thread.Sleep(20);
-                                candidate.internalDeviceHackRef.SetVibration(new SharpDX.XInput.Vibration() { LeftMotorSpeed = 0x0200, RightMotorSpeed = 0x0400 });
+                                candidate.SetVibration(0x0200, 0x0400);
                                 Thread.Sleep(20);
-                                candidate.internalDeviceHackRef.SetVibration(new SharpDX.XInput.Vibration() { LeftMotorSpeed = 0x0000, RightMotorSpeed = 0x0000 });
+                                candidate.SetVibration(0x0000, 0x0000);
                             }
                         }
                     }
@@ -116,8 +116,8 @@ namespace ExtendInput.Controller.Betop
                 lock (CandidateXInputLock)
                 {
                     // Keep a weak reference on all 4 XInput controllers. Note that this weak reference will fail to work properly if there is no XInput controller.
-                    CandidateXInputDevicesX[(byte)deviceXInput.internalDeviceHackRef.UserIndex] = new WeakReference<XInputDevice>(deviceXInput);
-                    CandidateXInputDevicesLastSeen[(byte)deviceXInput.internalDeviceHackRef.UserIndex] = DateTime.UtcNow;
+                    CandidateXInputDevicesX[(byte)deviceXInput.UserIndex] = new WeakReference<XInputDevice>(deviceXInput);
+                    CandidateXInputDevicesLastSeen[(byte)deviceXInput.UserIndex] = DateTime.UtcNow;
                 }
                 CheckXInputData();
                 return null;
