@@ -55,6 +55,11 @@
             content: "Deactivate";
         }
 
+        .chord_text {
+            font-size: 0.6em;
+            font-family: monospace;
+        }
+
         .controller_image {
             padding: 5px;
         }
@@ -110,6 +115,12 @@
         var ControllerActive = false;
         var ControllerActiveSubtype = null;
         var ControllerPollAjax = null;
+
+        const cord_formatter = new Intl.NumberFormat('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+            signDisplay: "always"
+        });
 
         $(document).ready(function () {
             var $controllers = $('#controllers');
@@ -326,16 +337,20 @@
                                 renderElement.empty().append(
                                     '<svg id="control_render_' + control_id + '" width="140" height="140" xmlns="http://www.w3.org/2000/svg">' +
                                     '<g>' +
+                                    //'<path class="stick_click" d="M 2,2 m 0,136 136,0 0,-136 -136,0 z" stroke="#999" fill="none" stroke-width="3"></path>' +
                                     '<path class="" d="M 6,6 m 0,128 128,0 0,-128 -128,0 z" stroke="#000" fill="#fff"></path>' +
                                     '<ellipse class="" ry="64" rx="64" cy="70" cx="70" stroke="#000" fill="#fff" />' +
-                                    '<ellipse class="stick_float" ry="2" rx="2" cy="70" cx="70" fill="#000" />' +
+                                    '<g class="stick_float" cy="70" cx="70">' +
+                                    '<ellipse ry="2" rx="2" cy="0" cx="0" fill="#000" />' +
+                                    '<text class="chord_text stick_float_text" x="-4" y="4" transform="translate(5,-5)"></text>' +
+                                    '</g>' +
                                     '</g>' +
                                     '</svg>');
                             }
                             var ctrl = $('#control_render_' + control_id);
                             var stickFloat = ctrl.find('.stick_float');
-                            stickFloat.attr('cx', 70 + controlData.X * 63);
-                            stickFloat.attr('cy', 70 + controlData.Y * 63);
+                            stickFloat.attr('transform', 'translate(' + (70 + controlData.X * 63) + ',' + (70 + controlData.Y * 63) + ')');
+                            stickFloat.children('.stick_float_text').attr('transform', 'translate(' + (controlData.X > 0 ? 0 : 6) + ',' + (controlData.Y > 0 ? -6 : 6) + ')').attr('text-anchor', (controlData.X > 0 ? "end" : "initial")).text(cord_formatter.format(controlData.X) + ',' + cord_formatter.format(controlData.Y));
                         }
                         break;
                     case 'ExtendInput.Controls.ControlStickWithClick':
@@ -349,14 +364,17 @@
                                     '<path class="stick_click" d="M 2,2 m 0,136 136,0 0,-136 -136,0 z" stroke="#999" fill="none" stroke-width="3"></path>' +
                                     '<path class="" d="M 6,6 m 0,128 128,0 0,-128 -128,0 z" stroke="#000" fill="#fff"></path>' +
                                     '<ellipse class="" ry="64" rx="64" cy="70" cx="70" stroke="#000" fill="#fff" />' +
-                                    '<ellipse class="stick_float" ry="2" rx="2" cy="70" cx="70" fill="#000" />' +
+                                    '<g class="stick_float" cy="70" cx="70">' +
+                                    '<ellipse ry="2" rx="2" cy="0" cx="0" fill="#000" />' +
+                                    '<text class="chord_text stick_float_text" x="-4" y="4" transform="translate(5,-5)"></text>' +
+                                    '</g>' +
                                     '</g>' +
                                     '</svg>');
                             }
                             var ctrl = $('#control_render_' + control_id);
                             var stickFloat = ctrl.find('.stick_float');
-                            stickFloat.attr('cx', 70 + controlData.X * 63);
-                            stickFloat.attr('cy', 70 + controlData.Y * 63);
+                            stickFloat.attr('transform', 'translate(' + (70 + controlData.X * 63) + ',' + (70 + controlData.Y * 63) + ')');
+                            stickFloat.children('.stick_float_text').attr('transform', 'translate(' + (controlData.X > 0 ? 0 : 6) + ',' + (controlData.Y > 0 ? -6 : 6) + ')').attr('text-anchor', (controlData.X > 0 ? "end" : "initial")).text(cord_formatter.format(controlData.X) + ',' + cord_formatter.format(controlData.Y));
                             if (controlData.Click) ctrl.find('.stick_click').addClass('active-o'); else ctrl.find('.stick_click').removeClass('active-o');
                         }
                         break;
@@ -386,7 +404,10 @@
                                     domString +=
                                         '<g cy="70" cx="70" class="pad_float_' + i + '" style="display: none;">' +
                                         '<ellipse ry="2" rx="2" cy="0" cx="0" fill="#000" />' +
-                                        '<text class="pad_float_text" style="font-size: small;" x="-4" y="4" transform="translate(5,-5)">' + i + '</text>' +
+                                        '<text class="chord_text pad_float_text" x="-4" y="4" transform="translate(5,-5)">' +
+                                        '<tspan x="0", dy="0em">' + i + '</tspan>' +
+                                        '<tspan x="0", dy="1em"> 0.00, 0.00</tspan>' +
+                                        '</text>' +
                                         '</g>';
                                 }
                                 domString +=
@@ -399,7 +420,9 @@
                                 var stickFloat = ctrl.find('.pad_float_' + i);
                                 if (controlData.Touch[i]) {
                                     stickFloat.attr('transform', 'translate(' + (6 + (64 + controlData.X[i] * 63) * ratioW) + ',' + (6 + (64 + controlData.Y[i] * 63) * ratioH) + ')');
-                                    stickFloat.children('.pad_float_text').attr('transform', 'translate(' + (controlData.X[i] > 0 ? -6 : 6) + ',' + (controlData.Y[i] > 0 ? -6 : 6) + ')');
+                                    stickFloat.children('.pad_float_text').attr('transform', 'translate(' + (controlData.X[i] > 0 ? -6 : 6) + ',' + (controlData.Y[i] > 0 ? -6 : 6) + ')').attr('text-anchor', (controlData.X[i] > 0 ? "end" : "initial"));
+                                    stickFloat.children('.pad_float_text').children('tspan:first()').text(i);
+                                    stickFloat.children('.pad_float_text').children('tspan:last()').text(cord_formatter.format(controlData.X[i]) + ',' + cord_formatter.format(controlData.Y[i])).attr("dy", controlData.Y[i] > 0 ? "-1em" : "1em");
                                     stickFloat.show();
                                 } else {
                                     stickFloat.hide();
