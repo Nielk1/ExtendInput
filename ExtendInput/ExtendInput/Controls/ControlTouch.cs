@@ -2,7 +2,19 @@
 
 namespace ExtendInput.Controls
 {
-    public class ControlTouch : IControl
+    public interface IControlTouch : IControl
+    {
+        bool HasClick { get; }
+        int TouchCount { get; }
+        float[] X { get; }
+        float[] Y { get; }
+        bool[] Touch { get; }
+        bool Click { get; set; }
+
+        int PhysicalWidth { get; set; }
+        int PhysicalHeight { get; set; }
+    }
+    public class ControlTouch : IControlTouch
     {
         public bool HasClick { get; private set; }
         public int TouchCount { get; private set; }

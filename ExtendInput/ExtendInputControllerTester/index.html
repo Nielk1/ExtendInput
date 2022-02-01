@@ -156,9 +156,19 @@
             });
 
             function DrawButtonSvg(name, x, y) {
+                return '<ellipse class="" ry="29" rx="29" cy="' + y + '" cx="' + x + '" stroke="#000" fill="#fff" />' +
+                    '<ellipse class="' + name + '_data" ry="0" rx="0" cy="' + y + '" cx="' + x + '" stroke="#000" fill="#333" />';
+            }
+            function UpdateButtonSvg(ctrl, name, val) {
+                ctrl.find(name).attr('rx', val * 29).attr('ry', val * 29);
+            }
+            function DrawButton2StageSvg(name, x, y) {
                 return '<ellipse class="' + name + '_click" ry="29" rx="29" cy="' + y + '" cx="' + x + '" stroke="#ccc" fill="none" stroke-width="3" />' +
                     '<ellipse class="" ry="25" rx="25" cy="' + y + '" cx="' + x + '" stroke="#000" fill="#fff" />' +
                     '<ellipse class="' + name + '_data" ry="0" rx="0" cy="' + y + '" cx="' + x + '" stroke="#000" fill="#333" />';
+            }
+            function UpdateButton2StageSvg(ctrl, name, val) {
+                ctrl.find(name).attr('rx', val * 25).attr('ry', val * 25);
             }
 
             function RenderControl(control_id, controlData, controlType, $state_data, NewSubtype, knownChildren, childWidth) {
@@ -196,29 +206,78 @@
                             }
                             var ctrl = $('#control_render_' + control_id);
                             if (controlData.ButtonN) {
-                                ctrl.find('.btn_n_data').attr('rx', 25).attr('ry', 25);
+                                UpdateButtonSvg(ctrl, '.btn_n_data', 1);
                             } else {
-                                ctrl.find('.btn_n_data').attr('rx', 0).attr('ry', 0);
-                                //ctrl.find('.btn_n_data').attr('rx', controlData.Analog * 25).attr('ry', controlData.Analog * 25);
+                                UpdateButtonSvg(ctrl, '.btn_n_data', 0);
                             }
                             if (controlData.ButtonE) {
-                                ctrl.find('.btn_e_data').attr('rx', 25).attr('ry', 25);
+                                UpdateButtonSvg(ctrl, '.btn_e_data', 1);
                             } else {
-                                ctrl.find('.btn_e_data').attr('rx', 0).attr('ry', 0);
-                                //ctrl.find('.btn_e_data').attr('rx', controlData.Analog * 25).attr('ry', controlData.Analog * 25);
+                                UpdateButtonSvg(ctrl, '.btn_e_data', 0);
                             }
                             if (controlData.ButtonS) {
-                                ctrl.find('.btn_s_data').attr('rx', 25).attr('ry', 25);
+                                UpdateButtonSvg(ctrl, '.btn_s_data', 1);
                             } else {
-                                ctrl.find('.btn_s_data').attr('rx', 0).attr('ry', 0);
-                                //ctrl.find('.btn_s_data').attr('rx', controlData.Analog * 25).attr('ry', controlData.Analog * 25);
+                                UpdateButtonSvg(ctrl, '.btn_s_data', 0);
                             }
                             if (controlData.ButtonW) {
-                                ctrl.find('.btn_w_data').attr('rx', 25).attr('ry', 25);
+                                UpdateButtonSvg(ctrl, '.btn_w_data', 1);
                             } else {
-                                ctrl.find('.btn_w_data').attr('rx', 0).attr('ry', 0);
-                                //ctrl.find('.btn_w_data').attr('rx', controlData.Analog * 25).attr('ry', controlData.Analog * 25);
+                                UpdateButtonSvg(ctrl, '.btn_w_data', 0);
                             }
+                        }
+                        break;
+                    case 'ExtendInput.Controls.ControlButton':
+                        {
+                            var renderElement = wrapper.find('.control-value');
+                            renderElement.addClass('text-center');
+                            if (NewSubtype || renderElement.children('svg').length == 0) {
+                                renderElement.empty().append(
+                                    '<svg id="control_render_' + control_id + '" width="62" height="62" xmlns="http://www.w3.org/2000/svg">' +
+                                    '<g>' +
+                                    DrawButtonSvg("btn_x", 31, 31) +
+                                    '</g>' +
+                                    '</svg>');
+                            }
+                            var ctrl = $('#control_render_' + control_id);
+                            if (controlData.DigitalStage1) {
+                                UpdateButtonSvg(ctrl, '.btn_x_data', 1);
+                            } else {
+                                UpdateButtonSvg(ctrl, '.btn_x_data', 0);
+                            }
+                        }
+                        break;
+                    case 'ExtendInput.Controls.ControlTrigger':
+                        {
+                            var renderElement = wrapper.find('.control-value');
+                            renderElement.addClass('text-center');
+                            if (NewSubtype || renderElement.children('svg').length == 0) {
+                                renderElement.empty().append(
+                                    '<svg id="control_render_' + control_id + '" width="62" height="62" xmlns="http://www.w3.org/2000/svg">' +
+                                    '<g>' +
+                                    DrawButtonSvg("btn_x", 31, 31) +
+                                    '</g>' +
+                                    '</svg>');
+                            }
+                            var ctrl = $('#control_render_' + control_id);
+                            UpdateButtonSvg(ctrl, '.btn_x_data', controlData.AnalogStage1);
+                        }
+                        break;
+                    case 'ExtendInput.Controls.ControlTrigger2Stage':
+                        {
+                            var renderElement = wrapper.find('.control-value');
+                            renderElement.addClass('text-center');
+                            if (NewSubtype || renderElement.children('svg').length == 0) {
+                                renderElement.empty().append(
+                                    '<svg id="control_render_' + control_id + '" width="62" height="62" xmlns="http://www.w3.org/2000/svg">' +
+                                    '<g>' +
+                                    DrawButton2StageSvg("btn_x", 31, 31) +
+                                    '</g>' +
+                                    '</svg>');
+                            }
+                            var ctrl = $('#control_render_' + control_id);
+                            UpdateButton2StageSvg(ctrl, '.btn_x_data', controlData.AnalogStage1);
+                            if (controlData.Stage2) ctrl.find('.btn_x_click').addClass('active-o'); else ctrl.find('.btn_x_click').removeClass('active-o');
                         }
                         break;
                     case 'ExtendInput.Controls.ControlDPad':
@@ -259,83 +318,27 @@
                             }
                         }
                         break;
-                    case 'ExtendInput.Controls.ControlButton':
-                        {
-                            var renderElement = wrapper.find('.control-value');
-                            renderElement.addClass('text-center');
-                            if (NewSubtype || renderElement.children('svg').length == 0) {
-                                renderElement.empty().append(
-                                    '<svg id="control_render_' + control_id + '" width="62" height="62" xmlns="http://www.w3.org/2000/svg">' +
-                                    '<g>' +
-
-                                    DrawButtonSvg("btn_x", 31, 31) +
-
-                                    '</g>' +
-                                    '</svg>');
-                            }
-                            var ctrl = $('#control_render_' + control_id);
-                            if (controlData.Button0) {
-                                ctrl.find('.btn_x_data').attr('rx', 25).attr('ry', 25);
-                            } else {
-                                ctrl.find('.btn_x_data').attr('rx', controlData.Analog * 25).attr('ry', controlData.Analog * 25);
-                            }
-                            if (controlData.HasStage2 == "Digital") if (controlData.Stage2) ctrl.find('.btn_x_click').addClass('active-o'); else ctrl.find('.btn_x_click').removeClass('active-o', 'disable-o'); else ctrl.find('.btn_x_click').addClass('disable-o');
-
-                        }
-                        break;
-                    case 'ExtendInput.Controls.ControlButtonPair':
-                        //case 'ExtendInput.Controls.ControlTriggerPair':
-                        {
-                            var renderElement = wrapper.find('.control-value');
-                            renderElement.addClass('text-center');
-                            if (NewSubtype || renderElement.children('svg').length == 0) {
-                                renderElement.empty().append(
-                                    '<svg id="control_render_' + control_id + '" width="182" height="62" xmlns="http://www.w3.org/2000/svg">' +
-                                    '<g>' +
-
-                                    //'<ellipse class="btn_l_click" ry="29" rx="29" cy="31" cx="031" stroke="#ccc" fill="none" stroke-width="3" />' +
-                                    //'<ellipse class="" ry="25" rx="25" cy="31" cx="031" stroke="#000" fill="#fff" />' +
-                                    //'<ellipse class="btn_l_data" ry="0" rx="0" cy="31" cx="031" stroke="#000" fill="#333" />' +
-                                    DrawButtonSvg("btn_l", 31, 31) +
-
-                                    //'<ellipse class="btn_r_click" ry="29" rx="29" cy="31" cx="151" stroke="#ccc" fill="none" stroke-width="3" />' +
-                                    //'<ellipse class="" ry="25" rx="25" cy="31" cx="151" stroke="#000" fill="#fff" />' +
-                                    //'<ellipse class="btn_r_data" ry="0" rx="0" cy="31" cx="151" stroke="#000" fill="#333" />' +
-                                    DrawButtonSvg("btn_r", 151, 31) +
-
-                                    '</g>' +
-                                    '</svg>');
-                            }
-                            var ctrl = $('#control_render_' + control_id);
-                            if (controlData.Left.Button0) {
-                                ctrl.find('.btn_l_data').attr('rx', 25).attr('ry', 25);
-                            } else {
-                                ctrl.find('.btn_l_data').attr('rx', controlData.Left.Analog * 25).attr('ry', controlData.Left.Analog * 25);
-                            }
-                            if (controlData.Right.Button0) {
-                                ctrl.find('.btn_r_data').attr('rx', 25).attr('ry', 25);
-                            } else {
-                                ctrl.find('.btn_r_data').attr('rx', controlData.Right.Analog * 25).attr('ry', controlData.Right.Analog * 25);
-                            }
-                            if (controlData.Left.HasStage2 == "Digital") if (controlData.Left.Stage2) ctrl.find('.btn_l_click').addClass('active-o'); else ctrl.find('.btn_l_click').removeClass('active-o', 'disable-o'); else ctrl.find('.btn_l_click').addClass('disable-o');
-                            if (controlData.Right.HasStage2 == "Digital") if (controlData.Right.Stage2) ctrl.find('.btn_r_click').addClass('active-o'); else ctrl.find('.btn_r_click').removeClass('active-o', 'disable-o'); else ctrl.find('.btn_r_click').addClass('disable-o');
-                        }
-                        break;
-                    case 'ExtendInput.Controls.ControlPair':
-                        {
-                            var renderElement = wrapper.find('.control-value');
-                            //renderElement.addClass('text-center');
-                            var ctrl = $('#control_render_' + control_id);
-                            if (controlData.Button0) ctrl.find('.btn_x').addClass('active'); else ctrl.find('.btn_x').removeClass('active');
-
-                            RenderControl(control_id + "-Left", controlData.Left, controlType.split('[')[1].split(']')[0], renderElement, NewSubtype, knownChildren, true);
-                            RenderControl(control_id + "-Right", controlData.Right, controlType.split('[')[1].split(']')[0], renderElement, NewSubtype, knownChildren, true);
-
-                            //RenderControl(control_id + "-Left", controlData.Left, controlType.split('[')[1].split(']')[0], $state_data, NewSubtype, knownChildren);
-                            //RenderControl(control_id + "-Right", controlData.Right, controlType.split('[')[1].split(']')[0], $state_data, NewSubtype, knownChildren);
-                        }
-                        break;
                     case 'ExtendInput.Controls.ControlStick':
+                        {
+                            var renderElement = wrapper.find('.control-value');
+                            renderElement.addClass('text-center');
+                            if (NewSubtype || renderElement.children('svg').length == 0) {
+                                renderElement.empty().append(
+                                    '<svg id="control_render_' + control_id + '" width="140" height="140" xmlns="http://www.w3.org/2000/svg">' +
+                                    '<g>' +
+                                    '<path class="" d="M 6,6 m 0,128 128,0 0,-128 -128,0 z" stroke="#000" fill="#fff"></path>' +
+                                    '<ellipse class="" ry="64" rx="64" cy="70" cx="70" stroke="#000" fill="#fff" />' +
+                                    '<ellipse class="stick_float" ry="2" rx="2" cy="70" cx="70" fill="#000" />' +
+                                    '</g>' +
+                                    '</svg>');
+                            }
+                            var ctrl = $('#control_render_' + control_id);
+                            var stickFloat = ctrl.find('.stick_float');
+                            stickFloat.attr('cx', 70 + controlData.X * 63);
+                            stickFloat.attr('cy', 70 + controlData.Y * 63);
+                        }
+                        break;
+                    case 'ExtendInput.Controls.ControlStickWithClick':
                         {
                             var renderElement = wrapper.find('.control-value');
                             renderElement.addClass('text-center');
@@ -354,7 +357,7 @@
                             var stickFloat = ctrl.find('.stick_float');
                             stickFloat.attr('cx', 70 + controlData.X * 63);
                             stickFloat.attr('cy', 70 + controlData.Y * 63);
-                            if (controlData.HasClick) if (controlData.Click) ctrl.find('.stick_click').addClass('active-o'); else ctrl.find('.stick_click').removeClass('active-o', 'disable-o'); else ctrl.find('.stick_click').addClass('disable-o');
+                            if (controlData.Click) ctrl.find('.stick_click').addClass('active-o'); else ctrl.find('.stick_click').removeClass('active-o');
                         }
                         break;
                     case 'ExtendInput.Controls.ControlTouch':
@@ -438,6 +441,58 @@
                             //if (controlData.HasClick) if (controlData.Click) ctrl.find('.stick_click').addClass('active-o'); else ctrl.find('.stick_click').removeClass('active-o', 'disable-o'); else ctrl.find('.stick_click').addClass('disable-o');
                         }
                         break;
+                    /*case 'ExtendInput.Controls.ControlButtonPair':
+                        //case 'ExtendInput.Controls.ControlTriggerPair':
+                        {
+                            var renderElement = wrapper.find('.control-value');
+                            renderElement.addClass('text-center');
+                            if (NewSubtype || renderElement.children('svg').length == 0) {
+                                renderElement.empty().append(
+                                    '<svg id="control_render_' + control_id + '" width="182" height="62" xmlns="http://www.w3.org/2000/svg">' +
+                                    '<g>' +
+
+                                    //'<ellipse class="btn_l_click" ry="29" rx="29" cy="31" cx="031" stroke="#ccc" fill="none" stroke-width="3" />' +
+                                    //'<ellipse class="" ry="25" rx="25" cy="31" cx="031" stroke="#000" fill="#fff" />' +
+                                    //'<ellipse class="btn_l_data" ry="0" rx="0" cy="31" cx="031" stroke="#000" fill="#333" />' +
+                                    DrawButtonSvg("btn_l", 31, 31) +
+
+                                    //'<ellipse class="btn_r_click" ry="29" rx="29" cy="31" cx="151" stroke="#ccc" fill="none" stroke-width="3" />' +
+                                    //'<ellipse class="" ry="25" rx="25" cy="31" cx="151" stroke="#000" fill="#fff" />' +
+                                    //'<ellipse class="btn_r_data" ry="0" rx="0" cy="31" cx="151" stroke="#000" fill="#333" />' +
+                                    DrawButtonSvg("btn_r", 151, 31) +
+
+                                    '</g>' +
+                                    '</svg>');
+                            }
+                            var ctrl = $('#control_render_' + control_id);
+                            if (controlData.Left.Button0) {
+                                ctrl.find('.btn_l_data').attr('rx', 25).attr('ry', 25);
+                            } else {
+                                ctrl.find('.btn_l_data').attr('rx', controlData.Left.Analog * 25).attr('ry', controlData.Left.Analog * 25);
+                            }
+                            if (controlData.Right.Button0) {
+                                ctrl.find('.btn_r_data').attr('rx', 25).attr('ry', 25);
+                            } else {
+                                ctrl.find('.btn_r_data').attr('rx', controlData.Right.Analog * 25).attr('ry', controlData.Right.Analog * 25);
+                            }
+                            if (controlData.Left.HasStage2 == "Digital") if (controlData.Left.Stage2) ctrl.find('.btn_l_click').addClass('active-o'); else ctrl.find('.btn_l_click').removeClass('active-o', 'disable-o'); else ctrl.find('.btn_l_click').addClass('disable-o');
+                            if (controlData.Right.HasStage2 == "Digital") if (controlData.Right.Stage2) ctrl.find('.btn_r_click').addClass('active-o'); else ctrl.find('.btn_r_click').removeClass('active-o', 'disable-o'); else ctrl.find('.btn_r_click').addClass('disable-o');
+                        }
+                        break;
+                    case 'ExtendInput.Controls.ControlPair':
+                        {
+                            var renderElement = wrapper.find('.control-value');
+                            //renderElement.addClass('text-center');
+                            var ctrl = $('#control_render_' + control_id);
+                            if (controlData.Button0) ctrl.find('.btn_x').addClass('active'); else ctrl.find('.btn_x').removeClass('active');
+
+                            RenderControl(control_id + "-Left", controlData.Left, controlType.split('[')[1].split(']')[0], renderElement, NewSubtype, knownChildren, true);
+                            RenderControl(control_id + "-Right", controlData.Right, controlType.split('[')[1].split(']')[0], renderElement, NewSubtype, knownChildren, true);
+
+                            //RenderControl(control_id + "-Left", controlData.Left, controlType.split('[')[1].split(']')[0], $state_data, NewSubtype, knownChildren);
+                            //RenderControl(control_id + "-Right", controlData.Right, controlType.split('[')[1].split(']')[0], $state_data, NewSubtype, knownChildren);
+                        }
+                        break;*/
                     case 'ExtendInput.Controls.ControlMotion':
                         {
                             var renderElement = wrapper.find('.control-value');
@@ -452,7 +507,7 @@
                                 renderer.clear();
                                 window.camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 100);
                                 //camera.position.x = -1; camera.position.y = 1; camera.position.z = -1;
-                                camera.position.z = 0.5;
+                                camera.position.z = 1;
                                 /*var cameraControls;
                                 cameraControls = new THREE.OrbitControls(camera, renderer.domElement);
                                 cameraControls.target.set(0, 0, 0);
@@ -472,7 +527,7 @@
 
                                 var loader = new THREE.ColladaLoader();
                                 loader.load("./3d/model.dae", function (geometry, materials) {
-                                    geometry.scene = geometry.scene.translateY(-0.06);
+                                    //geometry.scene = geometry.scene.translateZ(-0.5);
                                     scene.add(geometry.scene);
                                     model_bz1 = geometry.scene;
                                     model_bz1.visible = true;

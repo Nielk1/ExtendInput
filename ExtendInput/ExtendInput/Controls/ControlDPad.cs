@@ -2,7 +2,11 @@
 
 namespace ExtendInput.Controls
 {
-    public class ControlDPad : IControl
+    public interface IControlDPad : IControl
+    {
+        EDPadDirection Direction { get; set; }
+    }
+    public class ControlDPad : IControlDPad
     {
         //public int StateCount { get; private set; }
         public EDPadDirection Direction { get; set; }

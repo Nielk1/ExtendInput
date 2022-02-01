@@ -2,19 +2,19 @@
 
 namespace ExtendInput.Controls
 {
-    public class ControlStick : IControl
+    public interface IControlStick : IControl
     {
-        public bool HasClick { get; private set; }
+        float X { get; set; }
+        float Y { get; set; }
+    }
+    public class ControlStick : IControlStick
+    {
         public float X { get; set; }
         public float Y { get; set; }
-        public bool Click { get; set; }
 
-        public ControlStick(bool HasClick)
-        {
-            this.HasClick = HasClick;
-        }
-
-        public T Value<T>(string key)
+        public ControlStick() { }
+        
+        public virtual T Value<T>(string key)
         {
             switch (key)
             {
@@ -22,13 +22,11 @@ namespace ExtendInput.Controls
                     return (T)Convert.ChangeType(X, typeof(T));
                 case "y":
                     return (T)Convert.ChangeType(Y, typeof(T));
-                case "click":
-                    return (T)Convert.ChangeType(Click, typeof(T));
                 default:
                     return default;
             }
         }
-        public Type Type(string key)
+        public virtual Type Type(string key)
         {
             switch (key)
             {
@@ -36,20 +34,17 @@ namespace ExtendInput.Controls
                     return typeof(float);
                 case "y":
                     return typeof(float);
-                case "click":
-                    return typeof(bool);
                 default:
                     return default;
             }
         }
 
-        public object Clone()
+        public virtual object Clone()
         {
-            ControlStick newData = new ControlStick(this.HasClick);
+            ControlStick newData = new ControlStick();
 
             newData.X = this.X;
             newData.Y = this.Y;
-            newData.Click = this.Click;
 
             return newData;
         }

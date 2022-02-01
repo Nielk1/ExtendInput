@@ -2,7 +2,14 @@
 
 namespace ExtendInput.Controls
 {
-    public class ControlButtonQuad : IControl
+    public interface IControlButtonQuad : IControl
+    {
+        bool ButtonN { get; set; }
+        bool ButtonE { get; set; }
+        bool ButtonS { get; set; }
+        bool ButtonW { get; set; }
+    }
+    public class ControlButtonQuad : IControlButtonQuad
     {
         public bool ButtonN { get; set; }
         public bool ButtonE { get; set; }

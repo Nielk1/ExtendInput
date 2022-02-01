@@ -104,6 +104,9 @@ namespace ExtendInput
                 deviceProvider.DeviceAdded += DeviceAdded;
                 deviceProvider.DeviceRemoved += DeviceRemoved;
             }
+
+            // tmp line to test discovery
+            ControlConverter converter = ControlConverter.Instance;
         }
 
         private void DeviceAdded(object sender, IDevice e)

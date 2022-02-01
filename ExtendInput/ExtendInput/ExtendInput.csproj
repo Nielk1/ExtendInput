@@ -77,6 +77,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ControlConverter.cs" />
     <Compile Include="Controller\Betop\BetopController.cs" />
     <Compile Include="Controller\Betop\BetopControllerFactory.cs" />
     <Compile Include="Controller\Sony\DualSenseController.cs" />
@@ -86,16 +87,19 @@
     <Compile Include="Controller\IControllerFactory.cs" />
     <Compile Include="Controller\SixtyBeat\SixtyBeatGamepadControllerFactory.cs" />
     <Compile Include="Controller\SixtyBeat\SixtyBeatGamepadController.cs" />
+    <Compile Include="Controls\ControllTrigger2Stage.cs" />
+    <Compile Include="Controls\ControlTrigger.cs" />
+    <Compile Include="Controls\ControlButton.cs" />
     <Compile Include="Controls\ControlDataButton.cs" />
     <Compile Include="Controls\ControlPair.cs" />
     <Compile Include="Controls\ControlRocker.cs" />
+    <Compile Include="Controls\ControlStickWithClick.cs" />
     <Compile Include="DeviceProvider\ReportData.cs" />
     <Compile Include="MadgwickAHRS.cs" />
     <Compile Include="QueueWorker.cs" />
     <Compile Include="Wrapper.cs" />
-    <Compile Include="Controls\ControlButton.cs" />
+    <Compile Include="Controls\ControlButtonOld.cs" />
     <Compile Include="Controls\ControlButtonGrid.cs" />
-    <Compile Include="Controls\ControlButtonPair.cs" />
     <Compile Include="Controls\ControlButtonQuad.cs" />
     <Compile Include="Controls\ControlDPad.cs" />
     <Compile Include="Controls\ControllerState.cs" />
