@@ -101,6 +101,7 @@ namespace ExtendInputControllerTester
                 //.WithStaticFolder("/", "index.html", true)
                 .WithStaticFolder("/images/controller", "../../images/controller", true)
                 .WithStaticFolder("/images/icon", "../../images/icon", true)
+                .WithStaticFolder("/3d", "../../3d", true)
                 //.WithModule(new FileModule("/images/controller", provider))
                 .WithModule(new ActionModule("/poll_controller", HttpVerbs.Get, PollController))
                 .WithModule(new ActionModule("/poll_other", HttpVerbs.Get, PollOther))

@@ -7,6 +7,8 @@ namespace ExtendInput.Controls
     /// </summary>
     public class ControlMotion : IControl
     {
+        private static AHRS.MadgwickAHRS AHRS = new AHRS.MadgwickAHRS(1f / 256f, 0.1f);
+
         public Int16 AccelerometerX { get; set; }
         public Int16 AccelerometerY { get; set; }
         public Int16 AccelerometerZ { get; set; }

@@ -58,6 +58,10 @@
         .controller_image {
             padding: 5px;
         }
+
+        div.model {
+            height: 150px;
+        }
     </style>
 
     <title>Hello, world!</title>
@@ -79,6 +83,10 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
     <script src="https://unpkg.com/masonry-layout@4/dist/masonry.pkgd.min.js"></script>
+
+    <script src="3d/three.min.js"></script>
+    <script src="3d/OrbitControls.js"></script>
+    <script src="3d/ColladaLoader.js"></script>
 
     <script>
         /*const socket = new WebSocket("ws://" + location.host + "/terminal");
@@ -430,6 +438,67 @@
                             //if (controlData.HasClick) if (controlData.Click) ctrl.find('.stick_click').addClass('active-o'); else ctrl.find('.stick_click').removeClass('active-o', 'disable-o'); else ctrl.find('.stick_click').addClass('disable-o');
                         }
                         break;
+                    case 'ExtendInput.Controls.ControlMotion':
+                        {
+                            var renderElement = wrapper.find('.control-value');
+                            if (NewSubtype || renderElement.children('div.model').length == 0) {
+                                renderElement.empty().append('<div class="model"/>');
+                                var container = renderElement.children('div.model')[0];
+                                var renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+                                renderer.setSize(container.clientWidth, container.clientHeight);
+                                container.innerHTML = '';
+                                container.appendChild(renderer.domElement);
+                                renderer.setClearColor(0xFFFFFF, 0);
+                                renderer.clear();
+                                window.camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 100);
+                                //camera.position.x = -1; camera.position.y = 1; camera.position.z = -1;
+                                camera.position.z = 0.5;
+                                /*var cameraControls;
+                                cameraControls = new THREE.OrbitControls(camera, renderer.domElement);
+                                cameraControls.target.set(0, 0, 0);
+                                cameraControls.maxDistance = 0.5;
+                                cameraControls.minDistance = 0.3;
+                                cameraControls.update();*/
+
+                                var scene = new THREE.Scene();
+
+                                var ambientLight = new THREE.AmbientLight(0x888888);
+                                scene.add(ambientLight);
+
+                                var light = new THREE.SpotLight();
+                                light.castShadow = true;
+                                light.position.set(170, 330, -160);
+                                scene.add(light);
+
+                                var loader = new THREE.ColladaLoader();
+                                loader.load("./3d/model.dae", function (geometry, materials) {
+                                    geometry.scene = geometry.scene.translateY(-0.06);
+                                    scene.add(geometry.scene);
+                                    model_bz1 = geometry.scene;
+                                    model_bz1.visible = true;
+                                });
+
+                                scene.add(camera);
+                                pointLight = new THREE.PointLight(0x888888);
+                                pointLight.position.set(1, 1, 2);
+                                camera.add(pointLight);
+
+                                renderer.render(scene, camera);
+
+                                $(container).data('render', renderer);
+
+                                setTimeout(onWindowResize, 100);
+
+                                function update() {
+                                    requestAnimationFrame(update);
+                                    //cameraControls.update();
+                                    renderer.render(scene, camera);
+                                }
+
+                                update();
+                            }
+                        }
+                        break;
                     default:
                         wrapper.find('.control-value').addClass('text-monospace small').text(JSON.stringify(controlData, null, 2));
                         break;
@@ -439,6 +508,23 @@
                     $state_data.append(wrapper);
                 }
             }
+
+            function onWindowResize(event) {
+                $('div.model').each(function (idx, elem) {
+
+                    SCREEN_WIDTH = elem.clientWidth;
+                    SCREEN_HEIGHT = elem.clientHeight;
+
+                    var renderer = $(elem).data('render');
+
+                    renderer.setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
+
+                    camera.aspect = SCREEN_WIDTH / SCREEN_HEIGHT;
+                    camera.updateProjectionMatrix();
+                });
+            }
+
+            window.addEventListener('resize', onWindowResize, false);
 
             function PollControllerFunc() {
                 if (ControllerPollAjax != null) ControllerPollAjax.abort();

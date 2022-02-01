@@ -1,6 +1,7 @@
 ﻿using ExtendInput.DeviceProvider;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -169,6 +170,8 @@ namespace ExtendInput.DeviceProvider
 
                 CreateSendingQueue();
 
+                Stopwatch InputTimer = new Stopwatch();
+
                 readingThread = new Thread(() =>
                 {
                     while (reading)
@@ -180,6 +183,8 @@ namespace ExtendInput.DeviceProvider
 
                         try
                         {
+                            InputTimer.Restart();
+
                             //XInputNative.XInputCapabilitiesEx data = new XInputNative.XInputCapabilitiesEx();
                             //if (XInputNative.XInputGetCapabilitiesEx(1, (int)internalDevice.UserIndex, 0, ref data) == 0)
 
@@ -241,6 +246,12 @@ namespace ExtendInput.DeviceProvider
                                 sThumbRX = State.Gamepad.RightThumbX,
                                 sThumbRY = State.Gamepad.RightThumbY,
                             });*/
+
+                            InputTimer.Stop();
+                            if (InputTimer.ElapsedMilliseconds < 10)
+                            {
+                                Thread.Sleep((int)(10 - InputTimer.ElapsedMilliseconds));
+                            }
                         }
                         catch
                         {

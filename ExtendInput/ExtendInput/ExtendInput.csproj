@@ -86,9 +86,11 @@
     <Compile Include="Controller\IControllerFactory.cs" />
     <Compile Include="Controller\SixtyBeat\SixtyBeatGamepadControllerFactory.cs" />
     <Compile Include="Controller\SixtyBeat\SixtyBeatGamepadController.cs" />
+    <Compile Include="Controls\ControlDataButton.cs" />
     <Compile Include="Controls\ControlPair.cs" />
     <Compile Include="Controls\ControlRocker.cs" />
     <Compile Include="DeviceProvider\ReportData.cs" />
+    <Compile Include="MadgwickAHRS.cs" />
     <Compile Include="QueueWorker.cs" />
     <Compile Include="Wrapper.cs" />
     <Compile Include="Controls\ControlButton.cs" />
@@ -129,6 +131,9 @@
     <Compile Include="XInputNative.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\.editorconfig">
+      <Link>.editorconfig</Link>
+    </None>
     <None Include="app.config" />
     <None Include="packages.config" />
   </ItemGroup>

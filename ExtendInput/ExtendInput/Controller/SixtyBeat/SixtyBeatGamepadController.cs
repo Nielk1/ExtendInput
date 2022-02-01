@@ -120,14 +120,14 @@ namespace ExtendInput.Controller.SixtyBeat
 
                     (StateInFlight.Controls["stick_right"] as ControlStick).Click = (reportData.ReportBytes[6] & 0x10) == 0x10;
                     (StateInFlight.Controls["stick_left"] as ControlStick).Click = (reportData.ReportBytes[6] & 0x08) == 0x08;
-                    (StateInFlight.Controls["menu"] as ControlButtonPair).Right.Digital = (reportData.ReportBytes[1] & 0x80) == 0x80;
-                    (StateInFlight.Controls["menu"] as ControlButtonPair).Left.Digital = (reportData.ReportBytes[1] & 0x40) == 0x40;
-                    (StateInFlight.Controls["bumpers"] as ControlButtonPair).Right.Digital = (reportData.ReportBytes[0] & 0x01) == 0x01;
-                    (StateInFlight.Controls["bumpers"] as ControlButtonPair).Left.Digital = (reportData.ReportBytes[0] & 0x04) == 0x04;
-                    (StateInFlight.Controls["triggers"] as ControlButtonPair).Right.Digital = (reportData.ReportBytes[1] & 0x08) == 0x08;
-                    (StateInFlight.Controls["triggers"] as ControlButtonPair).Left.Digital = (reportData.ReportBytes[0] & 0x02) == 0x02;
+                    (StateInFlight.Controls["menu"] as ControlButtonPair).Right.DigitalStage1 = (reportData.ReportBytes[1] & 0x80) == 0x80;
+                    (StateInFlight.Controls["menu"] as ControlButtonPair).Left.DigitalStage1 = (reportData.ReportBytes[1] & 0x40) == 0x40;
+                    (StateInFlight.Controls["bumpers"] as ControlButtonPair).Right.DigitalStage1 = (reportData.ReportBytes[0] & 0x01) == 0x01;
+                    (StateInFlight.Controls["bumpers"] as ControlButtonPair).Left.DigitalStage1 = (reportData.ReportBytes[0] & 0x04) == 0x04;
+                    (StateInFlight.Controls["triggers"] as ControlButtonPair).Right.DigitalStage1 = (reportData.ReportBytes[1] & 0x08) == 0x08;
+                    (StateInFlight.Controls["triggers"] as ControlButtonPair).Left.DigitalStage1 = (reportData.ReportBytes[0] & 0x02) == 0x02;
 
-                    (StateInFlight.Controls["home"] as ControlButton).Digital = (reportData.ReportBytes[1] & 0x04) == 0x04;
+                    (StateInFlight.Controls["home"] as ControlButton).DigitalStage1 = (reportData.ReportBytes[1] & 0x04) == 0x04;
 
                     // bring OldState in line with new State
                     State = StateInFlight;

@@ -1239,15 +1239,15 @@ namespace ExtendInput.Controller.Valve
             (StateInFlight.Controls["cluster_right"] as ControlButtonQuad).ButtonW = (RawState.ulButtons[0] & 64) == 64;   // X - W SW
             (StateInFlight.Controls["cluster_right"] as ControlButtonQuad).ButtonE = (RawState.ulButtons[0] & 32) == 32;   // B - E NE
             (StateInFlight.Controls["cluster_right"] as ControlButtonQuad).ButtonN = (RawState.ulButtons[0] & 16) == 16;   // Y - N NW
-            (StateInFlight.Controls["bumpers"] as ControlButtonPair).Left.Digital = (RawState.ulButtons[0] & 8) == 8;
-            (StateInFlight.Controls["bumpers"] as ControlButtonPair).Right.Digital = (RawState.ulButtons[0] & 4) == 4;
+            (StateInFlight.Controls["bumpers"] as ControlButtonPair).Left.DigitalStage1 = (RawState.ulButtons[0] & 8) == 8;
+            (StateInFlight.Controls["bumpers"] as ControlButtonPair).Right.DigitalStage1 = (RawState.ulButtons[0] & 4) == 4;
             (StateInFlight.Controls["triggers"] as ControlButtonPair).Left.DigitalStage2 = (RawState.ulButtons[0] & 2) == 2;
             (StateInFlight.Controls["triggers"] as ControlButtonPair).Right.DigitalStage2 = (RawState.ulButtons[0] & 1) == 1;
 
-            (StateInFlight.Controls["grip"] as ControlButtonPair).Left.Digital = (RawState.ulButtons[1] & 128) == 128;
-            (StateInFlight.Controls["menu"] as ControlButtonPair).Right.Digital = (RawState.ulButtons[1] & 64) == 64;
-            (StateInFlight.Controls["home"] as ControlButton).Digital = (RawState.ulButtons[1] & 32) == 32;
-            (StateInFlight.Controls["menu"] as ControlButtonPair).Left.Digital = (RawState.ulButtons[1] & 16) == 16;
+            (StateInFlight.Controls["grip"] as ControlButtonPair).Left.DigitalStage1 = (RawState.ulButtons[1] & 128) == 128;
+            (StateInFlight.Controls["menu"] as ControlButtonPair).Right.DigitalStage1 = (RawState.ulButtons[1] & 64) == 64;
+            (StateInFlight.Controls["home"] as ControlButton).DigitalStage1 = (RawState.ulButtons[1] & 32) == 32;
+            (StateInFlight.Controls["menu"] as ControlButtonPair).Left.DigitalStage1 = (RawState.ulButtons[1] & 16) == 16;
 
             if (ControllerType == EControllerType.Chell)
             {
@@ -1290,10 +1290,10 @@ namespace ExtendInput.Controller.Valve
             bool LeftPadTouch = (RawState.ulButtons[2] & 8) == 8;
             (StateInFlight.Controls["touch_right"] as ControlTouch).Click = (RawState.ulButtons[2] & 4) == 4;
             bool ThumbOrLeftPadPress = (RawState.ulButtons[2] & 2) == 2; // what is this even for?
-            (StateInFlight.Controls["grip"] as ControlButtonPair).Right.Digital = (RawState.ulButtons[2] & 1) == 1;
+            (StateInFlight.Controls["grip"] as ControlButtonPair).Right.DigitalStage1 = (RawState.ulButtons[2] & 1) == 1;
 
-            (StateInFlight.Controls["triggers"] as ControlButtonPair).Left.Analog = (float)RawState.sTriggerL / byte.MaxValue;
-            (StateInFlight.Controls["triggers"] as ControlButtonPair).Right.Analog = (float)RawState.sTriggerR / byte.MaxValue;
+            (StateInFlight.Controls["triggers"] as ControlButtonPair).Left.AnalogStage1 = (float)RawState.sTriggerL / byte.MaxValue;
+            (StateInFlight.Controls["triggers"] as ControlButtonPair).Right.AnalogStage1 = (float)RawState.sTriggerR / byte.MaxValue;
             if (ControllerType != EControllerType.Chell)
             {
                 (StateInFlight.Controls["stick_left"] as ControlStick).X = (float)RawState.sLeftStickX / Int16.MaxValue;

@@ -672,20 +672,20 @@ namespace ExtendInput.Controller.Flydigi
                                             (StateInFlight.Controls["stick_right"] as ControlStick).X = ControllerMathTools.QuickStickToFloat(RStickX);
                                             (StateInFlight.Controls["stick_right"] as ControlStick).Y = ControllerMathTools.QuickStickToFloat(RStickY);
                                             (StateInFlight.Controls["stick_right"] as ControlStick).Click = buttonR3;
-                                            (StateInFlight.Controls["bumpers"] as ControlButtonPair).Left.Digital = buttonL1;
-                                            (StateInFlight.Controls["bumpers"] as ControlButtonPair).Right.Digital = buttonR1;
-                                            (StateInFlight.Controls["menu"] as ControlButtonPair).Left.Digital = buttonSelect;
-                                            (StateInFlight.Controls["menu"] as ControlButtonPair).Right.Digital = buttonStart;
+                                            (StateInFlight.Controls["bumpers"] as ControlButtonPair).Left.DigitalStage1 = buttonL1;
+                                            (StateInFlight.Controls["bumpers"] as ControlButtonPair).Right.DigitalStage1 = buttonR1;
+                                            (StateInFlight.Controls["menu"] as ControlButtonPair).Left.DigitalStage1 = buttonSelect;
+                                            (StateInFlight.Controls["menu"] as ControlButtonPair).Right.DigitalStage1 = buttonStart;
 
                                             if (ControllerAttributeInFlight.HasAnalogTrigger && StateInFlight.Controls["triggers"] is ControlButtonPair)
                                             {
-                                                (StateInFlight.Controls["triggers"] as ControlButtonPair).Left.Analog = TriggerLeft > 0 ? TriggerLeft / 255f : buttonL2 ? 255 : 0;
-                                                (StateInFlight.Controls["triggers"] as ControlButtonPair).Right.Analog = TriggerRight > 0 ? TriggerRight / 255f : buttonR2 ? 255 : 0;
+                                                (StateInFlight.Controls["triggers"] as ControlButtonPair).Left.AnalogStage1 = TriggerLeft > 0 ? TriggerLeft / 255f : buttonL2 ? 255 : 0;
+                                                (StateInFlight.Controls["triggers"] as ControlButtonPair).Right.AnalogStage1 = TriggerRight > 0 ? TriggerRight / 255f : buttonR2 ? 255 : 0;
                                             }
                                             else if (ControllerSubType != FlyDigiSubType.None && ControllerSubType != FlyDigiSubType.Unknown && StateInFlight.Controls["triggers"] is ControlButtonPair)
                                             {
-                                                (StateInFlight.Controls["triggers"] as ControlButtonPair).Left.Digital = buttonL2;
-                                                (StateInFlight.Controls["triggers"] as ControlButtonPair).Right.Digital = buttonR2;
+                                                (StateInFlight.Controls["triggers"] as ControlButtonPair).Left.DigitalStage1 = buttonL2;
+                                                (StateInFlight.Controls["triggers"] as ControlButtonPair).Right.DigitalStage1 = buttonR2;
                                             }
                                             //if (ControllerAttributeInFlight.HasLogo)
                                             //{
@@ -711,13 +711,13 @@ namespace ExtendInput.Controller.Flydigi
                                             }
                                             if (ControllerAttributeInFlight.HasCZBottom)
                                             {
-                                                (StateInFlight.Controls["c"] as ControlButton).Digital = buttonC;
-                                                (StateInFlight.Controls["z"] as ControlButton).Digital = buttonZ;
+                                                (StateInFlight.Controls["c"] as ControlButton).DigitalStage1 = buttonC;
+                                                (StateInFlight.Controls["z"] as ControlButton).DigitalStage1 = buttonZ;
                                             }
                                             if (ControllerAttributeInFlight.HasCZTop)
                                             {
-                                                (StateInFlight.Controls["c_top"] as ControlButton).Digital = buttonC;
-                                                (StateInFlight.Controls["z_top"] as ControlButton).Digital = buttonZ;
+                                                (StateInFlight.Controls["c_top"] as ControlButton).DigitalStage1 = buttonC;
+                                                (StateInFlight.Controls["z_top"] as ControlButton).DigitalStage1 = buttonZ;
                                             }
                                             if (ControllerAttributeInFlight.HasMRockers)
                                             {
@@ -726,15 +726,15 @@ namespace ExtendInput.Controller.Flydigi
                                             }
                                             else if (ControllerAttributeInFlight.HasMButtons)
                                             {
-                                                (StateInFlight.Controls["grip"] as ControlPair<ControlButtonPair>).Right.Left.Digital = buttonM3;
-                                                (StateInFlight.Controls["grip"] as ControlPair<ControlButtonPair>).Right.Right.Digital = buttonM1 || AirMouseClick;
-                                                (StateInFlight.Controls["grip"] as ControlPair<ControlButtonPair>).Left.Left.Digital = buttonM2;
-                                                (StateInFlight.Controls["grip"] as ControlPair<ControlButtonPair>).Left.Right.Digital = buttonM4;
+                                                (StateInFlight.Controls["grip"] as ControlPair<ControlButtonPair>).Right.Left.DigitalStage1 = buttonM3;
+                                                (StateInFlight.Controls["grip"] as ControlPair<ControlButtonPair>).Right.Right.DigitalStage1 = buttonM1 || AirMouseClick;
+                                                (StateInFlight.Controls["grip"] as ControlPair<ControlButtonPair>).Left.Left.DigitalStage1 = buttonM2;
+                                                (StateInFlight.Controls["grip"] as ControlPair<ControlButtonPair>).Left.Right.DigitalStage1 = buttonM4;
                                             }
                                             if (ControllerAttributeInFlight.HasBumper2)
                                             {
-                                                (StateInFlight.Controls["shoulder_a"] as ControlButtonPair).Left.Digital = buttonM6;
-                                                (StateInFlight.Controls["shoulder_a"] as ControlButtonPair).Right.Digital = buttonM5;
+                                                (StateInFlight.Controls["shoulder_a"] as ControlButtonPair).Left.DigitalStage1 = buttonM6;
+                                                (StateInFlight.Controls["shoulder_a"] as ControlButtonPair).Right.DigitalStage1 = buttonM5;
                                             }
                                             if (ControllerAttributeInFlight.HasWheel)
                                             {

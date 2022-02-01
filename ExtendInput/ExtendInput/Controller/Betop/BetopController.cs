@@ -538,11 +538,11 @@ namespace ExtendInput.Controller.Betop
                                             case 0x06: (StateInFlight.Controls["cluster_left"] as ControlDPad).Direction = EDPadDirection.West; break;
                                             case 0x07: (StateInFlight.Controls["cluster_left"] as ControlDPad).Direction = EDPadDirection.NorthWest; break;
                                         }
-                                        (StateInFlight.Controls["bumpers"] as ControlButtonPair).Left.Digital = (reportData.ReportBytes[2] & 0x40) == 0x40;
-                                        (StateInFlight.Controls["bumpers"] as ControlButtonPair).Right.Digital = (reportData.ReportBytes[2] & 0x80) == 0x80;
+                                        (StateInFlight.Controls["bumpers"] as ControlButtonPair).Left.DigitalStage1 = (reportData.ReportBytes[2] & 0x40) == 0x40;
+                                        (StateInFlight.Controls["bumpers"] as ControlButtonPair).Right.DigitalStage1 = (reportData.ReportBytes[2] & 0x80) == 0x80;
 
-                                        (StateInFlight.Controls["triggers"] as ControlButtonPair).Left.Analog = (float)(reportData.ReportBytes[8] > 0 ? reportData.ReportBytes[8] : (reportData.ReportBytes[3] & 0x01) == 0x01 ? byte.MaxValue : 0) / byte.MaxValue;
-                                        (StateInFlight.Controls["triggers"] as ControlButtonPair).Right.Analog = (float)(reportData.ReportBytes[9] > 0 ? reportData.ReportBytes[9] : (reportData.ReportBytes[3] & 0x02) == 0x02 ? byte.MaxValue : 0) / byte.MaxValue;
+                                        (StateInFlight.Controls["triggers"] as ControlButtonPair).Left.AnalogStage1 = (float)(reportData.ReportBytes[8] > 0 ? reportData.ReportBytes[8] : (reportData.ReportBytes[3] & 0x01) == 0x01 ? byte.MaxValue : 0) / byte.MaxValue;
+                                        (StateInFlight.Controls["triggers"] as ControlButtonPair).Right.AnalogStage1 = (float)(reportData.ReportBytes[9] > 0 ? reportData.ReportBytes[9] : (reportData.ReportBytes[3] & 0x02) == 0x02 ? byte.MaxValue : 0) / byte.MaxValue;
 
                                         (StateInFlight.Controls["stick_left"] as ControlStick).X = ControllerMathTools.QuickStickToFloat(reportData.ReportBytes[4]);
                                         (StateInFlight.Controls["stick_left"] as ControlStick).Y = ControllerMathTools.QuickStickToFloat(reportData.ReportBytes[5]);
@@ -551,10 +551,10 @@ namespace ExtendInput.Controller.Betop
                                         (StateInFlight.Controls["stick_right"] as ControlStick).Y = ControllerMathTools.QuickStickToFloat(reportData.ReportBytes[7]);
                                         (StateInFlight.Controls["stick_right"] as ControlStick).Click = (reportData.ReportBytes[3] & 0x40) == 0x40;
 
-                                        (StateInFlight.Controls["menu"] as ControlButtonPair).Left.Digital = (reportData.ReportBytes[3] & 0x04) == 0x04;
-                                        (StateInFlight.Controls["menu"] as ControlButtonPair).Right.Digital = (reportData.ReportBytes[3] & 0x08) == 0x08;
+                                        (StateInFlight.Controls["menu"] as ControlButtonPair).Left.DigitalStage1 = (reportData.ReportBytes[3] & 0x04) == 0x04;
+                                        (StateInFlight.Controls["menu"] as ControlButtonPair).Right.DigitalStage1 = (reportData.ReportBytes[3] & 0x08) == 0x08;
 
-                                        (StateInFlight.Controls["home"] as ControlButton).Digital = (reportData.ReportBytes[3] & 0x10) == 0x10;
+                                        (StateInFlight.Controls["home"] as ControlButton).DigitalStage1 = (reportData.ReportBytes[3] & 0x10) == 0x10;
 
                                         State = StateInFlight;
 
@@ -655,11 +655,11 @@ namespace ExtendInput.Controller.Betop
                                                         (StateInFlight.Controls["cluster_left"] as ControlDPad).Direction = EDPadDirection.None;
                                                 }
 
-                                                (StateInFlight.Controls["bumpers"] as ControlButtonPair).Left.Digital = (reportData.ReportBytes[7] == 0x01);
-                                                (StateInFlight.Controls["bumpers"] as ControlButtonPair).Right.Digital = (reportData.ReportBytes[8] == 0x01);
+                                                (StateInFlight.Controls["bumpers"] as ControlButtonPair).Left.DigitalStage1 = (reportData.ReportBytes[7] == 0x01);
+                                                (StateInFlight.Controls["bumpers"] as ControlButtonPair).Right.DigitalStage1 = (reportData.ReportBytes[8] == 0x01);
 
-                                                (StateInFlight.Controls["triggers"] as ControlButtonPair).Left.Analog = (float)reportData.ReportBytes[9] / byte.MaxValue;
-                                                (StateInFlight.Controls["triggers"] as ControlButtonPair).Right.Analog = (float)reportData.ReportBytes[10] / byte.MaxValue;
+                                                (StateInFlight.Controls["triggers"] as ControlButtonPair).Left.AnalogStage1 = (float)reportData.ReportBytes[9] / byte.MaxValue;
+                                                (StateInFlight.Controls["triggers"] as ControlButtonPair).Right.AnalogStage1 = (float)reportData.ReportBytes[10] / byte.MaxValue;
 
                                                 (StateInFlight.Controls["stick_left"] as ControlStick).X = ControllerMathTools.QuickStickToFloat(reportData.ReportBytes[21]);
                                                 (StateInFlight.Controls["stick_left"] as ControlStick).Y = ControllerMathTools.QuickStickToFloat(reportData.ReportBytes[22]);
@@ -668,16 +668,16 @@ namespace ExtendInput.Controller.Betop
                                                 (StateInFlight.Controls["stick_right"] as ControlStick).Y = ControllerMathTools.QuickStickToFloat(reportData.ReportBytes[24]);
                                                 (StateInFlight.Controls["stick_right"] as ControlStick).Click = reportData.ReportBytes[12] == 0x01;
 
-                                                (StateInFlight.Controls["menu"] as ControlButtonPair).Left.Digital = reportData.ReportBytes[14] == 0x01;
-                                                (StateInFlight.Controls["menu"] as ControlButtonPair).Right.Digital = reportData.ReportBytes[13] == 0x01;
+                                                (StateInFlight.Controls["menu"] as ControlButtonPair).Left.DigitalStage1 = reportData.ReportBytes[14] == 0x01;
+                                                (StateInFlight.Controls["menu"] as ControlButtonPair).Right.DigitalStage1 = reportData.ReportBytes[13] == 0x01;
 
-                                                (StateInFlight.Controls["menu2"] as ControlButtonPair).Left.Digital = reportData.ReportBytes[28] == 0x01;
-                                                (StateInFlight.Controls["menu2"] as ControlButtonPair).Right.Digital = reportData.ReportBytes[27] == 0x01;
+                                                (StateInFlight.Controls["menu2"] as ControlButtonPair).Left.DigitalStage1 = reportData.ReportBytes[28] == 0x01;
+                                                (StateInFlight.Controls["menu2"] as ControlButtonPair).Right.DigitalStage1 = reportData.ReportBytes[27] == 0x01;
 
-                                                (StateInFlight.Controls["grip"] as ControlButtonPair).Left.Digital = reportData.ReportBytes[25] == 0x01;
-                                                (StateInFlight.Controls["grip"] as ControlButtonPair).Right.Digital = reportData.ReportBytes[26] == 0x01;
+                                                (StateInFlight.Controls["grip"] as ControlButtonPair).Left.DigitalStage1 = reportData.ReportBytes[25] == 0x01;
+                                                (StateInFlight.Controls["grip"] as ControlButtonPair).Right.DigitalStage1 = reportData.ReportBytes[26] == 0x01;
 
-                                                (StateInFlight.Controls["home"] as ControlButton).Digital = reportData.ReportBytes[29] == 0x01;
+                                                (StateInFlight.Controls["home"] as ControlButton).DigitalStage1 = reportData.ReportBytes[29] == 0x01;
 
 
                                                 State = StateInFlight;
