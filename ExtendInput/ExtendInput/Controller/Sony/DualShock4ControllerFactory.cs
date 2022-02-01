@@ -7,6 +7,9 @@ namespace ExtendInput.Controller.Sony
 {
     public class DualShock4ControllerFactory : IControllerFactory
     {
+        private Dictionary<string, Guid> DeviceToControllerKeyMap = new Dictionary<string, Guid>();
+        Dictionary<Guid, DualShock4Controller> Controllers = new Dictionary<Guid, DualShock4Controller>();
+        private Dictionary<Guid, HashSet<string>> ControllerToDeviceKeyMap = new Dictionary<Guid, HashSet<string>>();
         private readonly Guid CONTAINER_ID_REWASD_VIRTUAL_DS4 = new Guid(0xfbc4667d, 0xf0d7, 0x58dc, 0x84, 0x32, 0x19, 0xf7, 0x0a, 0x66, 0x0d, 0xb2);
         public Dictionary<string, dynamic>[] DeviceWhitelist => new Dictionary<string, dynamic>[]
         {
@@ -90,15 +93,57 @@ namespace ExtendInput.Controller.Sony
             }
 
             {
-                DualShock4Controller ctrl = new DualShock4Controller(_device, ConType, VirtualType);
-                return ctrl;
+                Guid? ContrainerID = DevPKey.PnpDevicePropertyAPI.GetDeviceContainerId(deviceInstanceId);
+                if (ContrainerID.HasValue)
+                    lock (Controllers)
+                    {
+                        DualShock4Controller ctrl = null;
+                        if (Controllers.ContainsKey(ContrainerID.Value))
+                        {
+                            // TODO handle subdevices, such as the audio device
+                            //ctrl = Controllers[ContrainerID.Value];
+                            //ctrl.AddDevice(_device);
+                        }
+                        else
+                        {
+                            Controllers[ContrainerID.Value] = new DualShock4Controller(_device, ConType, VirtualType);
+                            ctrl = Controllers[ContrainerID.Value];
+                        }
+
+                        DeviceToControllerKeyMap[device.UniqueKey] = ContrainerID.Value;
+                        if (!ControllerToDeviceKeyMap.ContainsKey(ContrainerID.Value))
+                            ControllerToDeviceKeyMap[ContrainerID.Value] = new HashSet<string>();
+                        ControllerToDeviceKeyMap[ContrainerID.Value].Add(device.UniqueKey);
+                        return ctrl;
+                    }
             }
+
+            return null;
         }
 
         public string RemoveDevice(string UniqueKey)
         {
-            // TODO IMPLEMENT
-            return null;
+            lock (Controllers)
+            {
+                if (!DeviceToControllerKeyMap.ContainsKey(UniqueKey))
+                    return null;
+
+                Guid DeviceParent = DeviceToControllerKeyMap[UniqueKey];
+
+                foreach (string DeviceKey in ControllerToDeviceKeyMap[DeviceParent])
+                    if (DeviceToControllerKeyMap.ContainsKey(DeviceKey))
+                        DeviceToControllerKeyMap.Remove(DeviceKey);
+
+                DualShock4Controller ctrl = Controllers[DeviceParent];
+                string UniqueControllerId = ctrl.ConnectionUniqueID;
+
+                ctrl.DeInitalize();
+                ctrl.Dispose();
+                Controllers.Remove(DeviceParent);
+                ControllerToDeviceKeyMap.Remove(DeviceParent);
+
+                return UniqueControllerId;
+            }
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using ExtendInput.DeviceProvider;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -6,6 +7,9 @@ namespace ExtendInput.Controller.Sony
 {
     public class DualSenseControllerFactory : IControllerFactory
     {
+        private Dictionary<string, Guid> DeviceToControllerKeyMap = new Dictionary<string, Guid>();
+        Dictionary<Guid, DualSenseController> Controllers = new Dictionary<Guid, DualSenseController>();
+        private Dictionary<Guid, HashSet<string>> ControllerToDeviceKeyMap = new Dictionary<Guid, HashSet<string>>();
         public Dictionary<string, dynamic>[] DeviceWhitelist => new Dictionary<string, dynamic>[]
         {
             new Dictionary<string, dynamic>(){ { "VID", DualSenseController.VendorId }, { "PID", DualSenseController.ProductId } },
@@ -44,15 +48,64 @@ namespace ExtendInput.Controller.Sony
                     //break;
             }
 
-            DualSenseController ctrl = new DualSenseController(_device, ConType);
-            ctrl.HalfInitalize();
-            return ctrl;
+            {
+                string deviceInstanceId = DevPKey.PnpDevicePropertyAPI.devicePathToInstanceId(_device.DevicePath);
+                Guid? ContrainerID = DevPKey.PnpDevicePropertyAPI.GetDeviceContainerId(deviceInstanceId);
+                if (ContrainerID.HasValue)
+                    lock (Controllers)
+                    {
+                        DualSenseController ctrl = null;
+                        if (Controllers.ContainsKey(ContrainerID.Value))
+                        {
+                            // TODO handle subdevices, such as the audio device
+                            //ctrl = Controllers[ContrainerID.Value];
+                            //ctrl.AddDevice(_device);
+                        }
+                        else
+                        {
+                            Controllers[ContrainerID.Value] = new DualSenseController(_device, ConType);
+                            ctrl = Controllers[ContrainerID.Value];
+                        }
+
+                        DeviceToControllerKeyMap[device.UniqueKey] = ContrainerID.Value;
+                        if (!ControllerToDeviceKeyMap.ContainsKey(ContrainerID.Value))
+                            ControllerToDeviceKeyMap[ContrainerID.Value] = new HashSet<string>();
+                        ControllerToDeviceKeyMap[ContrainerID.Value].Add(device.UniqueKey);
+
+                        ctrl.HalfInitalize();
+                        return ctrl;
+                    }
+            }
+
+            //DualSenseController ctrl = new DualSenseController(_device, ConType);
+            //ctrl.HalfInitalize();
+            //return ctrl;
+            return null;
         }
 
         public string RemoveDevice(string UniqueKey)
         {
-            // TODO IMPLEMENT
-            return null;
+            lock (Controllers)
+            {
+                if (!DeviceToControllerKeyMap.ContainsKey(UniqueKey))
+                    return null;
+
+                Guid DeviceParent = DeviceToControllerKeyMap[UniqueKey];
+
+                foreach (string DeviceKey in ControllerToDeviceKeyMap[DeviceParent])
+                    if (DeviceToControllerKeyMap.ContainsKey(DeviceKey))
+                        DeviceToControllerKeyMap.Remove(DeviceKey);
+
+                DualSenseController ctrl = Controllers[DeviceParent];
+                string UniqueControllerId = ctrl.ConnectionUniqueID;
+
+                ctrl.DeInitalize();
+                ctrl.Dispose();
+                Controllers.Remove(DeviceParent);
+                ControllerToDeviceKeyMap.Remove(DeviceParent);
+
+                return UniqueControllerId;
+            }
         }
     }
 }
