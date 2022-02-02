@@ -6,17 +6,17 @@ using System.Threading.Tasks;
 
 namespace ExtendInput.Controls
 {
-    public interface IControllTrigger2Stage : IControl
+    public interface IControlTrigger2Stage : IControl
     {
         float AnalogStage1 { get; set; }
         bool DigitalStage2 { get; set; }
 
     }
-    public class ControllTrigger2Stage : ControlTrigger, IControllTrigger2Stage, IControlTrigger
+    public class ControlTrigger2Stage : ControlTrigger, IControlTrigger2Stage, IControlTrigger
     {
         public bool DigitalStage2 { get; set; }
 
-        public ControllTrigger2Stage()
+        public ControlTrigger2Stage()
         {
         }
 
@@ -43,7 +43,7 @@ namespace ExtendInput.Controls
 
         public override object Clone()
         {
-            ControllTrigger2Stage newData = new ControllTrigger2Stage();
+            ControlTrigger2Stage newData = new ControlTrigger2Stage();
 
             newData.AnalogStage1 = this.AnalogStage1;
             newData.DigitalStage2 = this.DigitalStage2;

@@ -288,7 +288,7 @@
                             }
                             var ctrl = $('#control_render_' + control_id);
                             UpdateButton2StageSvg(ctrl, '.btn_x_data', controlData.AnalogStage1);
-                            if (controlData.Stage2) ctrl.find('.btn_x_click').addClass('active-o'); else ctrl.find('.btn_x_click').removeClass('active-o');
+                            if (controlData.DigitalStage2) ctrl.find('.btn_x_click').addClass('active-o'); else ctrl.find('.btn_x_click').removeClass('active-o');
                         }
                         break;
                     case 'ExtendInput.Controls.ControlDPad':
