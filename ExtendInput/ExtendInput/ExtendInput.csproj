@@ -90,7 +90,6 @@
     <Compile Include="Controls\ControlTrigger2Stage.cs" />
     <Compile Include="Controls\ControlTrigger.cs" />
     <Compile Include="Controls\ControlButton.cs" />
-    <Compile Include="Controls\ControlDataButton.cs" />
     <Compile Include="Controls\ControlPair.cs" />
     <Compile Include="Controls\ControlRocker.cs" />
     <Compile Include="Controls\ControlStickWithClick.cs" />
@@ -98,7 +97,6 @@
     <Compile Include="MadgwickAHRS.cs" />
     <Compile Include="QueueWorker.cs" />
     <Compile Include="Wrapper.cs" />
-    <Compile Include="Controls\ControlButtonOld.cs" />
     <Compile Include="Controls\ControlButtonGrid.cs" />
     <Compile Include="Controls\ControlButtonQuad.cs" />
     <Compile Include="Controls\ControlDPad.cs" />
