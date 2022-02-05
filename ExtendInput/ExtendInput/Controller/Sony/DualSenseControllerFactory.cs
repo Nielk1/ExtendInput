@@ -71,15 +71,10 @@ namespace ExtendInput.Controller.Sony
                         if (!ControllerToDeviceKeyMap.ContainsKey(ContrainerID.Value))
                             ControllerToDeviceKeyMap[ContrainerID.Value] = new HashSet<string>();
                         ControllerToDeviceKeyMap[ContrainerID.Value].Add(device.UniqueKey);
-
-                        ctrl.HalfInitalize();
                         return ctrl;
                     }
             }
 
-            //DualSenseController ctrl = new DualSenseController(_device, ConType);
-            //ctrl.HalfInitalize();
-            //return ctrl;
             return null;
         }
 

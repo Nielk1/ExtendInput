@@ -60,6 +60,7 @@ namespace ExtendInput.Controller.Sony
         }
 
         public EConnectionType ConnectionType { get; private set; }
+        public EPollingState PollingState { get; private set; }
 
         public string ConnectionUniqueID
         {
@@ -140,7 +141,6 @@ namespace ExtendInput.Controller.Sony
         ControllerState State = new ControllerState();
         ControllerState OldState = null;
 
-        int Initalized;
 
 
         static byte[] data = new byte[] {
@@ -294,61 +294,55 @@ namespace ExtendInput.Controller.Sony
             }//).Start();
             */
 
-            Initalized = 0;
+            PollingState = EPollingState.Inactive;
 
             _device.DeviceReport += OnReport;
         }
         public void Dispose()
         {
+            switch (PollingState)
+            {
+                case EPollingState.Active:
+                case EPollingState.SlowPoll:
+                case EPollingState.RunOnce:
+                    {
+                        _device.StopReading();
+
+                        PollingState = EPollingState.Inactive;
+                        _device.CloseDevice();
+                    }
+                    break;
+            }
         }
 
         public void Initalize()
         {
-            if (Initalized > 1) return;
+            if (PollingState == EPollingState.Active) return;
 
-            HalfInitalize();
-
-            Initalized = 2;
-            _device.StartReading();
-        }
-
-        public void HalfInitalize()
-        {
-            if (Initalized > 0) return;
-
-            // open the device overlapped read so we don't get stuck waiting for a report when we write to it
-            //_device.OpenDevice(DeviceMode.Overlapped, DeviceMode.NonOverlapped, ShareMode.ShareRead | ShareMode.ShareWrite);
-            _device.OpenDevice(DeviceMode.Overlapped, DeviceMode.Overlapped, ShareMode.ShareRead | ShareMode.ShareWrite);
-
-            //_device.Inserted += DeviceAttachedHandler;
-            //_device.Removed += DeviceRemovedHandler;
-
-            //_device.MonitorDeviceEvents = true;
-
-            Initalized = 1;
             touch_last_frame = false;
 
-            //_attached = _device.IsConnected;
-
-            if (ConnectionType == EConnectionType.Dongle)
-            {
-                _device.StartReading();
-            }
+            PollingState = EPollingState.Active;
+            _device.StartReading();
         }
 
         public void DeInitalize()
         {
-            if (Initalized == 0) return;
+            if (PollingState == EPollingState.Inactive) return;
+            if (PollingState == EPollingState.RunOnce) return;
+            if (PollingState == EPollingState.SlowPoll) return;
 
-            //_device.Inserted -= DeviceAttachedHandler;
-            //_device.Removed -= DeviceRemovedHandler;
+            // dongles switch back to slow poll instead of going inactive
+            if (ConnectionType == EConnectionType.Dongle)
+            {
+                PollingState = EPollingState.SlowPoll;
+            }
+            else
+            {
+                _device.StopReading();
 
-            //_device.MonitorDeviceEvents = false;
-
-            _device.StopReading();
-
-            Initalized = 0;
-            _device.CloseDevice();
+                PollingState = EPollingState.Inactive;
+                _device.CloseDevice();
+            }
         }
 
         public async void Identify()
@@ -417,7 +411,7 @@ namespace ExtendInput.Controller.Sony
 
         private void OnReport(IReport rawReportData)
         {
-            if (Initalized < 1) return;
+            if (PollingState == EPollingState.Inactive) return;
             //if (!(reportData is HidReport)) return;
             if (rawReportData.ReportTypeCode != REPORT_TYPE.HID) return;
             HidReport reportData = (HidReport)rawReportData;
