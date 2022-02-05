@@ -188,8 +188,9 @@
 
                 if (existing.length == 0) {
                     //var wrapper = $('<div class="col-sm-6 col-md-4 col-lg-3 pb-4"/>');
-                    var wrapper = childWidth ? $('<div class="col-12 pb-4"/>') : $('<div class="col-sm-12 col-md-12 col-lg-6 col-xl-4 pb-4"/>');
+                    var wrapper = childWidth ? $('<div class="control_state col-12 pb-4"/>') : $('<div class="control_state col-sm-12 col-md-12 col-lg-6 col-xl-4 pb-4"/>');
                     wrapper.attr('id', 'state_' + control_id);
+                    wrapper.attr('data-id', control_id);
                     wrapper.append('<div class="card"><div class="pb-3"><h5 class="card-title text-center">' + control_id.replace('-', ':') + '</h5><div class="control_type card-title text-center small" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + controlType + '</div><div class="card-text control-value" style="white-space:pre;"></div></div></div>');
                 } else {
                     wrapper = existing;
@@ -255,6 +256,45 @@
                                 UpdateButtonSvg(ctrl, '.btn_x_data', 1);
                             } else {
                                 UpdateButtonSvg(ctrl, '.btn_x_data', 0);
+                            }
+                        }
+                        break;
+                    case 'ExtendInput.Controls.ControlButtonPS5Mute':
+                        {
+                            var renderElement = wrapper.find('.control-value');
+                            renderElement.addClass('text-center');
+                            if (NewSubtype || renderElement.children('svg').length == 0) {
+                                renderElement.empty().append(
+                                    '<svg id="control_render_' + control_id + '" width="62" height="62" xmlns="http://www.w3.org/2000/svg">' +
+                                    '<g>' +
+                                    '<ellipse class="" ry="29" rx="29" cy="' + 31 + '" cx="' + 31 + '" stroke="#000" fill="#fff" />' +
+                                    '<ellipse class="btn_x_data" ry="0" rx="0" cy="' + 31 + '" cx="' + 31 + '" stroke="#000" fill="#333" />' +
+                                    '</g>' +
+                                    '</svg>');
+                                var listElement = $('<div class="list-group p-1 control_state_list" id="control_state_list_' + control_id + '"/>');
+                                renderElement.append(listElement);
+                            }
+                            var ctrl = $('#control_render_' + control_id);
+                            var listElement = $('#control_state_list_' + control_id);
+                            if (controlData.States.length != listElement.children().length) {
+                                listElement.empty();
+                            } else {
+                                for (var idx in controlData.States) {
+                                    if (listElement.find('a[data-id="' + controlData.States[idx] + '"]').length == 0) {
+                                        listElement.empty();
+                                        break;
+                                    }
+                                }
+                            }
+                            if (controlData.States.length != listElement.children().length) {
+                                for (var idx in controlData.States) {
+                                    listElement.append('<a href="#" class="list-group-item list-group-item-action' + (controlData.States[idx] == controlData.State ? ' active' : '') + '" data-id="' + controlData.States[idx] + '">' + controlData.States[idx] + '</a>');
+                                }
+                            }
+                            if (controlData.DigitalStage1) {
+                                ctrl.find(".btn_x_data").attr('rx', 29).attr('ry', 29);
+                            } else {
+                                ctrl.find(".btn_x_data").attr('rx', 0).attr('ry', 0);
                             }
                         }
                         break;
@@ -847,6 +887,18 @@
                         }
                     });
                 }
+
+                return true;
+            });
+
+            $('#state_data').on('click', '.control_state_list a.list-group-item', function (evt) {
+                evt.preventDefault();
+                $.post("/activate_control_mode", { "id": $(evt.target).parents('.control_state').data('id'), "state": $(evt.target).data('id') }, function (data) {
+                    if (data) {
+                    } else {
+                        //$('#controller_state').remove();
+                    }
+                });
 
                 return true;
             });

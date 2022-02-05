@@ -8,11 +8,11 @@ namespace ExtendInput.Controller.Betop
 {
     public class BetopControllerFactory : IControllerFactory
     {
-        private AccesMode AccessMode;
+        private AccessMode AccessMode;
         //private object DeviceControllerMapLock = new object(); // use the locking of Controllers with these for now
         private Dictionary<string, Guid> DeviceToControllerKeyMap = new Dictionary<string, Guid>();
         private Dictionary<Guid, HashSet<string>> ControllerToDeviceKeyMap = new Dictionary<Guid, HashSet<string>>();
-        public BetopControllerFactory(AccesMode AccessMode)
+        public BetopControllerFactory(AccessMode AccessMode)
         {
             this.AccessMode = AccessMode;
         }
@@ -84,14 +84,14 @@ namespace ExtendInput.Controller.Betop
             if (deviceHid == null && deviceXInput == null)
                 return null;
 
-            if (deviceXInput != null && this.AccessMode != AccesMode.FullControl)
+            if (deviceXInput != null && this.AccessMode != AccessMode.FullControl)
                 return null;
 
             if (deviceHid != null)
             {
                 if (deviceHid.VendorId == 0x045E && deviceHid.ProductId == 0x028E)
                 {
-                    if (this.AccessMode != AccesMode.FullControl)
+                    if (this.AccessMode != AccessMode.FullControl)
                         return null;
 
                     if (deviceHid.Properties["ProductName"].Contains(" A2 GAMEPAD ") // ASURA3
@@ -111,7 +111,7 @@ namespace ExtendInput.Controller.Betop
             }
             else if (deviceXInput != null)
             {
-                if (this.AccessMode != AccesMode.FullControl)
+                if (this.AccessMode != AccessMode.FullControl)
                     return null;
 
                 lock (CandidateXInputLock)

@@ -36,7 +36,7 @@ namespace ExtendInputControllerTester
             Swan.Logging.Logger.UnregisterLogger<ConsoleLogger>();
             server.RunAsync();
 
-            DeviceManager = new DeviceManager(AccesMode.FullControl);
+            DeviceManager = new DeviceManager(AccessMode.FullControl);
             DeviceManager.ControllerAdded += DeviceManager_ControllerAdded;
             DeviceManager.ControllerRemoved += DeviceManager_ControllerRemoved;
 
@@ -108,6 +108,7 @@ namespace ExtendInputControllerTester
                 .WithModule(new ActionModule("/manual_device", HttpVerbs.Post, ManualDevice))
                 .WithModule(new ActionModule("/activate_controller", HttpVerbs.Post, ActivateController))
                 .WithModule(new ActionModule("/alternate_controller", HttpVerbs.Post, AlternateController))
+                .WithModule(new ActionModule("/activate_control_mode", HttpVerbs.Post, ActivateControlMode))
                 .WithModule(new ActionModule("/", HttpVerbs.Get, ctx => ctx.SendStringAsync(File.ReadAllText("../../index.html"), "text/html", Encoding.UTF8)));
                 //.WithStaticFolder("/images/controller/","../images/controller/",true, new FileModule(,)
             //.WithModule(new ActionModule("/", HttpVerbs.Get, DeviceList))
@@ -302,6 +303,30 @@ namespace ExtendInputControllerTester
                     return;
                 }
                 await context.SendDataAsync(false);
+            }
+            finally
+            {
+                ControllersLock.Release();
+            }
+        }
+
+        private static async Task ActivateControlMode(IHttpContext context)
+        {
+            await ControllersLock.WaitAsync();
+            try
+            {
+                if (activeController != null)
+                {
+                    string raw = await context.GetRequestBodyAsStringAsync();
+                    var data = HttpUtility.ParseQueryString(raw);
+
+                    bool retVal = activeController.SetControlState(data["id"], data["state"]);
+                    await context.SendDataAsync(retVal);
+                }
+                else
+                {
+                    await context.SendDataAsync(false);
+                }
             }
             finally
             {

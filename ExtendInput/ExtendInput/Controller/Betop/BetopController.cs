@@ -80,9 +80,9 @@ namespace ExtendInput.Controller.Betop
         private HidDevice deviceVendor => devices.Where(dr => dr.Usages?.Contains(0xff000003u) ?? false).FirstOrDefault();
 
 
-        private AccesMode AccessMode;
+        private AccessMode AccessMode;
         bool Initalized;
-        public BetopController(string UniqueKey, AccesMode AccessMode, HidDevice device)
+        public BetopController(string UniqueKey, AccessMode AccessMode, HidDevice device)
         {
             ConnectionUniqueID = UniqueKey;
             this.AccessMode = AccessMode;
@@ -121,7 +121,7 @@ namespace ExtendInput.Controller.Betop
             State.Controls["stick_left"] = new ControlStickWithClick();
             State.Controls["stick_right"] = new ControlStickWithClick();
 
-            if (device.ProductId == PRODUCT_BETOP_ASURA3 && (AccessMode == AccesMode.FullControl || AccessMode == AccesMode.SafeWriteOnly))
+            if (device.ProductId == PRODUCT_BETOP_ASURA3 && (AccessMode == AccessMode.FullControl || AccessMode == AccessMode.SafeWriteOnly))
             {
                 State.Controls["menu2_left"] = new ControlButton();
                 State.Controls["menu2_right"] = new ControlButton();
@@ -808,6 +808,11 @@ namespace ExtendInput.Controller.Betop
         }
 
         public void SetActiveAlternateController(string ControllerID) { }
+
+        public bool SetControlState(string control, string state)
+        {
+            return false;
+        }
 
     }
 }

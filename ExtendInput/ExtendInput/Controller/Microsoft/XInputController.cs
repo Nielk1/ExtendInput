@@ -311,5 +311,10 @@ namespace ExtendInput.Controller.Microsoft
 
         public void SetActiveAlternateController(string ControllerID) { }
 
+        public bool SetControlState(string control, string state)
+        {
+            return false;
+        }
+
     }
 }

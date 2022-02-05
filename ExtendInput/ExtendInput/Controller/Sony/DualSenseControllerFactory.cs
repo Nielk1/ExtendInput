@@ -7,6 +7,7 @@ namespace ExtendInput.Controller.Sony
 {
     public class DualSenseControllerFactory : IControllerFactory
     {
+        private AccessMode AccessMode;
         private Dictionary<string, Guid> DeviceToControllerKeyMap = new Dictionary<string, Guid>();
         Dictionary<Guid, DualSenseController> Controllers = new Dictionary<Guid, DualSenseController>();
         private Dictionary<Guid, HashSet<string>> ControllerToDeviceKeyMap = new Dictionary<Guid, HashSet<string>>();
@@ -14,6 +15,12 @@ namespace ExtendInput.Controller.Sony
         {
             new Dictionary<string, dynamic>(){ { "VID", DualSenseController.VendorId }, { "PID", DualSenseController.ProductId } },
         };
+
+        public DualSenseControllerFactory(AccessMode AccessMode)
+        {
+            this.AccessMode = AccessMode;
+        }
+
         public IController NewDevice(IDevice device)
         {
             HidDevice _device = device as HidDevice;
@@ -63,7 +70,7 @@ namespace ExtendInput.Controller.Sony
                         }
                         else
                         {
-                            Controllers[ContrainerID.Value] = new DualSenseController(_device, ConType);
+                            Controllers[ContrainerID.Value] = new DualSenseController(_device, AccessMode, ConType);
                             ctrl = Controllers[ContrainerID.Value];
                         }
 

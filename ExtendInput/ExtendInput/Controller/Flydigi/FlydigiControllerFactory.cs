@@ -8,10 +8,10 @@ namespace ExtendInput.Controller.Flydigi
 {
     public class FlydigiControllerFactory : IControllerFactory
     {
-        private AccesMode AccessMode;
+        private AccessMode AccessMode;
         private Dictionary<string, FlydigiController> Controllers = new Dictionary<string, FlydigiController>();
 
-        public FlydigiControllerFactory(AccesMode AccessMode)
+        public FlydigiControllerFactory(AccessMode AccessMode)
         {
             this.AccessMode = AccessMode;
         }
@@ -81,7 +81,7 @@ namespace ExtendInput.Controller.Flydigi
             {
                 if (device.VendorId == 0x045E && device.ProductId == 0x028E)
                 {
-                    if (this.AccessMode != AccesMode.FullControl)
+                    if (this.AccessMode != AccessMode.FullControl)
                         return null;
 
                     if (device.Properties["ProductName"] == "Controller (Flydigi 2.4G x360)"
@@ -96,7 +96,7 @@ namespace ExtendInput.Controller.Flydigi
             }
             else if (_deviceX != null)
             {
-                if (this.AccessMode != AccesMode.FullControl)
+                if (this.AccessMode != AccessMode.FullControl)
                     return null;
 
                 lock (CandidateXInputLock)

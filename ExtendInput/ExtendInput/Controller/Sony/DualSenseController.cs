@@ -59,6 +59,7 @@ namespace ExtendInput.Controller.Sony
             return State;
         }
 
+        public AccessMode AccessMode { get; private set; }
         public EConnectionType ConnectionType { get; private set; }
         public EPollingState PollingState { get; private set; }
 
@@ -248,8 +249,9 @@ namespace ExtendInput.Controller.Sony
             }
         }*/
 
-        public DualSenseController(HidDevice device, EConnectionType ConnectionType = EConnectionType.Unknown)
+        public DualSenseController(HidDevice device, AccessMode AccessMode, EConnectionType ConnectionType = EConnectionType.Unknown)
         {
+            this.AccessMode = AccessMode;
             this.ConnectionType = ConnectionType;
 
             State.Controls["cluster_left"] = new ControlDPad();
@@ -262,7 +264,7 @@ namespace ExtendInput.Controller.Sony
             State.Controls["menu_left"] = new ControlButton();
             State.Controls["menu_right"] = new ControlButton();
             State.Controls["home"] = new ControlButton();
-            State.Controls["mute"] = new ControlButton();
+            State.Controls["mute"] = new ControlButtonPS5Mute(AccessMode);
             State.Controls["stick_left"] = new ControlStickWithClick();
             State.Controls["stick_right"] = new ControlStickWithClick();
             State.Controls["touch_center"] = new ControlTouch(TouchCount: 2, HasClick: true);
@@ -514,7 +516,7 @@ namespace ExtendInput.Controller.Sony
 
                             (StateInFlight.Controls["home"] as IControlButton).DigitalStage1 = (reportData.ReportBytes[baseOffset + 9] & 0x1) == 0x1;
                             (StateInFlight.Controls["touch_center"] as ControlTouch).Click = (reportData.ReportBytes[baseOffset + 9] & 0x2) == 0x2;
-                            (StateInFlight.Controls["mute"] as IControlButton).DigitalStage1 = (reportData.ReportBytes[baseOffset + 9] & 0x4) == 0x4;
+                            (StateInFlight.Controls["mute"] as IControlButtonWithStateLight).DigitalStage1 = (reportData.ReportBytes[baseOffset + 9] & 0x4) == 0x4;
                             (StateInFlight.Controls["trigger_left"] as IControlTrigger).AnalogStage1 = (float)reportData.ReportBytes[baseOffset + 4] / byte.MaxValue;
                             (StateInFlight.Controls["trigger_right"] as IControlTrigger).AnalogStage1 = (float)reportData.ReportBytes[baseOffset + 5] / byte.MaxValue;
 
@@ -608,5 +610,16 @@ namespace ExtendInput.Controller.Sony
         }*/
 
         public void SetActiveAlternateController(string ControllerID) { }
+
+        public bool SetControlState(string control, string state)
+        {
+            switch (control)
+            {
+                case "mute":
+                    (State.Controls["mute"] as IControlButtonWithStateLight).State = state;
+                    return true;
+            }
+            return false;
+        }
     }
 }

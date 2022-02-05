@@ -112,6 +112,13 @@ namespace ExtendInput.Controller
         void Initalize();
         void Identify();
         void SetActiveAlternateController(string ControllerID);
+
+        /// <summary>
+        /// Possible temp function, not sure yet
+        /// </summary>
+        /// <param name="control"></param>
+        /// <param name="state"></param>
+        bool SetControlState(string control, string state);
     }
 
     public static class ControllerMathTools

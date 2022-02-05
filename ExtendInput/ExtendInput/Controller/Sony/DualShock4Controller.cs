@@ -1460,5 +1460,10 @@ namespace ExtendInput.Controller.Sony
 
             ControllerMetadataUpdate?.Invoke(this);
         }
+
+        public bool SetControlState(string control, string state)
+        {
+            return false;
+        }
     }
 }

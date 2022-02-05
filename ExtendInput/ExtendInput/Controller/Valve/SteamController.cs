@@ -1357,5 +1357,10 @@ namespace ExtendInput.Controller.Valve
         }*/
 
         public void SetActiveAlternateController(string ControllerID) { }
+
+        public bool SetControlState(string control, string state)
+        {
+            return false;
+        }
     }
 }

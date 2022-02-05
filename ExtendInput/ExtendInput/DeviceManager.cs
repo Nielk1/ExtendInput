@@ -8,7 +8,7 @@ using System.Diagnostics;
 
 namespace ExtendInput
 {
-    public enum AccesMode
+    public enum AccessMode
     {
         ReadOnly,
         SafeWriteOnly,
@@ -22,7 +22,7 @@ namespace ExtendInput
         public event ControllerAddedEventHandler ControllerAdded;
         public event ControllerRemovedEventHandler ControllerRemoved;
 
-        private AccesMode AccessMode;
+        private AccessMode AccessMode;
 
 
 
@@ -32,7 +32,7 @@ namespace ExtendInput
             throw new NotImplementedException();
         }
 
-        public DeviceManager(AccesMode AccessMode = AccesMode.SafeWriteOnly)
+        public DeviceManager(AccessMode AccessMode = AccessMode.SafeWriteOnly)
         {
             DeviceProviders = new List<IDeviceProvider>();
             ControllerFactories = new List<IControllerFactory>();
@@ -80,7 +80,7 @@ namespace ExtendInput
                             for (int i = 0; i < @params.Length; i++)
                             {
                                 //paramList[i] = ServiceProvider.GetService(@params[i].ParameterType);
-                                if (@params[i].ParameterType == typeof(AccesMode))
+                                if (@params[i].ParameterType == typeof(AccessMode))
                                 {
                                     paramList[i] = AccessMode;
                                 }

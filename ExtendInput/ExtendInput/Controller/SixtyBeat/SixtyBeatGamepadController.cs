@@ -126,7 +126,7 @@ namespace ExtendInput.Controller.SixtyBeat
                     (StateInFlight.Controls["menu_right"] as IControlButton).DigitalStage1 = (reportData.ReportBytes[1] & 0x80) == 0x80;
                     (StateInFlight.Controls["menu_left"] as IControlButton).DigitalStage1 = (reportData.ReportBytes[1] & 0x40) == 0x40;
                     (StateInFlight.Controls["bumper_right"] as IControlButton).DigitalStage1 = (reportData.ReportBytes[0] & 0x01) == 0x01;
-                    (StateInFlight.Controls["bumper_lleft"] as IControlButton).DigitalStage1 = (reportData.ReportBytes[0] & 0x04) == 0x04;
+                    (StateInFlight.Controls["bumper_left"] as IControlButton).DigitalStage1 = (reportData.ReportBytes[0] & 0x04) == 0x04;
                     (StateInFlight.Controls["trigger_right"] as IControlButton).DigitalStage1 = (reportData.ReportBytes[1] & 0x08) == 0x08;
                     (StateInFlight.Controls["trigger_left"] as IControlButton).DigitalStage1 = (reportData.ReportBytes[0] & 0x02) == 0x02;
 
@@ -185,6 +185,11 @@ namespace ExtendInput.Controller.SixtyBeat
         }
 
         public void SetActiveAlternateController(string ControllerID) { }
+
+        public bool SetControlState(string control, string state)
+        {
+            return false;
+        }
 
     }
 }
