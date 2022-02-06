@@ -79,7 +79,6 @@ namespace ExtendInput.Controller.Microsoft
         int reportUsageLock = 0;
 
         public event ControllerNameUpdateEvent ControllerMetadataUpdate;
-        public event ControllerStateUpdateEvent ControllerStateUpdate;
 
         ControllerState State = new ControllerState();
 
@@ -174,95 +173,95 @@ namespace ExtendInput.Controller.Microsoft
                 ConnectedState.Wait();
                 try
                 {
-                    // Clone the current state before altering it since the OldState is likely a shared reference
-                    ControllerState StateInFlight = (ControllerState)State.Clone();
-
-                    if (reportData.sThumbLX.HasValue) (StateInFlight.Controls["stick_left" ] as IControlStickWithClick).X = reportData.sThumbLX.Value *  1.0f / Int16.MaxValue;
-                    if (reportData.sThumbLY.HasValue) (StateInFlight.Controls["stick_left" ] as IControlStickWithClick).Y = reportData.sThumbLY.Value * -1.0f / Int16.MaxValue;
-                    if (reportData.sThumbRX.HasValue) (StateInFlight.Controls["stick_right"] as IControlStickWithClick).X = reportData.sThumbRX.Value *  1.0f / Int16.MaxValue;
-                    if (reportData.sThumbRY.HasValue) (StateInFlight.Controls["stick_right"] as IControlStickWithClick).Y = reportData.sThumbRY.Value * -1.0f / Int16.MaxValue;
-
-                    if (reportData.wButtons.HasValue)
+                    State.StartStateChange();
+                    try
                     {
-                        (StateInFlight.Controls["cluster_right"] as IControlButtonQuad).ButtonN = (reportData.wButtons.Value & 0x8000) == 0x8000;
-                        (StateInFlight.Controls["cluster_right"] as IControlButtonQuad).ButtonE = (reportData.wButtons.Value & 0x2000) == 0x2000;
-                        (StateInFlight.Controls["cluster_right"] as IControlButtonQuad).ButtonS = (reportData.wButtons.Value & 0x1000) == 0x1000;
-                        (StateInFlight.Controls["cluster_right"] as IControlButtonQuad).ButtonW = (reportData.wButtons.Value & 0x4000) == 0x4000;
+                        if (reportData.sThumbLX.HasValue) (State.Controls["stick_left" ] as IControlStickWithClick).X = reportData.sThumbLX.Value *  1.0f / Int16.MaxValue;
+                        if (reportData.sThumbLY.HasValue) (State.Controls["stick_left" ] as IControlStickWithClick).Y = reportData.sThumbLY.Value * -1.0f / Int16.MaxValue;
+                        if (reportData.sThumbRX.HasValue) (State.Controls["stick_right"] as IControlStickWithClick).X = reportData.sThumbRX.Value *  1.0f / Int16.MaxValue;
+                        if (reportData.sThumbRY.HasValue) (State.Controls["stick_right"] as IControlStickWithClick).Y = reportData.sThumbRY.Value * -1.0f / Int16.MaxValue;
 
-                        bool DPadUp    = (reportData.wButtons.Value & 0x0001) == 0x0001;
-                        bool DPadDown  = (reportData.wButtons.Value & 0x0002) == 0x0002;
-                        bool DPadLeft  = (reportData.wButtons.Value & 0x0004) == 0x0004;
-                        bool DPadRight = (reportData.wButtons.Value & 0x0008) == 0x0008;
-
-                        if (DPadUp && DPadDown)
-                            DPadUp = DPadDown = false;
-
-                        if (DPadLeft && DPadRight)
-                            DPadLeft = DPadRight = false;
-
-                        if (DPadUp)
+                        if (reportData.wButtons.HasValue)
                         {
-                            if (DPadRight)
+                            (State.Controls["cluster_right"] as IControlButtonQuad).ButtonN = (reportData.wButtons.Value & 0x8000) == 0x8000;
+                            (State.Controls["cluster_right"] as IControlButtonQuad).ButtonE = (reportData.wButtons.Value & 0x2000) == 0x2000;
+                            (State.Controls["cluster_right"] as IControlButtonQuad).ButtonS = (reportData.wButtons.Value & 0x1000) == 0x1000;
+                            (State.Controls["cluster_right"] as IControlButtonQuad).ButtonW = (reportData.wButtons.Value & 0x4000) == 0x4000;
+
+                            bool DPadUp    = (reportData.wButtons.Value & 0x0001) == 0x0001;
+                            bool DPadDown  = (reportData.wButtons.Value & 0x0002) == 0x0002;
+                            bool DPadLeft  = (reportData.wButtons.Value & 0x0004) == 0x0004;
+                            bool DPadRight = (reportData.wButtons.Value & 0x0008) == 0x0008;
+
+                            if (DPadUp && DPadDown)
+                                DPadUp = DPadDown = false;
+
+                            if (DPadLeft && DPadRight)
+                                DPadLeft = DPadRight = false;
+
+                            if (DPadUp)
                             {
-                                (StateInFlight.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.NorthEast;
+                                if (DPadRight)
+                                {
+                                    (State.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.NorthEast;
+                                }
+                                else if (DPadLeft)
+                                {
+                                    (State.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.NorthWest;
+                                }
+                                else
+                                {
+                                    (State.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.North;
+                                }
                             }
-                            else if (DPadLeft)
+                            else if (DPadDown)
                             {
-                                (StateInFlight.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.NorthWest;
+                                if (DPadRight)
+                                {
+                                    (State.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.SouthEast;
+                                }
+                                else if (DPadLeft)
+                                {
+                                    (State.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.SouthWest;
+                                }
+                                else
+                                {
+                                    (State.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.South;
+                                }
                             }
                             else
                             {
-                                (StateInFlight.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.North;
+                                if (DPadRight)
+                                {
+                                    (State.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.East;
+                                }
+                                else if (DPadLeft)
+                                {
+                                    (State.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.West;
+                                }
+                                else
+                                {
+                                    (State.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.None;
+                                }
                             }
-                        }
-                        else if (DPadDown)
-                        {
-                            if (DPadRight)
-                            {
-                                (StateInFlight.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.SouthEast;
-                            }
-                            else if (DPadLeft)
-                            {
-                                (StateInFlight.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.SouthWest;
-                            }
-                            else
-                            {
-                                (StateInFlight.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.South;
-                            }
-                        }
-                        else
-                        {
-                            if (DPadRight)
-                            {
-                                (StateInFlight.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.East;
-                            }
-                            else if (DPadLeft)
-                            {
-                                (StateInFlight.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.West;
-                            }
-                            else
-                            {
-                                (StateInFlight.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.None;
-                            }
+
+                            (State.Controls["stick_right"  ] as IControlStickWithClick).Click = (reportData.wButtons.Value & 0x0080) == 0x0080;
+                            (State.Controls["stick_left"   ] as IControlStickWithClick).Click = (reportData.wButtons.Value & 0x0040) == 0x0040;
+                            (State.Controls["menu_right"   ] as ControlButton).DigitalStage1 = (reportData.wButtons.Value & 0x0010) == 0x0010;
+                            (State.Controls["menu_left"    ] as ControlButton).DigitalStage1  = (reportData.wButtons.Value & 0x0020) == 0x0020;
+                            (State.Controls["bumpers_right"] as ControlButton).DigitalStage1 = (reportData.wButtons.Value & 0x0200) == 0x0200;
+                            (State.Controls["bumpers_lfet" ] as ControlButton).DigitalStage1  = (reportData.wButtons.Value & 0x0100) == 0x0100;
+                            (State.Controls["home"         ] as IControlButton).DigitalStage1 = (reportData.wButtons.Value & 0x0400) == 0x0400;
                         }
 
-                        (StateInFlight.Controls["stick_right"  ] as IControlStickWithClick).Click = (reportData.wButtons.Value & 0x0080) == 0x0080;
-                        (StateInFlight.Controls["stick_left"   ] as IControlStickWithClick).Click = (reportData.wButtons.Value & 0x0040) == 0x0040;
-                        (StateInFlight.Controls["menu_right"   ] as ControlButton).DigitalStage1 = (reportData.wButtons.Value & 0x0010) == 0x0010;
-                        (StateInFlight.Controls["menu_left"    ] as ControlButton).DigitalStage1  = (reportData.wButtons.Value & 0x0020) == 0x0020;
-                        (StateInFlight.Controls["bumpers_right"] as ControlButton).DigitalStage1 = (reportData.wButtons.Value & 0x0200) == 0x0200;
-                        (StateInFlight.Controls["bumpers_lfet" ] as ControlButton).DigitalStage1  = (reportData.wButtons.Value & 0x0100) == 0x0100;
-                        (StateInFlight.Controls["home"         ] as IControlButton).DigitalStage1 = (reportData.wButtons.Value & 0x0400) == 0x0400;
+                        //(State.Controls["home"] as ControlButton).Button0 = (buttons & 0x1) == 0x1;
+                        if (reportData.bLeftTrigger.HasValue)  (State.Controls["trigger_left"] as ControlTrigger).AnalogStage1  = (float)reportData.bLeftTrigger.Value  / byte.MaxValue;
+                        if (reportData.bRightTrigger.HasValue) (State.Controls["trigger_right"] as ControlTrigger).AnalogStage1 = (float)reportData.bRightTrigger.Value / byte.MaxValue;
                     }
-
-                    //(State.Controls["home"] as ControlButton).Button0 = (buttons & 0x1) == 0x1;
-                    if (reportData.bLeftTrigger.HasValue)  (StateInFlight.Controls["trigger_left"] as ControlTrigger).AnalogStage1  = (float)reportData.bLeftTrigger.Value  / byte.MaxValue;
-                    if (reportData.bRightTrigger.HasValue) (StateInFlight.Controls["trigger_right"] as ControlTrigger).AnalogStage1 = (float)reportData.bRightTrigger.Value / byte.MaxValue;
-
-                    // bring OldState in line with new State
-                    State = StateInFlight;
-
-                    ControllerStateUpdate?.Invoke(this, State);
+                    finally
+                    {
+                        State.EndStateChange();
+                    }
                 }
                 finally
                 {

@@ -92,7 +92,6 @@
     <Compile Include="Controls\ControlTrigger2Stage.cs" />
     <Compile Include="Controls\ControlTrigger.cs" />
     <Compile Include="Controls\ControlButton.cs" />
-    <Compile Include="Controls\ControlPair.cs" />
     <Compile Include="Controls\ControlRocker.cs" />
     <Compile Include="Controls\ControlStickWithClick.cs" />
     <Compile Include="DeviceProvider\ReportData.cs" />
@@ -116,7 +115,6 @@
     <Compile Include="Controls\ControlTouch.cs" />
     <Compile Include="Controls\EDPadDirection.cs" />
     <Compile Include="Controls\IControl.cs" />
-    <Compile Include="Controls\IControlPair.cs" />
     <Compile Include="Crc32.cs" />
     <Compile Include="DevPKey\Native\PnpDevicePropertyAPINative.cs" />
     <Compile Include="DevPKey\PnpDevicePropertyAPI.cs" />

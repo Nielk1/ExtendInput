@@ -121,24 +121,26 @@ namespace ExtendInputControllerTester
             return server;
         }
 
+        static ControlCollection State = null;
         private static async Task PollController(IHttpContext context)
         {
             await ControllersLock.WaitAsync();
             try
             {
                 if (activeController == null) return;
+                if (State == null) return;
                 JsonSerializer serializer = new JsonSerializer();
                 serializer.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
-                ControllerState State = activeController.GetState();
+
                 JObject controls = new JObject();
-                foreach (string key in State.Controls.Keys)
+                foreach (string key in State.Keys)
                 {
                     JObject obj = new JObject();
-                    string TypeCodeString = State.Controls[key]?.GetType()?.ToString();
+                    string TypeCodeString = State[key]?.GetType()?.ToString();
                     if (!string.IsNullOrWhiteSpace(TypeCodeString))
                         TypeCodeString = Regex.Replace(TypeCodeString, @"`[^\[\]]+\[", "[");
                     obj["Type"] = TypeCodeString;
-                    obj["Data"] = State.Controls[key] != null ? JObject.FromObject(State.Controls[key], serializer) : null;
+                    obj["Data"] = State[key] != null ? JObject.FromObject(State[key], serializer) : null;
                     controls[key] = obj;
                 }
                 JObject output = new JObject()
@@ -290,8 +292,11 @@ namespace ExtendInputControllerTester
             await ControllersLock.WaitAsync();
             try
             {
+                if (activeController != null)
+                    activeController.GetState().ControllerStateUpdate -= Program_ControllerStateUpdate;
                 activeController?.DeInitalize();
                 activeController = null;
+                State = null;
 
                 string ControllerID = await context.GetRequestBodyAsStringAsync();
 
@@ -300,6 +305,7 @@ namespace ExtendInputControllerTester
                     activeController = Controllers[ControllerID];
                     await context.SendDataAsync(true);
                     activeController.Initalize();
+                    activeController.GetState().ControllerStateUpdate += Program_ControllerStateUpdate;
                     return;
                 }
                 await context.SendDataAsync(false);
@@ -308,6 +314,11 @@ namespace ExtendInputControllerTester
             {
                 ControllersLock.Release();
             }
+        }
+
+        private static void Program_ControllerStateUpdate(ControlCollection controls)
+        {
+            State = (ControlCollection)controls.Clone();
         }
 
         private static async Task ActivateControlMode(IHttpContext context)
@@ -320,7 +331,17 @@ namespace ExtendInputControllerTester
                     string raw = await context.GetRequestBodyAsStringAsync();
                     var data = HttpUtility.ParseQueryString(raw);
 
-                    bool retVal = activeController.SetControlState(data["id"], data["state"]);
+                    //bool retVal = await Task.Run(() => activeController.SetControlState(data["id"], data["state"]));
+                    //bool retVal = activeController.SetControlState(data["id"], data["state"]);
+                    bool retVal = false;
+                    Thread tmp = new Thread(() =>
+                    {
+                        retVal = activeController.SetControlState(data["id"], data["state"]);
+                    });
+                    tmp.Start();
+                    while (tmp.IsAlive)
+                        await Task.Delay(100);
+
                     await context.SendDataAsync(retVal);
                 }
                 else

@@ -290,6 +290,9 @@
                                 for (var idx in controlData.States) {
                                     listElement.append('<a href="#" class="list-group-item list-group-item-action' + (controlData.States[idx] == controlData.State ? ' active' : '') + '" data-id="' + controlData.States[idx] + '">' + controlData.States[idx] + '</a>');
                                 }
+                            } else {
+                                listElement.find('[data-id="' + controlData.State + '"]').addClass('active');
+                                listElement.find('.active[data-id][data-id!="' + controlData.State + '"]').removeClass('active');
                             }
                             if (controlData.DigitalStage1) {
                                 ctrl.find(".btn_x_data").attr('rx', 29).attr('ry', 29);

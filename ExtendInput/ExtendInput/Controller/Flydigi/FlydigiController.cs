@@ -261,7 +261,6 @@ namespace ExtendInput.Controller.Flydigi
         private const int _SLOW_POLL_MS = 1000;
 
         public event ControllerNameUpdateEvent ControllerMetadataUpdate;
-        public event ControllerStateUpdateEvent ControllerStateUpdate;
 
         // The controller state can drastically change, where it picks up or loses items based on passive detection of quirky controllers, this makes it safe
         //private ReaderWriterLockSlim StateMutationLock = new ReaderWriterLockSlim();
@@ -402,7 +401,6 @@ namespace ExtendInput.Controller.Flydigi
         public IDevice DeviceHackRef => _device;
 
         ControllerState State = new ControllerState();
-        ControllerState OldState = null;
 
         bool AbortStatusThread = false;
         //bool EarlyDeviceRecheck = false;
@@ -612,16 +610,14 @@ namespace ExtendInput.Controller.Flydigi
                             {
                                 try
                                 {
-                                    //StateMutationLock.EnterReadLock();
-                                    //try
+                                    State.StartStateChange();
+                                    try
                                     {
                                         // Clone the current state before altering it since the OldState is likely a shared reference
-                                        ControllerState StateInFlight = null;
                                         StateMutationLock.Wait(); NoteStateMutationLock();
                                         try
                                         {
-//                                            Log($"Clone State {State.Controls["triggers"]?.GetType()}", ConsoleColor.Cyan);
-                                            StateInFlight = (ControllerState)State.Clone();
+//                                          Log($"Clone State {State.Controls["triggers"]?.GetType()}", ConsoleColor.Cyan);
                                             ControllerSubTypeAttribute ControllerAttributeInFlight = ControllerAttribute;
 
                                             //byte ControllerID = reportData.ReportBytes[27];
@@ -666,26 +662,26 @@ namespace ExtendInput.Controller.Flydigi
                                             byte TriggerRight = reportData.ReportBytes[23];
                                             ////////////////////////////////////////////////////
 
-                                            (StateInFlight.Controls["stick_left"] as IControlStickWithClick).X = ControllerMathTools.QuickStickToFloat(LStickX);
-                                            (StateInFlight.Controls["stick_left"] as IControlStickWithClick).Y = ControllerMathTools.QuickStickToFloat(LStickY);
-                                            (StateInFlight.Controls["stick_left"] as IControlStickWithClick).Click = buttonL3;
-                                            (StateInFlight.Controls["stick_right"] as IControlStickWithClick).X = ControllerMathTools.QuickStickToFloat(RStickX);
-                                            (StateInFlight.Controls["stick_right"] as IControlStickWithClick).Y = ControllerMathTools.QuickStickToFloat(RStickY);
-                                            (StateInFlight.Controls["stick_right"] as IControlStickWithClick).Click = buttonR3;
-                                            (StateInFlight.Controls["bumpers_left"] as IControlButton).DigitalStage1 = buttonL1;
-                                            (StateInFlight.Controls["bumpers_right"] as IControlButton).DigitalStage1 = buttonR1;
-                                            (StateInFlight.Controls["menu_left"] as IControlButton).DigitalStage1 = buttonSelect;
-                                            (StateInFlight.Controls["menu_right"] as IControlButton).DigitalStage1 = buttonStart;
+                                            (State.Controls["stick_left"] as IControlStickWithClick).X = ControllerMathTools.QuickStickToFloat(LStickX);
+                                            (State.Controls["stick_left"] as IControlStickWithClick).Y = ControllerMathTools.QuickStickToFloat(LStickY);
+                                            (State.Controls["stick_left"] as IControlStickWithClick).Click = buttonL3;
+                                            (State.Controls["stick_right"] as IControlStickWithClick).X = ControllerMathTools.QuickStickToFloat(RStickX);
+                                            (State.Controls["stick_right"] as IControlStickWithClick).Y = ControllerMathTools.QuickStickToFloat(RStickY);
+                                            (State.Controls["stick_right"] as IControlStickWithClick).Click = buttonR3;
+                                            (State.Controls["bumpers_left"] as IControlButton).DigitalStage1 = buttonL1;
+                                            (State.Controls["bumpers_right"] as IControlButton).DigitalStage1 = buttonR1;
+                                            (State.Controls["menu_left"] as IControlButton).DigitalStage1 = buttonSelect;
+                                            (State.Controls["menu_right"] as IControlButton).DigitalStage1 = buttonStart;
 
                                             if (ControllerAttributeInFlight.HasAnalogTrigger)
                                             {
-                                                if (StateInFlight.Controls["trigger_left"] is IControlTrigger) (StateInFlight.Controls["trigger_left"] as IControlTrigger).AnalogStage1 = TriggerLeft > 0 ? TriggerLeft / 255f : buttonL2 ? 255 : 0;
-                                                if (StateInFlight.Controls["trigger_right"] is IControlTrigger) (StateInFlight.Controls["trigger_right"] as IControlTrigger).AnalogStage1 = TriggerRight > 0 ? TriggerRight / 255f : buttonR2 ? 255 : 0;
+                                                if (State.Controls["trigger_left"] is IControlTrigger) (State.Controls["trigger_left"] as IControlTrigger).AnalogStage1 = TriggerLeft > 0 ? TriggerLeft / 255f : buttonL2 ? 255 : 0;
+                                                if (State.Controls["trigger_right"] is IControlTrigger) (State.Controls["trigger_right"] as IControlTrigger).AnalogStage1 = TriggerRight > 0 ? TriggerRight / 255f : buttonR2 ? 255 : 0;
                                             }
                                             else if (ControllerSubType != FlyDigiSubType.None && ControllerSubType != FlyDigiSubType.Unknown)
                                             {
-                                                if (StateInFlight.Controls["trigger_left"] is IControlButton) (StateInFlight.Controls["trigger_left"] as IControlButton).DigitalStage1 = buttonL2;
-                                                if (StateInFlight.Controls["trigger_right"] is IControlButton) (StateInFlight.Controls["trigger_right"] as IControlButton).DigitalStage1 = buttonR2;
+                                                if (State.Controls["trigger_left"] is IControlButton) (State.Controls["trigger_left"] as IControlButton).DigitalStage1 = buttonL2;
+                                                if (State.Controls["trigger_right"] is IControlButton) (State.Controls["trigger_right"] as IControlButton).DigitalStage1 = buttonR2;
                                             }
                                             //if (ControllerAttributeInFlight.HasLogo)
                                             //{
@@ -705,50 +701,50 @@ namespace ExtendInput.Controller.Flydigi
                                             }*/
                                             if (ControllerAttributeInFlight.HasTopMenu || ControllerAttributeInFlight.HasBottomMenu)
                                             {
-                                                (StateInFlight.Controls["cluster_middle"] as ControlButtonGrid).Button[0, 0] = buttonPair;
-                                                (StateInFlight.Controls["cluster_middle"] as ControlButtonGrid).Button[1, 0] = buttonHome;
-                                                (StateInFlight.Controls["cluster_middle"] as ControlButtonGrid).Button[2, 0] = buttonBack;
+                                                (State.Controls["cluster_middle"] as ControlButtonGrid).Button[0, 0] = buttonPair;
+                                                (State.Controls["cluster_middle"] as ControlButtonGrid).Button[1, 0] = buttonHome;
+                                                (State.Controls["cluster_middle"] as ControlButtonGrid).Button[2, 0] = buttonBack;
                                             }
                                             if (ControllerAttributeInFlight.HasCZBottom)
                                             {
-                                                (StateInFlight.Controls["c"] as IControlButton).DigitalStage1 = buttonC;
-                                                (StateInFlight.Controls["z"] as IControlButton).DigitalStage1 = buttonZ;
+                                                (State.Controls["c"] as IControlButton).DigitalStage1 = buttonC;
+                                                (State.Controls["z"] as IControlButton).DigitalStage1 = buttonZ;
                                             }
                                             if (ControllerAttributeInFlight.HasCZTop)
                                             {
-                                                (StateInFlight.Controls["c_top"] as IControlButton).DigitalStage1 = buttonC;
-                                                (StateInFlight.Controls["z_top"] as IControlButton).DigitalStage1 = buttonZ;
+                                                (State.Controls["c_top"] as IControlButton).DigitalStage1 = buttonC;
+                                                (State.Controls["z_top"] as IControlButton).DigitalStage1 = buttonZ;
                                             }
                                             if (ControllerAttributeInFlight.HasMRockers)
                                             {
-                                                (StateInFlight.Controls["grip_right"] as ControlRocker).Direction = buttonM1 || AirMouseClick ? EDPadDirection.East : buttonM3 ? EDPadDirection.West : EDPadDirection.None;
-                                                (StateInFlight.Controls["grip_left"] as ControlRocker).Direction = buttonM4 ? EDPadDirection.East : buttonM2 ? EDPadDirection.West : EDPadDirection.None;
+                                                (State.Controls["grip_right"] as ControlRocker).Direction = buttonM1 || AirMouseClick ? EDPadDirection.East : buttonM3 ? EDPadDirection.West : EDPadDirection.None;
+                                                (State.Controls["grip_left"] as ControlRocker).Direction = buttonM4 ? EDPadDirection.East : buttonM2 ? EDPadDirection.West : EDPadDirection.None;
                                             }
                                             else if (ControllerAttributeInFlight.HasMButtons)
                                             {
-                                                (StateInFlight.Controls["grip_right_left"] as ControlButton).DigitalStage1 = buttonM3;
-                                                (StateInFlight.Controls["grip_right_right"] as ControlButton).DigitalStage1 = buttonM1 || AirMouseClick;
-                                                (StateInFlight.Controls["grip_left_left"] as ControlButton).DigitalStage1 = buttonM2;
-                                                (StateInFlight.Controls["grip_left_right"] as ControlButton).DigitalStage1 = buttonM4;
+                                                (State.Controls["grip_right_left"] as ControlButton).DigitalStage1 = buttonM3;
+                                                (State.Controls["grip_right_right"] as ControlButton).DigitalStage1 = buttonM1 || AirMouseClick;
+                                                (State.Controls["grip_left_left"] as ControlButton).DigitalStage1 = buttonM2;
+                                                (State.Controls["grip_left_right"] as ControlButton).DigitalStage1 = buttonM4;
                                             }
                                             if (ControllerAttributeInFlight.HasBumper2)
                                             {
-                                                (StateInFlight.Controls["shoulder_a_left"] as ControlButton).DigitalStage1 = buttonM6;
-                                                (StateInFlight.Controls["shoulder_a_right"] as ControlButton).DigitalStage1 = buttonM5;
+                                                (State.Controls["shoulder_a_left"] as ControlButton).DigitalStage1 = buttonM6;
+                                                (State.Controls["shoulder_a_right"] as ControlButton).DigitalStage1 = buttonM5;
                                             }
                                             if (ControllerAttributeInFlight.HasWheel)
                                             {
-                                                (StateInFlight.Controls["cluster_right"] as IControlButtonQuad).ButtonN = buttonY; // wheel
-                                                (StateInFlight.Controls["cluster_right"] as IControlButtonQuad).ButtonE = buttonB;
-                                                (StateInFlight.Controls["cluster_right"] as IControlButtonQuad).ButtonS = buttonA;
-                                                (StateInFlight.Controls["cluster_right"] as IControlButtonQuad).ButtonW = buttonX;
+                                                (State.Controls["cluster_right"] as IControlButtonQuad).ButtonN = buttonY; // wheel
+                                                (State.Controls["cluster_right"] as IControlButtonQuad).ButtonE = buttonB;
+                                                (State.Controls["cluster_right"] as IControlButtonQuad).ButtonS = buttonA;
+                                                (State.Controls["cluster_right"] as IControlButtonQuad).ButtonW = buttonX;
                                             }
                                             else if (ControllerSubType != FlyDigiSubType.None && ControllerSubType != FlyDigiSubType.Unknown)
                                             {
-                                                (StateInFlight.Controls["cluster_right"] as IControlButtonQuad).ButtonN = buttonY;
-                                                (StateInFlight.Controls["cluster_right"] as IControlButtonQuad).ButtonE = buttonB;
-                                                (StateInFlight.Controls["cluster_right"] as IControlButtonQuad).ButtonS = buttonA;
-                                                (StateInFlight.Controls["cluster_right"] as IControlButtonQuad).ButtonW = buttonX;
+                                                (State.Controls["cluster_right"] as IControlButtonQuad).ButtonN = buttonY;
+                                                (State.Controls["cluster_right"] as IControlButtonQuad).ButtonE = buttonB;
+                                                (State.Controls["cluster_right"] as IControlButtonQuad).ButtonS = buttonA;
+                                                (State.Controls["cluster_right"] as IControlButtonQuad).ButtonW = buttonX;
                                             }
 
                                             int padH = 0;
@@ -759,33 +755,28 @@ namespace ExtendInput.Controller.Flydigi
                                             if (buttonLeft) padH--;
                                             if (padH > 0)
                                                 if (padV > 0)
-                                                    (StateInFlight.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.NorthEast;
+                                                    (State.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.NorthEast;
                                                 else if (padV < 0)
-                                                    (StateInFlight.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.SouthEast;
+                                                    (State.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.SouthEast;
                                                 else
-                                                    (StateInFlight.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.East;
+                                                    (State.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.East;
                                             else if (padH < 0)
                                                 if (padV > 0)
-                                                    (StateInFlight.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.NorthWest;
+                                                    (State.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.NorthWest;
                                                 else if (padV < 0)
-                                                    (StateInFlight.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.SouthWest;
+                                                    (State.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.SouthWest;
                                                 else
-                                                    (StateInFlight.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.West;
+                                                    (State.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.West;
                                             else
                                                 if (padV > 0)
-                                                (StateInFlight.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.North;
+                                                (State.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.North;
                                             else if (padV < 0)
-                                                (StateInFlight.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.South;
+                                                (State.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.South;
                                             else
-                                                (StateInFlight.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.None;
+                                                (State.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.None;
 
                                             //short yaw = ProcSignedByteNybble((short)(((report.Data[4] & 0x0f) << 8) + report.Data[3]));
                                             //short pitch = ProcSignedByteNybble((short)(((report.Data[4] & 0xf0) >> 4) + (report.Data[5] << 4)));
-
-
-                                            // bring OldState in line with new State
-                                            OldState = State;
-                                            State = StateInFlight;
                                         }
                                         finally
                                         {
@@ -820,58 +811,40 @@ namespace ExtendInput.Controller.Flydigi
                                         {
                                             MetadataMutationLock.Release();
                                         }
-
-
-                                        ControllerStateUpdate?.Invoke(this, State);
-
-                                        if (PollingState == EPollingState.RunUntilReady || PollingState == EPollingState.RunOnce)
-                                        {
-                                            if (ConnectionType == EConnectionType.Dongle)
-                                            {
-                                                /*if (_device.VendorId == VENDOR_FLYDIGI && _device.ProductId == PRODUCT_FLYDIGI_DONGLE_1 && _device.RevisionNumber == REVISION_FLYDIGI_DONGLE_1)
-                                                {
-                                                    Console.WriteLine("Dongle is a type 1 that never gives data, so we have what we're going to get");
-                                                    PollingState = EPollingState.SlowPoll;
-                                                }
-                                                else*/
-                                                if (FirstDeviceInfoRequestTime.HasValue && (FirstDeviceInfoRequestTime.Value.AddSeconds(5) < DateTime.UtcNow)) // check if we are a dongle and asked for this data a while ago, but still don't have it
-                                                {
-                                                    Log("Did not get dongle data within timeout");
-                                                    FirstDeviceInfoRequestTime = null;
-                                                    NoMetaForThisController = true;
-                                                    PollingState = EPollingState.SlowPoll;
-                                                    Log($"Polling state set to SlowPoll", ConsoleColor.Yellow);
-                                                    lock (ResetControllerInfoNeededLock) ResetControllerInfoNeeded = true; // ResetControllerInfo();
-                                                    Log("ResetControllerInfo Requested", ConsoleColor.Red);
-                                                }
-                                            }
-                                            // USB mode we expect data, so don't stop if we get a normal report, we should keep our RunUntilReady until we see what we want
-                                            /*else
-                                            {
-                                                _device.StopReading();
-                                                PollingState = EPollingState.Inactive;
-                                                _device.CloseDevice();
-                                            }*/
-                                        }
-
-//                                        Log($"{reportData.ReportId:X2} {BitConverter.ToString(reportData.ReportBytes)}", ConsoleColor.Green);
                                     }
-                                    //finally
+                                    finally
                                     {
-                                        //StateMutationLock.ExitReadLock();
+                                        State.EndStateChange();
+                                    }
 
-                                        //if (ControllerTempDataAppeared)
-                                        //{
-                                        //    if (ControllerSubType == DS4SubType.UnknownDS4V1) ChangeControllerSubType(DS4SubType.SonyDS4V1);
-                                        //    if (ControllerSubType == DS4SubType.UnknownDS4V2) ChangeControllerSubType(DS4SubType.SonyDS4V2);
-                                        //}
-                                        //
-                                        //if (DongleConnectionStatusChanged)
-                                        //    QueueResetControllerInfo = true; // ResetControllerInfo();
-
-                                        //Console.ForegroundColor = ConsoleColor.Green;
-                                        //Console.WriteLine($"{reportData.ReportId:X2} {BitConverter.ToString(reportData.ReportBytes)}");
-                                        //Console.ResetColor();
+                                    if (PollingState == EPollingState.RunUntilReady || PollingState == EPollingState.RunOnce)
+                                    {
+                                        if (ConnectionType == EConnectionType.Dongle)
+                                        {
+                                            /*if (_device.VendorId == VENDOR_FLYDIGI && _device.ProductId == PRODUCT_FLYDIGI_DONGLE_1 && _device.RevisionNumber == REVISION_FLYDIGI_DONGLE_1)
+                                            {
+                                                Console.WriteLine("Dongle is a type 1 that never gives data, so we have what we're going to get");
+                                                PollingState = EPollingState.SlowPoll;
+                                            }
+                                            else*/
+                                            if (FirstDeviceInfoRequestTime.HasValue && (FirstDeviceInfoRequestTime.Value.AddSeconds(5) < DateTime.UtcNow)) // check if we are a dongle and asked for this data a while ago, but still don't have it
+                                            {
+                                                Log("Did not get dongle data within timeout");
+                                                FirstDeviceInfoRequestTime = null;
+                                                NoMetaForThisController = true;
+                                                PollingState = EPollingState.SlowPoll;
+                                                Log($"Polling state set to SlowPoll", ConsoleColor.Yellow);
+                                                lock (ResetControllerInfoNeededLock) ResetControllerInfoNeeded = true; // ResetControllerInfo();
+                                                Log("ResetControllerInfo Requested", ConsoleColor.Red);
+                                            }
+                                        }
+                                        // USB mode we expect data, so don't stop if we get a normal report, we should keep our RunUntilReady until we see what we want
+                                        /*else
+                                        {
+                                            _device.StopReading();
+                                            PollingState = EPollingState.Inactive;
+                                            _device.CloseDevice();
+                                        }*/
                                     }
                                 }
                                 finally

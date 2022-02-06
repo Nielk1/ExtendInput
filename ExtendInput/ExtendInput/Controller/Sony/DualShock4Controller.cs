@@ -570,7 +570,6 @@ namespace ExtendInput.Controller.Sony
         //private DateTime tmp = DateTime.Now;
 
         public event ControllerNameUpdateEvent ControllerMetadataUpdate;
-        public event ControllerStateUpdateEvent ControllerStateUpdate;
 
         // The controller state can drastically change, where it picks up or loses items based on passive detection of quirky controllers, this makes it safe
         private ReaderWriterLockSlim StateMutationLock = new ReaderWriterLockSlim();
@@ -614,9 +613,6 @@ namespace ExtendInput.Controller.Sony
         public IDevice DeviceHackRef => _device;
 
         ControllerState State = new ControllerState();
-        ControllerState OldState = new ControllerState();
-
-
 
         public DualShock4Controller(HidDevice device, EConnectionType ConnectionType = EConnectionType.Unknown, DS4VirtualType VirtualType = DS4VirtualType.Unknown)
         {
@@ -787,21 +783,6 @@ namespace ExtendInput.Controller.Sony
 
             byte[] sha_identity = SHA256.Create().ComputeHash(identity);
             return BitConverter.ToString(sha_identity).Replace("-", string.Empty).ToLowerInvariant();
-        }
-
-        public bool CheckSensorDataStuck()
-        {
-            return (OldState != null &&
-                (State.Controls["motion"] as ControlMotion).AccelerometerX == 0 &&
-                (State.Controls["motion"] as ControlMotion).AccelerometerY == 0 &&
-                (State.Controls["motion"] as ControlMotion).AccelerometerZ == 0 ||
-                (State.Controls["motion"] as ControlMotion).AccelerometerX == (OldState.Controls["motion"] as ControlMotion).AccelerometerX &&
-                (State.Controls["motion"] as ControlMotion).AccelerometerY == (OldState.Controls["motion"] as ControlMotion).AccelerometerY &&
-                (State.Controls["motion"] as ControlMotion).AccelerometerZ == (OldState.Controls["motion"] as ControlMotion).AccelerometerZ ||
-                (State.Controls["motion"] as ControlMotion).AngularVelocityX == (OldState.Controls["motion"] as ControlMotion).AngularVelocityX &&
-                (State.Controls["motion"] as ControlMotion).AngularVelocityY == (OldState.Controls["motion"] as ControlMotion).AngularVelocityY &&
-                (State.Controls["motion"] as ControlMotion).AngularVelocityZ == (OldState.Controls["motion"] as ControlMotion).AngularVelocityZ
-            );
         }
 
         private DS4SubType GetControllerInitialTypeCode(UInt16 VID, UInt16 PID, bool HaveSeenNonZeroRawTemp, string IdentityHash)
@@ -989,242 +970,240 @@ namespace ExtendInput.Controller.Sony
 
                     if (HasStateData)
                     {
-                        // Clone the current state before altering it since the OldState is likely a shared reference
-                        ControllerState StateInFlight = (ControllerState)State.Clone();
-                        //OldState = State; // shouldn't this be a clone?
-
-                        (StateInFlight.Controls["stick_left"] as IControlStickWithClick).X = ControllerMathTools.QuickStickToFloat(reportData.ReportBytes[baseOffset + 0]);
-                        (StateInFlight.Controls["stick_left"] as IControlStickWithClick).Y = ControllerMathTools.QuickStickToFloat(reportData.ReportBytes[baseOffset + 1]);
-
-                        bool Finger1BrookMarsTest = (reportData.ReportBytes[baseOffset + 34] & 0x80) != 0x80;
-                        if (_device.VendorId == VENDOR_BROOK && _device.ProductId == PRODUCT_BROOK_MARS && Finger1BrookMarsTest)
+                        State.StartStateChange();
+                        try
                         {
-                            int F1X = reportData.ReportBytes[baseOffset + 35]
-                                  | ((reportData.ReportBytes[baseOffset + 36] & 0xF) << 8);
-                            int F1Y = ((reportData.ReportBytes[baseOffset + 36] & 0xF0) >> 4)
-                                     | (reportData.ReportBytes[baseOffset + 37] << 4);
+                            (State.Controls["stick_left"] as IControlStickWithClick).X = ControllerMathTools.QuickStickToFloat(reportData.ReportBytes[baseOffset + 0]);
+                            (State.Controls["stick_left"] as IControlStickWithClick).Y = ControllerMathTools.QuickStickToFloat(reportData.ReportBytes[baseOffset + 1]);
 
-                            (StateInFlight.Controls["stick_right"] as IControlStickWithClick).X = ControllerMathTools.QuickStickToFloat((byte)((F1X - 192) / 6));
-                            (StateInFlight.Controls["stick_right"] as IControlStickWithClick).Y = ControllerMathTools.QuickStickToFloat((byte)((F1Y - 86) / 3));
-                        }
-                        else
-                        {
-                            (StateInFlight.Controls["stick_right"] as IControlStickWithClick).X = ControllerMathTools.QuickStickToFloat(reportData.ReportBytes[baseOffset + 2]);
-                            (StateInFlight.Controls["stick_right"] as IControlStickWithClick).Y = ControllerMathTools.QuickStickToFloat(reportData.ReportBytes[baseOffset + 3]);
-                        }
-
-                        (StateInFlight.Controls["cluster_right"] as IControlButtonQuad).ButtonN = (reportData.ReportBytes[baseOffset + 4] & 128) == 128;
-                        (StateInFlight.Controls["cluster_right"] as IControlButtonQuad).ButtonE = (reportData.ReportBytes[baseOffset + 4] & 64) == 64;
-                        (StateInFlight.Controls["cluster_right"] as IControlButtonQuad).ButtonS = (reportData.ReportBytes[baseOffset + 4] & 32) == 32;
-                        (StateInFlight.Controls["cluster_right"] as IControlButtonQuad).ButtonW = (reportData.ReportBytes[baseOffset + 4] & 16) == 16;
-
-                        switch ((reportData.ReportBytes[baseOffset + 4] & 0x0f))
-                        {
-                            case 0: (StateInFlight.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.North; break;
-                            case 1: (StateInFlight.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.NorthEast; break;
-                            case 2: (StateInFlight.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.East; break;
-                            case 3: (StateInFlight.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.SouthEast; break;
-                            case 4: (StateInFlight.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.South; break;
-                            case 5: (StateInFlight.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.SouthWest; break;
-                            case 6: (StateInFlight.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.West; break;
-                            case 7: (StateInFlight.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.NorthWest; break;
-                            default: (StateInFlight.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.None; break;
-                        }
-
-                        (StateInFlight.Controls["stick_right"] as IControlStickWithClick).Click = (reportData.ReportBytes[baseOffset + 5] & 128) == 128;
-                        (StateInFlight.Controls["stick_left"] as IControlStickWithClick).Click = (reportData.ReportBytes[baseOffset + 5] & 64) == 64;
-                        (StateInFlight.Controls["menu_right"] as IControlButton).DigitalStage1 = (reportData.ReportBytes[baseOffset + 5] & 32) == 32;
-                        (StateInFlight.Controls["menu_left"] as IControlButton).DigitalStage1 = (reportData.ReportBytes[baseOffset + 5] & 16) == 16;
-                        //(StateInFlight.Controls["bumpers2"] as ControlButtonPair).Right.Button0 = (reportData.ReportBytes[baseOffset + 5] & 8) == 8;
-                        //(StateInFlight.Controls["bumpers2"] as ControlButtonPair).Left.Button0 = (reportData.ReportBytes[baseOffset + 5] & 4) == 4;
-                        (StateInFlight.Controls["bumpers_right"] as IControlButton).DigitalStage1 = (reportData.ReportBytes[baseOffset + 5] & 2) == 2;
-                        (StateInFlight.Controls["bumpers_left"] as IControlButton).DigitalStage1 = (reportData.ReportBytes[baseOffset + 5] & 1) == 1;
-
-                        // counter
-                        // bld.Append((reportData.ReportBytes[baseOffset + 6] & 0xfc).ToString().PadLeft(3, '0'));
-
-                        /*if (ConnectionType == EConnectionType.Bluetooth)
-                        {
-                            if (_device.VendorId == VENDOR_SONY && _device.ProductId == PRODUCT_SONY_DS4V2)
+                            bool Finger1BrookMarsTest = (reportData.ReportBytes[baseOffset + 34] & 0x80) != 0x80;
+                            if (_device.VendorId == VENDOR_BROOK && _device.ProductId == PRODUCT_BROOK_MARS && Finger1BrookMarsTest)
                             {
-                                if ((ControllerSubType == DS4SubType.PartialDetection2E2415CA)
-                                 || (ControllerSubType == DS4SubType.No8952))
+                                int F1X = reportData.ReportBytes[baseOffset + 35]
+                                      | ((reportData.ReportBytes[baseOffset + 36] & 0xF) << 8);
+                                int F1Y = ((reportData.ReportBytes[baseOffset + 36] & 0xF0) >> 4)
+                                         | (reportData.ReportBytes[baseOffset + 37] << 4);
+
+                                (State.Controls["stick_right"] as IControlStickWithClick).X = ControllerMathTools.QuickStickToFloat((byte)((F1X - 192) / 6));
+                                (State.Controls["stick_right"] as IControlStickWithClick).Y = ControllerMathTools.QuickStickToFloat((byte)((F1Y - 86) / 3));
+                            }
+                            else
+                            {
+                                (State.Controls["stick_right"] as IControlStickWithClick).X = ControllerMathTools.QuickStickToFloat(reportData.ReportBytes[baseOffset + 2]);
+                                (State.Controls["stick_right"] as IControlStickWithClick).Y = ControllerMathTools.QuickStickToFloat(reportData.ReportBytes[baseOffset + 3]);
+                            }
+
+                            (State.Controls["cluster_right"] as IControlButtonQuad).ButtonN = (reportData.ReportBytes[baseOffset + 4] & 128) == 128;
+                            (State.Controls["cluster_right"] as IControlButtonQuad).ButtonE = (reportData.ReportBytes[baseOffset + 4] & 64) == 64;
+                            (State.Controls["cluster_right"] as IControlButtonQuad).ButtonS = (reportData.ReportBytes[baseOffset + 4] & 32) == 32;
+                            (State.Controls["cluster_right"] as IControlButtonQuad).ButtonW = (reportData.ReportBytes[baseOffset + 4] & 16) == 16;
+
+                            switch ((reportData.ReportBytes[baseOffset + 4] & 0x0f))
+                            {
+                                case 0: (State.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.North; break;
+                                case 1: (State.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.NorthEast; break;
+                                case 2: (State.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.East; break;
+                                case 3: (State.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.SouthEast; break;
+                                case 4: (State.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.South; break;
+                                case 5: (State.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.SouthWest; break;
+                                case 6: (State.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.West; break;
+                                case 7: (State.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.NorthWest; break;
+                                default: (State.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.None; break;
+                            }
+
+                            (State.Controls["stick_right"] as IControlStickWithClick).Click = (reportData.ReportBytes[baseOffset + 5] & 128) == 128;
+                            (State.Controls["stick_left"] as IControlStickWithClick).Click = (reportData.ReportBytes[baseOffset + 5] & 64) == 64;
+                            (State.Controls["menu_right"] as IControlButton).DigitalStage1 = (reportData.ReportBytes[baseOffset + 5] & 32) == 32;
+                            (State.Controls["menu_left"] as IControlButton).DigitalStage1 = (reportData.ReportBytes[baseOffset + 5] & 16) == 16;
+                            //(StateInFlight.Controls["bumpers2"] as ControlButtonPair).Right.Button0 = (reportData.ReportBytes[baseOffset + 5] & 8) == 8;
+                            //(StateInFlight.Controls["bumpers2"] as ControlButtonPair).Left.Button0 = (reportData.ReportBytes[baseOffset + 5] & 4) == 4;
+                            (State.Controls["bumpers_right"] as IControlButton).DigitalStage1 = (reportData.ReportBytes[baseOffset + 5] & 2) == 2;
+                            (State.Controls["bumpers_left"] as IControlButton).DigitalStage1 = (reportData.ReportBytes[baseOffset + 5] & 1) == 1;
+
+                            // counter
+                            // bld.Append((reportData.ReportBytes[baseOffset + 6] & 0xfc).ToString().PadLeft(3, '0'));
+
+                            /*if (ConnectionType == EConnectionType.Bluetooth)
+                            {
+                                if (_device.VendorId == VENDOR_SONY && _device.ProductId == PRODUCT_SONY_DS4V2)
                                 {
-                                    QuirkExtraButtonByte6Bit3RingBuffer = (byte)((QuirkExtraButtonByte6Bit3RingBuffer << 1) | ((reportData.ReportBytes[baseOffset + 6] & 0x04) == 0x04 ? 1 : 0));
-                                    bool SeeButton = (QuirkExtraButtonByte6Bit3RingBuffer & QUIRK_EXTRA_BUTTON_BYTE6_BIT3_BT_OBSCURE_RINGBUFFER_CHECK) == QUIRK_EXTRA_BUTTON_BYTE6_BIT3_BT_OBSCURE_RINGBUFFER_CHECK;
-                                    if (ControllerSubType == DS4SubType.PartialDetection2E2415CA && SeeButton)
+                                    if ((ControllerSubType == DS4SubType.PartialDetection2E2415CA)
+                                     || (ControllerSubType == DS4SubType.No8952))
                                     {
-                                        StateInFlight.Controls["clear"] = new ControlButton();
-                                        ChangeControllerSubType(DS4SubType.No8952);
+                                        QuirkExtraButtonByte6Bit3RingBuffer = (byte)((QuirkExtraButtonByte6Bit3RingBuffer << 1) | ((reportData.ReportBytes[baseOffset + 6] & 0x04) == 0x04 ? 1 : 0));
+                                        bool SeeButton = (QuirkExtraButtonByte6Bit3RingBuffer & QUIRK_EXTRA_BUTTON_BYTE6_BIT3_BT_OBSCURE_RINGBUFFER_CHECK) == QUIRK_EXTRA_BUTTON_BYTE6_BIT3_BT_OBSCURE_RINGBUFFER_CHECK;
+                                        if (ControllerSubType == DS4SubType.PartialDetection2E2415CA && SeeButton)
+                                        {
+                                            StateInFlight.Controls["clear"] = new ControlButton();
+                                            ChangeControllerSubType(DS4SubType.No8952);
+                                        }
                                     }
                                 }
-                            }
-                        }*/
+                            }*/
 
-                        if (ControllerAttribute.ExtraButton)
-                        {
-                            if ((StateInFlight.Controls["clear"] as IControlButton) != null)
-                                switch (ConnectionType)
-                                {
-                                    case EConnectionType.Bluetooth:
-                                    case EConnectionType.Dongle:
-                                        QuirkExtraButtonByte6Bit3RingBuffer = (byte)((QuirkExtraButtonByte6Bit3RingBuffer << 1) | ((reportData.ReportBytes[baseOffset + 6] & 0x04) == 0x04 ? 1 : 0));
-                                        (StateInFlight.Controls["clear"] as IControlButton).DigitalStage1 = (QuirkExtraButtonByte6Bit3RingBuffer & QUIRK_EXTRA_BUTTON_BYTE6_BIT3_BT_OBSCURE_RINGBUFFER_CHECK) == QUIRK_EXTRA_BUTTON_BYTE6_BIT3_BT_OBSCURE_RINGBUFFER_CHECK;
-                                        break;
-                                    case EConnectionType.USB:
-                                        (StateInFlight.Controls["clear"] as IControlButton).DigitalStage1 = (reportData.ReportBytes[baseOffset + 6] & 0x04) == 0x04;
-                                        break;
-                                }
-                        }
-
-                        (StateInFlight.Controls["home"] as IControlButton).DigitalStage1 = (reportData.ReportBytes[baseOffset + 6] & 0x1) == 0x1;
-
-                        if (ControllerAttribute.PadIsClickOnly)
-                        {
-                            (StateInFlight.Controls["touch_center"] as IControlButton).DigitalStage1 = (reportData.ReportBytes[baseOffset + 6] & 0x2) == 0x2;
-                        }
-                        else
-                        {
-                            (StateInFlight.Controls["touch_center"] as ControlTouch).Click = (reportData.ReportBytes[baseOffset + 6] & 0x2) == 0x2;
-                        }
-
-                        (StateInFlight.Controls["trigger_left"] as IControlTrigger).AnalogStage1 = (float)(reportData.ReportBytes[baseOffset + 7] > 0 ? reportData.ReportBytes[baseOffset + 7] : (reportData.ReportBytes[baseOffset + 5] & 4) == 4 ? byte.MaxValue : 0) / byte.MaxValue;
-                        (StateInFlight.Controls["trigger_right"] as IControlTrigger).AnalogStage1 = (float)(reportData.ReportBytes[baseOffset + 8] > 0 ? reportData.ReportBytes[baseOffset + 8] : (reportData.ReportBytes[baseOffset + 5] & 8) == 8 ? byte.MaxValue : 0) / byte.MaxValue;
-
-                        // GyroTimestamp
-                        //bld.Append(BitConverter.ToUInt16(reportData, 1 + baseOffset + 9).ToString().PadLeft(5));
-                        // FIX: (timestamp * 16) / 3
-
-                        // Battery Temperture
-                        if (reportData.ReportBytes[baseOffset + 11] != 0)
-                        {
-                            HaveSeenNonZeroRawTemp = true;
-                            // we see the temp is not 0, which means any suspect DS4s can now be converted to confirmed DS4s
-                            ControllerTempDataAppeared = true;    
-                        }
-
-                        (StateInFlight.Controls["motion"] as ControlMotion).AngularVelocityX = BitConverter.ToInt16(reportData.ReportBytes, baseOffset + 12);
-                        (StateInFlight.Controls["motion"] as ControlMotion).AngularVelocityZ = BitConverter.ToInt16(reportData.ReportBytes, baseOffset + 14);
-                        (StateInFlight.Controls["motion"] as ControlMotion).AngularVelocityY = BitConverter.ToInt16(reportData.ReportBytes, baseOffset + 16);
-                        (StateInFlight.Controls["motion"] as ControlMotion).AccelerometerX = BitConverter.ToInt16(reportData.ReportBytes, baseOffset + 18);
-                        (StateInFlight.Controls["motion"] as ControlMotion).AccelerometerY = BitConverter.ToInt16(reportData.ReportBytes, baseOffset + 20);
-                        (StateInFlight.Controls["motion"] as ControlMotion).AccelerometerZ = BitConverter.ToInt16(reportData.ReportBytes, baseOffset + 22);
-
-                        // ??
-                        // bld.Append(reportData.ReportBytes[baseOffset + 27].ToString("X2"));
-
-                        //State.Inputs.? = (reportData.ReportBytes[baseOffset + 29] & 128) == 128;
-                        //State.Inputs.Mic = (reportData.ReportBytes[baseOffset + 29] & 64) == 64;
-                        //State.Inputs.Headphone = (reportData.ReportBytes[baseOffset + 29] & 32) == 32;
-                        //State.Inputs.PowerCable = (reportData.ReportBytes[baseOffset + 29] * 16) == 16;
-
-                        //int bat = reportData.ReportBytes[baseOffset + 29] & 0x0f;
-                        //bool plugged = (reportData.ReportBytes[baseOffset + 29] & 0x10) == 0x10;
-
-                        // ??
-                        // bld.Append(reportData.ReportBytes[baseOffset + 30].ToString("X2"));
-                        // bld.Append(reportData.ReportBytes[baseOffset + 31].ToString("X2") + " ");
-
-                        bool DisconnectedFlag = (reportData.ReportBytes[baseOffset + 30] & 0x04) == 0x04;
-                        if (DisconnectedFlag != DisconnectedBit)
-                        {
-                            DisconnectedBit = DisconnectedFlag;
-                            DongleConnectionStatusChanged = true;
-                        }
-
-                        // Brook Mars has emulated touch with stick, we don't care about that since we'd do it in software
-                        if (_device.VendorId == VENDOR_BROOK && _device.ProductId == PRODUCT_BROOK_MARS)
-                        {
-
-                        }
-                        else
-                        {
-                            int TouchDataCount = reportData.ReportBytes[baseOffset + 32];
-
-                            for (int FingerCounter = 0; FingerCounter < TouchDataCount; FingerCounter++)
+                            if (ControllerAttribute.ExtraButton)
                             {
-                                byte touch_timestamp = reportData.ReportBytes[baseOffset + 33 + (FingerCounter * 9)]; // Touch Pad Counter
-                                                                                                              //DateTime tmp_now = DateTime.Now;
-
-                                bool Finger1 = (reportData.ReportBytes[baseOffset + 34 + (FingerCounter * 9)] & 0x80) != 0x80;
-                                byte Finger1Index = (byte)(reportData.ReportBytes[baseOffset + 34 + (FingerCounter * 9)] & 0x7f);
-                                int F1X = reportData.ReportBytes[baseOffset + 35 + (FingerCounter * 9)]
-                                      | ((reportData.ReportBytes[baseOffset + 36 + (FingerCounter * 9)] & 0xF) << 8);
-                                int F1Y = ((reportData.ReportBytes[baseOffset + 36 + (FingerCounter * 9)] & 0xF0) >> 4)
-                                         | (reportData.ReportBytes[baseOffset + 37 + (FingerCounter * 9)] << 4);
-
-                                bool Finger2 = (reportData.ReportBytes[baseOffset + 38 + (FingerCounter * 9)] & 0x80) != 0x80;
-                                byte Finger2Index = (byte)(reportData.ReportBytes[baseOffset + 38 + (FingerCounter * 9)] & 0x7f);
-                                int F2X = reportData.ReportBytes[baseOffset + 39 + (FingerCounter * 9)]
-                                      | ((reportData.ReportBytes[baseOffset + 40 + (FingerCounter * 9)] & 0xF) << 8);
-                                int F2Y = ((reportData.ReportBytes[baseOffset + 40 + (FingerCounter * 9)] & 0xF0) >> 4)
-                                         | (reportData.ReportBytes[baseOffset + 41 + (FingerCounter * 9)] << 4);
-
-                                bool Finger1Valid = true;
-                                bool Finger2Valid = true;
-
-                                // Some third party controllers give bad data.
-                                // It appears to be caused by the data coming in too fast and getting summed togeather.
-                                {
-                                    if (Finger1 && (F1X > TouchPadMaxX || F1Y > TouchPadMaxY))
-                                        Finger1Valid = false;
-                                    if (Finger2 && (F2X > TouchPadMaxX || F2Y > TouchPadMaxY))
-                                        Finger2Valid = false;
-
-                                    // we don't have to check if the finger is valid here since ANY value over the max of the 8951 proves this is an 8952, valid or invalid, since only the 8951 has this strange problem
-                                    /*if (ControllerSubType == DS4SubType.PartialDetection2E2415CA && (F1X > NO8952Attr.PadMaxX || F2X > NO8952Attr.PadMaxY))
+                                if ((State.Controls["clear"] as IControlButton) != null)
+                                    switch (ConnectionType)
                                     {
-                                        if (ConnectionType == EConnectionType.Bluetooth)
-                                        {
-                                            if (_device.VendorId == VENDOR_SONY && _device.ProductId == PRODUCT_SONY_DS4V2)
-                                            {
-                                                // TODO: see if we can figure out how to tell these apart, though manual override should be possible
-                                                ChangeControllerSubType(DS4SubType.No8951);
-                                                //ChangeControllerSubType(DS4SubType.SZ4003B);
-                                            }
-                                            else if (_device.VendorId == VENDOR_SONY && _device.ProductId == PRODUCT_SONY_DS4V1)
-                                            {
-                                                // TODO: see if we can figure out how to tell these apart, though manual override should be possible
-                                                ChangeControllerSubType(DS4SubType.SZ4002B);
-                                                //ChangeControllerSubType(DS4SubType.Yiyang498);
-                                            }
-                                        }
-                                        else if (ConnectionType == EConnectionType.USB && !string.IsNullOrWhiteSpace(SerialNumber))
-                                        {
-                                            if (_device.VendorId == VENDOR_SONY && _device.ProductId == PRODUCT_SONY_DS4V1)
-                                            {
-                                                ChangeControllerSubType(DS4SubType.SZ4003B);
-                                            }
-                                        }
-                                    }*/
-                                }
-
-                                if (Finger1Valid || Finger2Valid)
-                                {
-                                    if (Finger1 && F1X > TouchPadMaxX) F1X = TouchPadMaxX;
-                                    if (Finger1 && F1Y > TouchPadMaxY) F1Y = TouchPadMaxY;
-                                    if (Finger2 && F2X > TouchPadMaxX) F2X = TouchPadMaxX;
-                                    if (Finger2 && F2Y > TouchPadMaxY) F2Y = TouchPadMaxY;
-
-                                    byte TimeDelta = touch_last_frame ? ControllerMathTools.GetOverflowedDelta(last_touch_timestamp, touch_timestamp) : (byte)0;
-
-                                    //Console.WriteLine($"{TimeDelta} {(tmp_now - tmp).Milliseconds}");
-                                    (StateInFlight.Controls["touch_center"] as ControlTouch).AddTouch(0, Finger1Valid && Finger1, (1.0f * F1X / TouchPadMaxX) * 2f - 1f, (1.0f * F1Y / TouchPadMaxY) * 2f - 1f, TimeDelta);
-                                    (StateInFlight.Controls["touch_center"] as ControlTouch).AddTouch(1, Finger2Valid && Finger2, (1.0f * F2X / TouchPadMaxX) * 2f - 1f, (1.0f * F2Y / TouchPadMaxY) * 2f - 1f, TimeDelta);
-
-                                    last_touch_timestamp = touch_timestamp;
-                                }
-                                //tmp = tmp_now;
+                                        case EConnectionType.Bluetooth:
+                                        case EConnectionType.Dongle:
+                                            QuirkExtraButtonByte6Bit3RingBuffer = (byte)((QuirkExtraButtonByte6Bit3RingBuffer << 1) | ((reportData.ReportBytes[baseOffset + 6] & 0x04) == 0x04 ? 1 : 0));
+                                            (State.Controls["clear"] as IControlButton).DigitalStage1 = (QuirkExtraButtonByte6Bit3RingBuffer & QUIRK_EXTRA_BUTTON_BYTE6_BIT3_BT_OBSCURE_RINGBUFFER_CHECK) == QUIRK_EXTRA_BUTTON_BYTE6_BIT3_BT_OBSCURE_RINGBUFFER_CHECK;
+                                            break;
+                                        case EConnectionType.USB:
+                                            (State.Controls["clear"] as IControlButton).DigitalStage1 = (reportData.ReportBytes[baseOffset + 6] & 0x04) == 0x04;
+                                            break;
+                                    }
                             }
 
-                            touch_last_frame = TouchDataCount > 0;
+                            (State.Controls["home"] as IControlButton).DigitalStage1 = (reportData.ReportBytes[baseOffset + 6] & 0x1) == 0x1;
+
+                            if (ControllerAttribute.PadIsClickOnly)
+                            {
+                                (State.Controls["touch_center"] as IControlButton).DigitalStage1 = (reportData.ReportBytes[baseOffset + 6] & 0x2) == 0x2;
+                            }
+                            else
+                            {
+                                (State.Controls["touch_center"] as ControlTouch).Click = (reportData.ReportBytes[baseOffset + 6] & 0x2) == 0x2;
+                            }
+
+                            (State.Controls["trigger_left"] as IControlTrigger).AnalogStage1 = (float)(reportData.ReportBytes[baseOffset + 7] > 0 ? reportData.ReportBytes[baseOffset + 7] : (reportData.ReportBytes[baseOffset + 5] & 4) == 4 ? byte.MaxValue : 0) / byte.MaxValue;
+                            (State.Controls["trigger_right"] as IControlTrigger).AnalogStage1 = (float)(reportData.ReportBytes[baseOffset + 8] > 0 ? reportData.ReportBytes[baseOffset + 8] : (reportData.ReportBytes[baseOffset + 5] & 8) == 8 ? byte.MaxValue : 0) / byte.MaxValue;
+
+                            // GyroTimestamp
+                            //bld.Append(BitConverter.ToUInt16(reportData, 1 + baseOffset + 9).ToString().PadLeft(5));
+                            // FIX: (timestamp * 16) / 3
+
+                            // Battery Temperture
+                            if (reportData.ReportBytes[baseOffset + 11] != 0)
+                            {
+                                HaveSeenNonZeroRawTemp = true;
+                                // we see the temp is not 0, which means any suspect DS4s can now be converted to confirmed DS4s
+                                ControllerTempDataAppeared = true;    
+                            }
+
+                            (State.Controls["motion"] as ControlMotion).AngularVelocityX = BitConverter.ToInt16(reportData.ReportBytes, baseOffset + 12);
+                            (State.Controls["motion"] as ControlMotion).AngularVelocityZ = BitConverter.ToInt16(reportData.ReportBytes, baseOffset + 14);
+                            (State.Controls["motion"] as ControlMotion).AngularVelocityY = BitConverter.ToInt16(reportData.ReportBytes, baseOffset + 16);
+                            (State.Controls["motion"] as ControlMotion).AccelerometerX = BitConverter.ToInt16(reportData.ReportBytes, baseOffset + 18);
+                            (State.Controls["motion"] as ControlMotion).AccelerometerY = BitConverter.ToInt16(reportData.ReportBytes, baseOffset + 20);
+                            (State.Controls["motion"] as ControlMotion).AccelerometerZ = BitConverter.ToInt16(reportData.ReportBytes, baseOffset + 22);
+
+                            // ??
+                            // bld.Append(reportData.ReportBytes[baseOffset + 27].ToString("X2"));
+
+                            //State.Inputs.? = (reportData.ReportBytes[baseOffset + 29] & 128) == 128;
+                            //State.Inputs.Mic = (reportData.ReportBytes[baseOffset + 29] & 64) == 64;
+                            //State.Inputs.Headphone = (reportData.ReportBytes[baseOffset + 29] & 32) == 32;
+                            //State.Inputs.PowerCable = (reportData.ReportBytes[baseOffset + 29] * 16) == 16;
+
+                            //int bat = reportData.ReportBytes[baseOffset + 29] & 0x0f;
+                            //bool plugged = (reportData.ReportBytes[baseOffset + 29] & 0x10) == 0x10;
+
+                            // ??
+                            // bld.Append(reportData.ReportBytes[baseOffset + 30].ToString("X2"));
+                            // bld.Append(reportData.ReportBytes[baseOffset + 31].ToString("X2") + " ");
+
+                            bool DisconnectedFlag = (reportData.ReportBytes[baseOffset + 30] & 0x04) == 0x04;
+                            if (DisconnectedFlag != DisconnectedBit)
+                            {
+                                DisconnectedBit = DisconnectedFlag;
+                                DongleConnectionStatusChanged = true;
+                            }
+
+                            // Brook Mars has emulated touch with stick, we don't care about that since we'd do it in software
+                            if (_device.VendorId == VENDOR_BROOK && _device.ProductId == PRODUCT_BROOK_MARS)
+                            {
+
+                            }
+                            else
+                            {
+                                int TouchDataCount = reportData.ReportBytes[baseOffset + 32];
+
+                                for (int FingerCounter = 0; FingerCounter < TouchDataCount; FingerCounter++)
+                                {
+                                    byte touch_timestamp = reportData.ReportBytes[baseOffset + 33 + (FingerCounter * 9)]; // Touch Pad Counter
+                                                                                                                  //DateTime tmp_now = DateTime.Now;
+
+                                    bool Finger1 = (reportData.ReportBytes[baseOffset + 34 + (FingerCounter * 9)] & 0x80) != 0x80;
+                                    byte Finger1Index = (byte)(reportData.ReportBytes[baseOffset + 34 + (FingerCounter * 9)] & 0x7f);
+                                    int F1X = reportData.ReportBytes[baseOffset + 35 + (FingerCounter * 9)]
+                                          | ((reportData.ReportBytes[baseOffset + 36 + (FingerCounter * 9)] & 0xF) << 8);
+                                    int F1Y = ((reportData.ReportBytes[baseOffset + 36 + (FingerCounter * 9)] & 0xF0) >> 4)
+                                             | (reportData.ReportBytes[baseOffset + 37 + (FingerCounter * 9)] << 4);
+
+                                    bool Finger2 = (reportData.ReportBytes[baseOffset + 38 + (FingerCounter * 9)] & 0x80) != 0x80;
+                                    byte Finger2Index = (byte)(reportData.ReportBytes[baseOffset + 38 + (FingerCounter * 9)] & 0x7f);
+                                    int F2X = reportData.ReportBytes[baseOffset + 39 + (FingerCounter * 9)]
+                                          | ((reportData.ReportBytes[baseOffset + 40 + (FingerCounter * 9)] & 0xF) << 8);
+                                    int F2Y = ((reportData.ReportBytes[baseOffset + 40 + (FingerCounter * 9)] & 0xF0) >> 4)
+                                             | (reportData.ReportBytes[baseOffset + 41 + (FingerCounter * 9)] << 4);
+
+                                    bool Finger1Valid = true;
+                                    bool Finger2Valid = true;
+
+                                    // Some third party controllers give bad data.
+                                    // It appears to be caused by the data coming in too fast and getting summed togeather.
+                                    {
+                                        if (Finger1 && (F1X > TouchPadMaxX || F1Y > TouchPadMaxY))
+                                            Finger1Valid = false;
+                                        if (Finger2 && (F2X > TouchPadMaxX || F2Y > TouchPadMaxY))
+                                            Finger2Valid = false;
+
+                                        // we don't have to check if the finger is valid here since ANY value over the max of the 8951 proves this is an 8952, valid or invalid, since only the 8951 has this strange problem
+                                        /*if (ControllerSubType == DS4SubType.PartialDetection2E2415CA && (F1X > NO8952Attr.PadMaxX || F2X > NO8952Attr.PadMaxY))
+                                        {
+                                            if (ConnectionType == EConnectionType.Bluetooth)
+                                            {
+                                                if (_device.VendorId == VENDOR_SONY && _device.ProductId == PRODUCT_SONY_DS4V2)
+                                                {
+                                                    // TODO: see if we can figure out how to tell these apart, though manual override should be possible
+                                                    ChangeControllerSubType(DS4SubType.No8951);
+                                                    //ChangeControllerSubType(DS4SubType.SZ4003B);
+                                                }
+                                                else if (_device.VendorId == VENDOR_SONY && _device.ProductId == PRODUCT_SONY_DS4V1)
+                                                {
+                                                    // TODO: see if we can figure out how to tell these apart, though manual override should be possible
+                                                    ChangeControllerSubType(DS4SubType.SZ4002B);
+                                                    //ChangeControllerSubType(DS4SubType.Yiyang498);
+                                                }
+                                            }
+                                            else if (ConnectionType == EConnectionType.USB && !string.IsNullOrWhiteSpace(SerialNumber))
+                                            {
+                                                if (_device.VendorId == VENDOR_SONY && _device.ProductId == PRODUCT_SONY_DS4V1)
+                                                {
+                                                    ChangeControllerSubType(DS4SubType.SZ4003B);
+                                                }
+                                            }
+                                        }*/
+                                    }
+
+                                    if (Finger1Valid || Finger2Valid)
+                                    {
+                                        if (Finger1 && F1X > TouchPadMaxX) F1X = TouchPadMaxX;
+                                        if (Finger1 && F1Y > TouchPadMaxY) F1Y = TouchPadMaxY;
+                                        if (Finger2 && F2X > TouchPadMaxX) F2X = TouchPadMaxX;
+                                        if (Finger2 && F2Y > TouchPadMaxY) F2Y = TouchPadMaxY;
+
+                                        byte TimeDelta = touch_last_frame ? ControllerMathTools.GetOverflowedDelta(last_touch_timestamp, touch_timestamp) : (byte)0;
+
+                                        //Console.WriteLine($"{TimeDelta} {(tmp_now - tmp).Milliseconds}");
+                                        (State.Controls["touch_center"] as ControlTouch).AddTouch(0, Finger1Valid && Finger1, (1.0f * F1X / TouchPadMaxX) * 2f - 1f, (1.0f * F1Y / TouchPadMaxY) * 2f - 1f, TimeDelta);
+                                        (State.Controls["touch_center"] as ControlTouch).AddTouch(1, Finger2Valid && Finger2, (1.0f * F2X / TouchPadMaxX) * 2f - 1f, (1.0f * F2Y / TouchPadMaxY) * 2f - 1f, TimeDelta);
+
+                                        last_touch_timestamp = touch_timestamp;
+                                    }
+                                    //tmp = tmp_now;
+                                }
+
+                                touch_last_frame = TouchDataCount > 0;
+                            }
                         }
-
-                        // bring OldState in line with new State
-                        OldState = State;
-                        State = StateInFlight;
-
-                        ControllerStateUpdate?.Invoke(this, State);
+                        finally
+                        {
+                            State.EndStateChange();
+                        }
 
                         if (PollingState == EPollingState.RunOnce)
                         {

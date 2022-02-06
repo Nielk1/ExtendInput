@@ -237,7 +237,6 @@ namespace ExtendInput.Controller.Valve
 
 
         ControllerState State = new ControllerState();
-        ControllerState OldState = new ControllerState();
 
         struct RawSteamControllerState
         {
@@ -473,7 +472,6 @@ namespace ExtendInput.Controller.Valve
         }*/
 
         public event ControllerNameUpdateEvent ControllerMetadataUpdate;
-        public event ControllerStateUpdateEvent ControllerStateUpdate;
 
         public void DeInitalize()
         {
@@ -784,20 +782,6 @@ namespace ExtendInput.Controller.Valve
         }
 
 
-        public bool CheckSensorDataStuck()
-        {
-            return (OldState != null &&
-                (State.Controls["motion"] as ControlMotion).AccelerometerX == 0 &&
-                (State.Controls["motion"] as ControlMotion).AccelerometerY == 0 &&
-                (State.Controls["motion"] as ControlMotion).AccelerometerZ == 0 ||
-                (State.Controls["motion"] as ControlMotion).AccelerometerX == (OldState.Controls["motion"] as ControlMotion).AccelerometerX &&
-                (State.Controls["motion"] as ControlMotion).AccelerometerY == (OldState.Controls["motion"] as ControlMotion).AccelerometerY &&
-                (State.Controls["motion"] as ControlMotion).AccelerometerZ == (OldState.Controls["motion"] as ControlMotion).AccelerometerZ ||
-                (State.Controls["motion"] as ControlMotion).AngularVelocityX == (OldState.Controls["motion"] as ControlMotion).AngularVelocityX &&
-                (State.Controls["motion"] as ControlMotion).AngularVelocityY == (OldState.Controls["motion"] as ControlMotion).AngularVelocityY &&
-                (State.Controls["motion"] as ControlMotion).AngularVelocityZ == (OldState.Controls["motion"] as ControlMotion).AngularVelocityZ
-            );
-        }
 
         private void OnReport(IReport rawReportData)
         {
@@ -976,22 +960,25 @@ namespace ExtendInput.Controller.Valve
                                                     //Console.WriteLine($"Error Packet {reportID}\t{BitConverter.ToString(m_rgubBuffer)}");
                                                 }
 
-                                                //ProcessStateBytes();
-                                                ControllerState StateInFlight = ProcessStateBytes();
 
-                                                if (ConState != InternalConState.Connected)
+                                                State.StartStateChange();
+                                                try
                                                 {
-                                                    ConState = InternalConState.Connected;
-                                                    StartSerialNumberCheck();
-                                                    ControllerMetadataUpdate?.Invoke(this);
+                                                    ProcessStateBytes();
+
+                                                    if (ConState != InternalConState.Connected)
+                                                    {
+                                                        ConState = InternalConState.Connected;
+                                                        StartSerialNumberCheck();
+                                                        ControllerMetadataUpdate?.Invoke(this);
+                                                    }
+                                                    ConnectedTime = DateTime.UtcNow;
                                                 }
-                                                ConnectedTime = DateTime.UtcNow;
+                                                finally
+                                                {
+                                                    State.EndStateChange();
+                                                }
 
-                                                // bring OldState in line with new State
-                                                OldState = State;
-                                                State = StateInFlight;
-
-                                                ControllerStateUpdate?.Invoke(this, State);
 
                                                 if (PollingState == EPollingState.RunOnce)
                                                 {
@@ -1114,21 +1101,23 @@ namespace ExtendInput.Controller.Valve
                                             RawState.sGyroQuatY = BitConverter.ToInt16(reportData.ReportBytes, 8 + 36);
                                             RawState.sGyroQuatZ = BitConverter.ToInt16(reportData.ReportBytes, 8 + 38);
 
-                                            ControllerState StateInFlight = ProcessStateBytes();
-
-                                            if (ConState != InternalConState.Connected)
+                                            State.StartStateChange();
+                                            try
                                             {
-                                                ConState = InternalConState.Connected;
-                                                StartSerialNumberCheck();
-                                                ControllerMetadataUpdate?.Invoke(this);
+                                                ProcessStateBytes();
+
+                                                if (ConState != InternalConState.Connected)
+                                                {
+                                                    ConState = InternalConState.Connected;
+                                                    StartSerialNumberCheck();
+                                                    ControllerMetadataUpdate?.Invoke(this);
+                                                }
+                                                ConnectedTime = DateTime.UtcNow;
                                             }
-                                            ConnectedTime = DateTime.UtcNow;
-
-                                            // bring OldState in line with new State
-                                            OldState = State;
-                                            State = StateInFlight;
-
-                                            ControllerStateUpdate?.Invoke(this, State);
+                                            finally
+                                            {
+                                                State.EndStateChange();
+                                            }
 
                                             if (PollingState == EPollingState.RunOnce)
                                             {
@@ -1234,107 +1223,105 @@ namespace ExtendInput.Controller.Valve
             return ((ucHeader & k_nSegmentNumberMask) == m_unNextSegmentNumber);
         }
 
-        private ControllerState ProcessStateBytes()
+        private void ProcessStateBytes()
         {
             //OldState = State; // shouldn't this be a clone?
-            ControllerState StateInFlight = (ControllerState)State.Clone(); // shouldn't this be a clone?
+            //ControllerState State = (ControllerState)State.Clone(); // shouldn't this be a clone?
 
-            (StateInFlight.Controls["cluster_right"] as IControlButtonQuad).ButtonS = (RawState.ulButtons[0] & 128) == 128; // A - S SE
-            (StateInFlight.Controls["cluster_right"] as IControlButtonQuad).ButtonW = (RawState.ulButtons[0] & 64) == 64;   // X - W SW
-            (StateInFlight.Controls["cluster_right"] as IControlButtonQuad).ButtonE = (RawState.ulButtons[0] & 32) == 32;   // B - E NE
-            (StateInFlight.Controls["cluster_right"] as IControlButtonQuad).ButtonN = (RawState.ulButtons[0] & 16) == 16;   // Y - N NW
-            (StateInFlight.Controls["bumper_left"] as IControlButton).DigitalStage1 = (RawState.ulButtons[0] & 8) == 8;
-            (StateInFlight.Controls["bumper_right"] as IControlButton).DigitalStage1 = (RawState.ulButtons[0] & 4) == 4;
-            (StateInFlight.Controls["trigger_left"] as IControlTrigger2Stage).DigitalStage2 = (RawState.ulButtons[0] & 2) == 2;
-            (StateInFlight.Controls["trigger_right"] as IControlTrigger2Stage).DigitalStage2 = (RawState.ulButtons[0] & 1) == 1;
+            (State.Controls["cluster_right"] as IControlButtonQuad).ButtonS = (RawState.ulButtons[0] & 128) == 128; // A - S SE
+            (State.Controls["cluster_right"] as IControlButtonQuad).ButtonW = (RawState.ulButtons[0] & 64) == 64;   // X - W SW
+            (State.Controls["cluster_right"] as IControlButtonQuad).ButtonE = (RawState.ulButtons[0] & 32) == 32;   // B - E NE
+            (State.Controls["cluster_right"] as IControlButtonQuad).ButtonN = (RawState.ulButtons[0] & 16) == 16;   // Y - N NW
+            (State.Controls["bumper_left"] as IControlButton).DigitalStage1 = (RawState.ulButtons[0] & 8) == 8;
+            (State.Controls["bumper_right"] as IControlButton).DigitalStage1 = (RawState.ulButtons[0] & 4) == 4;
+            (State.Controls["trigger_left"] as IControlTrigger2Stage).DigitalStage2 = (RawState.ulButtons[0] & 2) == 2;
+            (State.Controls["trigger_right"] as IControlTrigger2Stage).DigitalStage2 = (RawState.ulButtons[0] & 1) == 1;
 
-            (StateInFlight.Controls["grip_left"] as IControlButton).DigitalStage1 = (RawState.ulButtons[1] & 128) == 128;
-            (StateInFlight.Controls["menu_right"] as IControlButton).DigitalStage1 = (RawState.ulButtons[1] & 64) == 64;
-            (StateInFlight.Controls["home"] as IControlButton).DigitalStage1 = (RawState.ulButtons[1] & 32) == 32;
-            (StateInFlight.Controls["menu_left"] as IControlButton).DigitalStage1 = (RawState.ulButtons[1] & 16) == 16;
+            (State.Controls["grip_left"] as IControlButton).DigitalStage1 = (RawState.ulButtons[1] & 128) == 128;
+            (State.Controls["menu_right"] as IControlButton).DigitalStage1 = (RawState.ulButtons[1] & 64) == 64;
+            (State.Controls["home"] as IControlButton).DigitalStage1 = (RawState.ulButtons[1] & 32) == 32;
+            (State.Controls["menu_left"] as IControlButton).DigitalStage1 = (RawState.ulButtons[1] & 16) == 16;
 
             if (ControllerType == EControllerType.Chell)
             {
                 // for the Chell controller, these are the 4 face buttons
-                (StateInFlight.Controls["grid_center"] as ControlButtonGrid).Button[0, 0] = (RawState.ulButtons[1] & 0x01) == 0x01; // State.ButtonsOld.Touch0 = (RawState.ulButtons[1] & 0x01) == 0x01; // NW
-                (StateInFlight.Controls["grid_center"] as ControlButtonGrid).Button[1, 0] = (RawState.ulButtons[1] & 0x02) == 0x02; // State.ButtonsOld.Touch1 = (RawState.ulButtons[1] & 0x02) == 0x02; // NE
-                (StateInFlight.Controls["grid_center"] as ControlButtonGrid).Button[0, 1] = (RawState.ulButtons[1] & 0x04) == 0x04; // State.ButtonsOld.Touch2 = (RawState.ulButtons[1] & 0x04) == 0x04; // SW
-                (StateInFlight.Controls["grid_center"] as ControlButtonGrid).Button[1, 1] = (RawState.ulButtons[1] & 0x08) == 0x08; // State.ButtonsOld.Touch3 = (RawState.ulButtons[1] & 0x08) == 0x08; // SE
+                (State.Controls["grid_center"] as ControlButtonGrid).Button[0, 0] = (RawState.ulButtons[1] & 0x01) == 0x01; // State.ButtonsOld.Touch0 = (RawState.ulButtons[1] & 0x01) == 0x01; // NW
+                (State.Controls["grid_center"] as ControlButtonGrid).Button[1, 0] = (RawState.ulButtons[1] & 0x02) == 0x02; // State.ButtonsOld.Touch1 = (RawState.ulButtons[1] & 0x02) == 0x02; // NE
+                (State.Controls["grid_center"] as ControlButtonGrid).Button[0, 1] = (RawState.ulButtons[1] & 0x04) == 0x04; // State.ButtonsOld.Touch2 = (RawState.ulButtons[1] & 0x04) == 0x04; // SW
+                (State.Controls["grid_center"] as ControlButtonGrid).Button[1, 1] = (RawState.ulButtons[1] & 0x08) == 0x08; // State.ButtonsOld.Touch3 = (RawState.ulButtons[1] & 0x08) == 0x08; // SE
             }
             else
             {
                 // these are mutually exclusive in the raw data, so let's act like they are in the code too, even though they use 4 bits
                 if ((RawState.ulButtons[1] & 1) == 1)
                 {
-                    (StateInFlight.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.North;
+                    (State.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.North;
                 }
                 else if ((RawState.ulButtons[1] & 2) == 2)
                 {
-                    (StateInFlight.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.East;
+                    (State.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.East;
                 }
                 else if ((RawState.ulButtons[1] & 8) == 8)
                 {
-                    (StateInFlight.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.South;
+                    (State.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.South;
                 }
                 else if ((RawState.ulButtons[1] & 4) == 4)
                 {
-                    (StateInFlight.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.West;
+                    (State.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.West;
                 }
                 else
                 {
-                    (StateInFlight.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.None;
+                    (State.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.None;
                 }
             }
             //bool LeftAnalogMultiplexMode = (RawState.ulButtons[2] & 128) == 128;
             bool LeftStickClick = (RawState.ulButtons[2] & 64) == 64;
             if (ControllerType != EControllerType.Chell)
-                (StateInFlight.Controls["stick_left"] as IControlStickWithClick).Click = LeftStickClick;
+                (State.Controls["stick_left"] as IControlStickWithClick).Click = LeftStickClick;
             //bool Unknown = (RawState.ulButtons[2] & 32) == 32; // what is this?
             bool RightPadTouch = (RawState.ulButtons[2] & 16) == 16;
             bool LeftPadTouch = (RawState.ulButtons[2] & 8) == 8;
-            (StateInFlight.Controls["touch_right"] as ControlTouch).Click = (RawState.ulButtons[2] & 4) == 4;
+            (State.Controls["touch_right"] as ControlTouch).Click = (RawState.ulButtons[2] & 4) == 4;
             bool ThumbOrLeftPadPress = (RawState.ulButtons[2] & 2) == 2; // what is this even for?
-            (StateInFlight.Controls["grip_right"] as IControlButton).DigitalStage1 = (RawState.ulButtons[2] & 1) == 1;
+            (State.Controls["grip_right"] as IControlButton).DigitalStage1 = (RawState.ulButtons[2] & 1) == 1;
 
-            (StateInFlight.Controls["trigger_left"] as IControlTrigger2Stage).AnalogStage1 = (float)RawState.sTriggerL / byte.MaxValue;
-            (StateInFlight.Controls["trigger_right"] as IControlTrigger2Stage).AnalogStage1 = (float)RawState.sTriggerR / byte.MaxValue;
+            (State.Controls["trigger_left"] as IControlTrigger2Stage).AnalogStage1 = (float)RawState.sTriggerL / byte.MaxValue;
+            (State.Controls["trigger_right"] as IControlTrigger2Stage).AnalogStage1 = (float)RawState.sTriggerR / byte.MaxValue;
             if (ControllerType != EControllerType.Chell)
             {
-                (StateInFlight.Controls["stick_left"] as IControlStickWithClick).X = (float)RawState.sLeftStickX / Int16.MaxValue;
-                (StateInFlight.Controls["stick_left"] as IControlStickWithClick).Y = (float)-RawState.sLeftStickY / Int16.MaxValue;
+                (State.Controls["stick_left"] as IControlStickWithClick).X = (float)RawState.sLeftStickX / Int16.MaxValue;
+                (State.Controls["stick_left"] as IControlStickWithClick).Y = (float)-RawState.sLeftStickY / Int16.MaxValue;
             }
             if (RawState.LeftTouchChange)
             {
                 float LeftPadX = LeftPadTouch ? (float)RawState.sLeftPadX / Int16.MaxValue : 0f;
                 float LeftPadY = LeftPadTouch ? (float)-RawState.sLeftPadY / Int16.MaxValue : 0f;
-                (StateInFlight.Controls["touch_left"] as ControlTouch).AddTouch(0, LeftPadTouch, LeftPadX, LeftPadY, 0);
+                (State.Controls["touch_left"] as ControlTouch).AddTouch(0, LeftPadTouch, LeftPadX, LeftPadY, 0);
             }
 
             float RightPadX = (float)RawState.sRightPadX / Int16.MaxValue;
             float RightPadY = (float)-RawState.sRightPadY / Int16.MaxValue;
 
-            (StateInFlight.Controls["touch_right"] as ControlTouch).AddTouch(0, RightPadTouch, RightPadX, RightPadY, 0);
-            (StateInFlight.Controls["touch_left"] as ControlTouch).Click = ThumbOrLeftPadPress && !LeftStickClick;
+            (State.Controls["touch_right"] as ControlTouch).AddTouch(0, RightPadTouch, RightPadX, RightPadY, 0);
+            (State.Controls["touch_left"] as ControlTouch).Click = ThumbOrLeftPadPress && !LeftStickClick;
 
             /*
             State.DataStuck = CheckSensorDataStuck();
             if (!SensorsEnabled || DataStuck) { EnableGyroSensors(); }
             */
 
-            (StateInFlight.Controls["motion"] as ControlMotion).AccelerometerX = RawState.sAccelX;
-            (StateInFlight.Controls["motion"] as ControlMotion).AccelerometerY = RawState.sAccelY;
-            (StateInFlight.Controls["motion"] as ControlMotion).AccelerometerZ = RawState.sAccelZ;
-            (StateInFlight.Controls["motion"] as ControlMotion).AngularVelocityX = RawState.sGyroX;
-            (StateInFlight.Controls["motion"] as ControlMotion).AngularVelocityY = RawState.sGyroY;
-            (StateInFlight.Controls["motion"] as ControlMotion).AngularVelocityZ = RawState.sGyroZ;
-            (StateInFlight.Controls["motion"] as ControlMotion).OrientationW = RawState.sGyroQuatW;
-            (StateInFlight.Controls["motion"] as ControlMotion).OrientationX = RawState.sGyroQuatX;
-            (StateInFlight.Controls["motion"] as ControlMotion).OrientationY = RawState.sGyroQuatY;
-            (StateInFlight.Controls["motion"] as ControlMotion).OrientationZ = RawState.sGyroQuatZ;
+            (State.Controls["motion"] as ControlMotion).AccelerometerX = RawState.sAccelX;
+            (State.Controls["motion"] as ControlMotion).AccelerometerY = RawState.sAccelY;
+            (State.Controls["motion"] as ControlMotion).AccelerometerZ = RawState.sAccelZ;
+            (State.Controls["motion"] as ControlMotion).AngularVelocityX = RawState.sGyroX;
+            (State.Controls["motion"] as ControlMotion).AngularVelocityY = RawState.sGyroY;
+            (State.Controls["motion"] as ControlMotion).AngularVelocityZ = RawState.sGyroZ;
+            (State.Controls["motion"] as ControlMotion).OrientationW = RawState.sGyroQuatW;
+            (State.Controls["motion"] as ControlMotion).OrientationX = RawState.sGyroQuatX;
+            (State.Controls["motion"] as ControlMotion).OrientationY = RawState.sGyroQuatY;
+            (State.Controls["motion"] as ControlMotion).OrientationZ = RawState.sGyroQuatZ;
 
             RawState.LeftTouchChange = false;
-
-            return StateInFlight;
         }
 
         /*private void DeviceAttachedHandler()
