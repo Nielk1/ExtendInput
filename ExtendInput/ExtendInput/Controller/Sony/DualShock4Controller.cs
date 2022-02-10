@@ -299,6 +299,8 @@ namespace ExtendInput.Controller.Sony
                 Token: new string[] { "DEVICE_DS4_YIYANG498", "DEVICE_DS4", "DEVICE_GAMEPAD" },
                 PadMaxX: 1918,
                 PadMaxY: 940,
+                PhysicalWidth: 40,
+                PhysicalHeight: 32,
                 Name: "Yiyang 498", // May actually be a Senze SZ-4006B?   Maybe Senze rebrands them
                 NoTemperture: true,
                 IdentitySha256: AUTH_IDENTITY_SHA256_2E2415CA,
@@ -372,6 +374,8 @@ namespace ExtendInput.Controller.Sony
                 Token: new string[] { "DEVICE_DS4_P4GamepadQ300", "DEVICE_DS4", "DEVICE_GAMEPAD" },
                 PadMaxX: 1918,
                 PadMaxY: 940,
+                PhysicalWidth: 43,
+                PhysicalHeight: 22,
                 Name: "P4 Gamepad Q300",
                 NoTemperture: true,
                 IdentitySha256: AUTH_IDENTITY_SHA256_2E2415CA,
@@ -1017,8 +1021,8 @@ namespace ExtendInput.Controller.Sony
                             (State.Controls["menu_left"] as IControlButton).DigitalStage1 = (reportData.ReportBytes[baseOffset + 5] & 16) == 16;
                             //(StateInFlight.Controls["bumpers2"] as ControlButtonPair).Right.Button0 = (reportData.ReportBytes[baseOffset + 5] & 8) == 8;
                             //(StateInFlight.Controls["bumpers2"] as ControlButtonPair).Left.Button0 = (reportData.ReportBytes[baseOffset + 5] & 4) == 4;
-                            (State.Controls["bumpers_right"] as IControlButton).DigitalStage1 = (reportData.ReportBytes[baseOffset + 5] & 2) == 2;
-                            (State.Controls["bumpers_left"] as IControlButton).DigitalStage1 = (reportData.ReportBytes[baseOffset + 5] & 1) == 1;
+                            (State.Controls["bumper_right"] as IControlButton).DigitalStage1 = (reportData.ReportBytes[baseOffset + 5] & 2) == 2;
+                            (State.Controls["bumper_left"] as IControlButton).DigitalStage1 = (reportData.ReportBytes[baseOffset + 5] & 1) == 1;
 
                             // counter
                             // bld.Append((reportData.ReportBytes[baseOffset + 6] & 0xfc).ToString().PadLeft(3, '0'));

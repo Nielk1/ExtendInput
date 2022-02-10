@@ -245,13 +245,13 @@ namespace ExtendInput.Controller.Microsoft
                                 }
                             }
 
-                            (State.Controls["stick_right"  ] as IControlStickWithClick).Click = (reportData.wButtons.Value & 0x0080) == 0x0080;
-                            (State.Controls["stick_left"   ] as IControlStickWithClick).Click = (reportData.wButtons.Value & 0x0040) == 0x0040;
-                            (State.Controls["menu_right"   ] as ControlButton).DigitalStage1 = (reportData.wButtons.Value & 0x0010) == 0x0010;
-                            (State.Controls["menu_left"    ] as ControlButton).DigitalStage1  = (reportData.wButtons.Value & 0x0020) == 0x0020;
-                            (State.Controls["bumpers_right"] as ControlButton).DigitalStage1 = (reportData.wButtons.Value & 0x0200) == 0x0200;
-                            (State.Controls["bumpers_lfet" ] as ControlButton).DigitalStage1  = (reportData.wButtons.Value & 0x0100) == 0x0100;
-                            (State.Controls["home"         ] as IControlButton).DigitalStage1 = (reportData.wButtons.Value & 0x0400) == 0x0400;
+                            (State.Controls["stick_right" ] as IControlStickWithClick).Click = (reportData.wButtons.Value & 0x0080) == 0x0080;
+                            (State.Controls["stick_left"  ] as IControlStickWithClick).Click = (reportData.wButtons.Value & 0x0040) == 0x0040;
+                            (State.Controls["menu_right"  ] as ControlButton).DigitalStage1 = (reportData.wButtons.Value & 0x0010) == 0x0010;
+                            (State.Controls["menu_left"   ] as ControlButton).DigitalStage1  = (reportData.wButtons.Value & 0x0020) == 0x0020;
+                            (State.Controls["bumper_right"] as ControlButton).DigitalStage1 = (reportData.wButtons.Value & 0x0200) == 0x0200;
+                            (State.Controls["bumper_left" ] as ControlButton).DigitalStage1  = (reportData.wButtons.Value & 0x0100) == 0x0100;
+                            (State.Controls["home"        ] as IControlButton).DigitalStage1 = (reportData.wButtons.Value & 0x0400) == 0x0400;
                         }
 
                         //(State.Controls["home"] as ControlButton).Button0 = (buttons & 0x1) == 0x1;
