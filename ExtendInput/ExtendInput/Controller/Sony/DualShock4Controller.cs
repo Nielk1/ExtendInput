@@ -574,6 +574,7 @@ namespace ExtendInput.Controller.Sony
         //private DateTime tmp = DateTime.Now;
 
         public event ControllerNameUpdateEvent ControllerMetadataUpdate;
+        public event ControllerStateUpdateEvent ControllerStateUpdate;
 
         // The controller state can drastically change, where it picks up or loses items based on passive detection of quirky controllers, this makes it safe
         private ReaderWriterLockSlim StateMutationLock = new ReaderWriterLockSlim();
@@ -629,6 +630,7 @@ namespace ExtendInput.Controller.Sony
             PollingState = EPollingState.Inactive;
 
             _device.DeviceReport += OnReport;
+            State.ControllerStateUpdate += State_ControllerStateUpdate;
 
             ResetControllerInfo();
 
@@ -938,6 +940,12 @@ namespace ExtendInput.Controller.Sony
 
 
         bool DisconnectedBit = false;
+
+
+        private void State_ControllerStateUpdate(ControlCollection controls)
+        {
+            ControllerStateUpdate?.Invoke(this, controls);
+        }
         private void OnReport(IReport rawReportData)
         {
             if (PollingState == EPollingState.Inactive) return;

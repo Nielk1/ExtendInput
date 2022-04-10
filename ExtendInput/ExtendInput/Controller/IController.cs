@@ -65,9 +65,11 @@ namespace ExtendInput.Controller
     }
 
     public delegate void ControllerNameUpdateEvent(IController sender);
+    public delegate void ControllerStateUpdateEvent(IController sender, ControlCollection controls);
     public interface IController : IDisposable
     {
         event ControllerNameUpdateEvent ControllerMetadataUpdate;
+        event ControllerStateUpdateEvent ControllerStateUpdate;
 
         EConnectionType ConnectionType { get; }
         string[] ConnectionTypeCode { get; }
@@ -107,8 +109,8 @@ namespace ExtendInput.Controller
 
         void DeInitalize();
 
-        [Obsolete("Need a proxy for the event instead of giving the State object this way", false)]
-        ControllerState GetState();
+        //[Obsolete("Need a proxy for the event instead of giving the State object this way", false)]
+        //ControllerState GetState();
         void Initalize();
         void Identify();
         void SetActiveAlternateController(string ControllerID);

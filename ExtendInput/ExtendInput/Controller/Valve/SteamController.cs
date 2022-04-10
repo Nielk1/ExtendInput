@@ -310,6 +310,7 @@ namespace ExtendInput.Controller.Valve
             PollingState = EPollingState.Inactive;
 
             _device.DeviceReport += OnReport;
+            State.ControllerStateUpdate += State_ControllerStateUpdate;
 
             if (type != EControllerType.Chell)
                 State.Controls["cluster_left"] = new ControlDPad(/*4*/);
@@ -472,6 +473,7 @@ namespace ExtendInput.Controller.Valve
         }*/
 
         public event ControllerNameUpdateEvent ControllerMetadataUpdate;
+        public event ControllerStateUpdateEvent ControllerStateUpdate;
 
         public void DeInitalize()
         {
@@ -783,6 +785,12 @@ namespace ExtendInput.Controller.Valve
 
 
 
+
+
+        private void State_ControllerStateUpdate(ControlCollection controls)
+        {
+            ControllerStateUpdate?.Invoke(this, controls);
+        }
         private void OnReport(IReport rawReportData)
         {
             if (PollingState == EPollingState.Inactive) return;

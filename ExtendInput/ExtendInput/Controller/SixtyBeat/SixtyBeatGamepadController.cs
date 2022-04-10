@@ -30,6 +30,7 @@ namespace ExtendInput.Controller.SixtyBeat
         int reportUsageLock = 0;
 
         public event ControllerNameUpdateEvent ControllerMetadataUpdate;
+        public event ControllerStateUpdateEvent ControllerStateUpdate;
 
         ControllerState State = new ControllerState();
         public string ConnectionUniqueID
@@ -76,6 +77,7 @@ namespace ExtendInput.Controller.SixtyBeat
             Initalized = false;
 
             _device.DeviceReport += OnReport;
+            State.ControllerStateUpdate += State_ControllerStateUpdate;
         }
         public void Dispose()
         {
@@ -86,6 +88,12 @@ namespace ExtendInput.Controller.SixtyBeat
             return State;
         }
 
+
+
+        private void State_ControllerStateUpdate(ControlCollection controls)
+        {
+            ControllerStateUpdate?.Invoke(this, controls);
+        }
         private void OnReport(IReport rawReportData)
         {
             //if (!(reportData is GenericBytesReport)) return;

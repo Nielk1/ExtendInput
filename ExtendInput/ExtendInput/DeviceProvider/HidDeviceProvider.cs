@@ -49,7 +49,7 @@ namespace ExtendInput.DeviceProvider
 
                             KnownDevices.Remove(device);
                             DeviceRemovedEventHandler threadSafeEventHandler = DeviceRemoved;
-                            threadSafeEventHandler?.Invoke(this, HidDevice.GetUniqueKey(device.DevicePath));
+                            threadSafeEventHandler?.Invoke(this, HidDevice.GetUniqueKey(device.DevicePath)); // we have to re-create the device key since the device is gone now unless we preserve it
                         }
                     }
 
@@ -67,7 +67,7 @@ namespace ExtendInput.DeviceProvider
 
                             KnownDevices.Add(device);
                             DeviceAddedEventHandler threadSafeEventHandler = DeviceAdded;
-                            threadSafeEventHandler?.Invoke(this, new HidDevice(device));
+                            threadSafeEventHandler?.Invoke(this, new HidDevice(device)); // consider preserving this object so we can use it in the removal code above to prevent double-generating device unique id
                         }
                     }
                 }

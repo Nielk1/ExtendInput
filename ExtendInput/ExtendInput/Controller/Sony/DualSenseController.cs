@@ -46,6 +46,7 @@ namespace ExtendInput.Controller.Sony
         //private DateTime tmp = DateTime.Now;
 
         public event ControllerNameUpdateEvent ControllerMetadataUpdate;
+        public event ControllerStateUpdateEvent ControllerStateUpdate;
 
         public bool HasMotion => true;
 
@@ -264,7 +265,7 @@ namespace ExtendInput.Controller.Sony
             State.Controls["mute"] = new ControlButtonPS5Mute(AccessMode);
             State.Controls["stick_left"] = new ControlStickWithClick();
             State.Controls["stick_right"] = new ControlStickWithClick();
-            State.Controls["touch_center"] = new ControlTouch(TouchCount: 2, HasClick: true);
+            State.Controls["touch_center"] = new ControlTouch(TouchCount: 2, HasClick: true) { PhysicalWidth = 50, PhysicalHeight = 28, };
             State.Controls["motion"] = new ControlMotion();
 
             // According to this the normalized domain of the DS4 gyro is 1024 units per rad/s: https://gamedev.stackexchange.com/a/87178
@@ -296,6 +297,7 @@ namespace ExtendInput.Controller.Sony
             PollingState = EPollingState.Inactive;
 
             _device.DeviceReport += OnReport;
+            State.ControllerStateUpdate += State_ControllerStateUpdate;
         }
         public void Dispose()
         {
@@ -393,6 +395,12 @@ namespace ExtendInput.Controller.Sony
             }*/
         }
 
+
+
+        private void State_ControllerStateUpdate(ControlCollection controls)
+        {
+            ControllerStateUpdate?.Invoke(this, controls);
+        }
         private void OnReport(IReport rawReportData)
         {
             if (PollingState == EPollingState.Inactive) return;

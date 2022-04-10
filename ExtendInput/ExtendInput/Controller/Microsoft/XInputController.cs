@@ -79,6 +79,7 @@ namespace ExtendInput.Controller.Microsoft
         int reportUsageLock = 0;
 
         public event ControllerNameUpdateEvent ControllerMetadataUpdate;
+        public event ControllerStateUpdateEvent ControllerStateUpdate;
 
         ControllerState State = new ControllerState();
 
@@ -124,6 +125,7 @@ namespace ExtendInput.Controller.Microsoft
             ControllerTypeCode = _DEVICE_XBOX360;
 
             _device.DeviceReport += OnReport;
+            State.ControllerStateUpdate += State_ControllerStateUpdate;
         }
         public void Dispose()
         {
@@ -134,6 +136,12 @@ namespace ExtendInput.Controller.Microsoft
             return State;
         }
 
+
+
+        private void State_ControllerStateUpdate(ControlCollection controls)
+        {
+            ControllerStateUpdate?.Invoke(this, controls);
+        }
         private void OnReport(IReport rawReportData)
         {
             //if (!(reportData is XInputReport)) return;

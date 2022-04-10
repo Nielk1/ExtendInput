@@ -45,6 +45,7 @@ namespace ExtendInput.Controller.Betop
         int reportUsageLock = 0;
 
         public event ControllerNameUpdateEvent ControllerMetadataUpdate;
+        public event ControllerStateUpdateEvent ControllerStateUpdate;
 
         ControllerState State = new ControllerState();
         public string ConnectionUniqueID { get; private set; }
@@ -280,6 +281,12 @@ namespace ExtendInput.Controller.Betop
         UInt32 local_74 = 0;
         UInt32 local_5c = 0;
         UInt16 requestId = 0;
+
+
+        private void State_ControllerStateUpdate(ControlCollection controls)
+        {
+            ControllerStateUpdate?.Invoke(this, controls);
+        }
         private void OnReport(IReport rawReportData)
         {
             //if (!(reportData is GenericBytesReport)) return;

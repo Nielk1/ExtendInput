@@ -261,6 +261,7 @@ namespace ExtendInput.Controller.Flydigi
         private const int _SLOW_POLL_MS = 1000;
 
         public event ControllerNameUpdateEvent ControllerMetadataUpdate;
+        public event ControllerStateUpdateEvent ControllerStateUpdate;
 
         // The controller state can drastically change, where it picks up or loses items based on passive detection of quirky controllers, this makes it safe
         //private ReaderWriterLockSlim StateMutationLock = new ReaderWriterLockSlim();
@@ -276,10 +277,10 @@ namespace ExtendInput.Controller.Flydigi
         public bool IsPresent => true;
         public bool IsVirtual => false;
 
-        public ControllerState GetState()
-        {
-            return State;
-        }
+        //public ControllerState GetState()
+        //{
+        //    return State;
+        //}
 
         public EConnectionType ConnectionType { get; private set; }
         public EPollingState PollingState { get; private set; }
@@ -418,6 +419,7 @@ namespace ExtendInput.Controller.Flydigi
             Log($"Polling state set to Inactive", ConsoleColor.Yellow);
 
             _device.DeviceReport += OnReport;
+            State.ControllerStateUpdate += State_ControllerStateUpdate;
 
             ResetControllerInfo();
 
@@ -514,6 +516,7 @@ namespace ExtendInput.Controller.Flydigi
                 }
             }
         }
+
         public void Dispose()
         {
             AbortStatusThread = true;
@@ -571,6 +574,11 @@ namespace ExtendInput.Controller.Flydigi
         {
         }
 
+
+        private void State_ControllerStateUpdate(ControlCollection controls)
+        {
+            ControllerStateUpdate?.Invoke(this, controls);
+        }
         private void OnReport(IReport rawReportData)
         {
             if (PollingState == EPollingState.Inactive) return;

@@ -25,11 +25,18 @@ namespace ExtendInputControllerTester
     {
         static DeviceManager DeviceManager;
         //static object ControllersLock = new object();
+        //static IController activeController = null;
+        static WebSocketControllerModule websocket;
+
         static SemaphoreSlim ControllersLock = new SemaphoreSlim(1);
         static Dictionary<string, IController> Controllers = new Dictionary<string, IController>();
-        static IController activeController = null;
+        static Dictionary<IWebSocketContext, HashSet<string>> ActiveControllers = new Dictionary<IWebSocketContext, HashSet<string>>(); // contains activations per context, so we need to subtract these from the below if we find a context is gone
+        static Dictionary<string, HashSet<IWebSocketContext>> ActiveContextsPerController = new Dictionary<string, HashSet<IWebSocketContext>>();
+        static Dictionary<string, int> ActiveControllerCounts = new Dictionary<string, int>(); // contains counts of activations so 0 will deactivate the controller
+
         static void Main(string[] args)
         {
+            websocket = new WebSocketControllerModule("/socket/");
             string urlX = "http://localhost:9697/";
             //string urlX = "http://192.168.0.201:9697/";
             WebServer server = CreateWebServer(urlX);
@@ -40,9 +47,66 @@ namespace ExtendInputControllerTester
             DeviceManager.ControllerAdded += DeviceManager_ControllerAdded;
             DeviceManager.ControllerRemoved += DeviceManager_ControllerRemoved;
 
+            websocket.Connected += Websocket_Connected;
+            websocket.Disconnected += Websocket_Disconnected;
+            websocket.MessageReceived += Websocket_MessageReceived;
+
             LoadControllers(true);
 
             Console.ReadKey(true);
+        }
+
+        private static void Websocket_MessageReceived(object sender, (IWebSocketContext, JObject) e)
+        {
+            string function = e.Item2["function"].Value<string>();
+            JToken data = e.Item2["data"];
+            switch(function)
+            {
+                case "DeviceManager::ActivateController":
+                    ActivateController(e.Item1, data.Value<string>());
+                    break;
+            }
+        }
+
+        private static void Websocket_Connected(object sender, EventArgs e)
+        {
+            ControllersLock.Wait();
+            {
+                foreach(var ctrl in Controllers)
+                {
+                    websocket.SendMessage("DeviceManager:ControllerAdded", ctrl.Value);
+                }
+            }
+            ControllersLock.Release();
+        }
+
+        private static void Websocket_Disconnected(object sender, IWebSocketContext e)
+        {
+            ControllersLock.Wait();
+            try
+            {
+                if (!ActiveControllers.ContainsKey(e))
+                    return;
+
+                foreach(string ControllerID in ActiveControllers[e].ToList())
+                {
+                    ActiveContextsPerController[ControllerID].Remove(e);
+                    ActiveControllerCounts[ControllerID]--;
+                    if (ActiveControllerCounts[ControllerID] == 0)
+                    {
+                        Controllers[ControllerID].ControllerStateUpdate -= Program_ControllerStateUpdate;
+                        ActiveControllers[e].Remove(ControllerID);
+                        Controllers[ControllerID].DeInitalize();
+                        ActiveControllerCounts.Remove(ControllerID);
+                    }
+                }
+
+                ActiveControllers.Remove(e);
+            }
+            finally
+            {
+                ControllersLock.Release();
+            }
         }
 
         private static void LoadControllers(bool firstload)
@@ -54,11 +118,13 @@ namespace ExtendInputControllerTester
         {
             ControllersLock.Wait();
             {
-                string md5 = CreateMD5(controller.ConnectionUniqueID);
-                //Write_ControllerAdded(controller);
+                //string md5 = CreateMD5(controller.ConnectionUniqueID);
+                ////Write_ControllerAdded(controller);
                 controller.ControllerMetadataUpdate += DeviceManager_ControllerMetadataUpdate;
-                Controllers[md5] = controller;
+                //Controllers[md5] = controller;
+                Controllers[controller.ConnectionUniqueID] = controller;
             }
+            websocket.SendMessage("DeviceManager:ControllerAdded", controller);
             ControllersLock.Release();
         }
 
@@ -71,15 +137,21 @@ namespace ExtendInputControllerTester
         {
             ControllersLock.Wait();
             {
-                string md5 = CreateMD5(UniqueKey);
-                if (Controllers.ContainsKey(md5))
-                    Controllers[md5].Dispose(); // hack solution until this is added to the DeviceManager
-                Controllers.Remove(md5);
+                //string md5 = CreateMD5(UniqueKey);
+                //if (Controllers.ContainsKey(md5))
+                //    Controllers[md5].Dispose(); // hack solution until this is added to the DeviceManager
+                //Controllers.Remove(md5);
+                //websocket.SendMessage("DeviceManager:ControllerRemoved", md5);
+
+                if (Controllers.ContainsKey(UniqueKey))
+                    Controllers[UniqueKey].Dispose(); // hack solution until this is added to the DeviceManager
+                Controllers.Remove(UniqueKey);
+                websocket.SendMessage("DeviceManager:ControllerRemoved", UniqueKey);
             }
             ControllersLock.Release();
         }
 
-        public static string CreateMD5(string input)
+        /*public static string CreateMD5(string input)
         {
             // Use input string to calculate MD5 hash
             using (System.Security.Cryptography.MD5 md5 = System.Security.Cryptography.MD5.Create())
@@ -88,7 +160,7 @@ namespace ExtendInputControllerTester
                 byte[] hashBytes = md5.ComputeHash(inputBytes);
                 return BitConverter.ToString(hashBytes).Replace("-", string.Empty);
             }
-        }
+        }*/
 
         private static WebServer CreateWebServer(string url)
         {
@@ -99,21 +171,23 @@ namespace ExtendInputControllerTester
                 .WithLocalSessionManager()
                 //.WithModule(new ActionModule("/", HttpVerbs.Post, SawVideo));
                 //.WithStaticFolder("/", "index.html", true)
+            .WithModule(websocket)
+
                 .WithStaticFolder("/images/controller", "../../images/controller", true)
                 .WithStaticFolder("/images/icon", "../../images/icon", true)
                 .WithStaticFolder("/3d", "../../3d", true)
-                //.WithModule(new FileModule("/images/controller", provider))
-                .WithModule(new ActionModule("/poll_controller", HttpVerbs.Get, PollController))
-                .WithModule(new ActionModule("/poll_other", HttpVerbs.Get, PollOther))
+                ////.WithModule(new FileModule("/images/controller", provider))
+                //.WithModule(new ActionModule("/poll_controller", HttpVerbs.Get, PollController))
+                //.WithModule(new ActionModule("/poll_other", HttpVerbs.Get, PollOther))
+                .WithModule(new ActionModule("/startup_data", HttpVerbs.Get, StartupData))
                 .WithModule(new ActionModule("/manual_device", HttpVerbs.Post, ManualDevice))
-                .WithModule(new ActionModule("/activate_controller", HttpVerbs.Post, ActivateController))
+                //.WithModule(new ActionModule("/activate_controller", HttpVerbs.Post, ActivateController))
                 .WithModule(new ActionModule("/alternate_controller", HttpVerbs.Post, AlternateController))
                 .WithModule(new ActionModule("/activate_control_mode", HttpVerbs.Post, ActivateControlMode))
                 .WithModule(new ActionModule("/", HttpVerbs.Get, ctx => ctx.SendStringAsync(File.ReadAllText("../../index.html"), "text/html", Encoding.UTF8)));
-                //.WithStaticFolder("/images/controller/","../images/controller/",true, new FileModule(,)
+                ////.WithStaticFolder("/images/controller/","../images/controller/",true, new FileModule(,)
             //.WithModule(new ActionModule("/", HttpVerbs.Get, DeviceList))
             //.WithModule(new ActionModule("/", HttpVerbs.Get, DeviceList))
-            //.WithModule(new WebSocketControllerModule("/terminal/"));
 
             // Listen for state changes.
             //server.StateChanged += (s, e) => $"WebServer New State - {e.NewState}".Info();
@@ -121,8 +195,8 @@ namespace ExtendInputControllerTester
             return server;
         }
 
-        static ControlCollection State = null;
-        private static async Task PollController(IHttpContext context)
+        //static ControlCollection State = null;
+        /*private static async Task PollController(IHttpContext context)
         {
             await ControllersLock.WaitAsync();
             try
@@ -155,7 +229,42 @@ namespace ExtendInputControllerTester
             {
                 ControllersLock.Release();
             }
+        }*/
+
+
+        private static async Task StartupData(IHttpContext context)
+        {
+            if (DeviceManager == null)
+                return;
+
+            Dictionary<string, string> ControllerImages = new Dictionary<string, string>();
+            foreach (string pattern in new string[] { "*.png", "*.jpg", "*.jpeg" })
+                foreach (string ControllerImage in Directory.EnumerateFiles(@"..\..\images\controller", pattern, SearchOption.TopDirectoryOnly))
+                    if (!ControllerImages.ContainsKey(Path.GetFileNameWithoutExtension(ControllerImage)))
+                        ControllerImages[Path.GetFileNameWithoutExtension(ControllerImage)] = Path.GetFileName(ControllerImage);
+
+            Dictionary<string, string> IconImages = new Dictionary<string, string>();
+            foreach (string pattern in new string[] { "*.png", "*.jpg", "*.jpeg" })
+                foreach (string IconImage in Directory.EnumerateFiles(@"..\..\images\icon", pattern, SearchOption.TopDirectoryOnly))
+                    if (!IconImages.ContainsKey(Path.GetFileNameWithoutExtension(IconImage)))
+                        IconImages[Path.GetFileNameWithoutExtension(IconImage)] = Path.GetFileName(IconImage);
+
+            Dictionary<string, string> ManualDevices = new Dictionary<string, string>();
+            foreach (IDeviceProvider provider in DeviceManager.GetManualDeviceProviders())
+            {
+                string Name = (Attribute.GetCustomAttribute(provider.GetType(), typeof(DeviceProviderAttribute)) as DeviceProviderAttribute)?.TypeString;
+                string Code = (Attribute.GetCustomAttribute(provider.GetType(), typeof(DeviceProviderAttribute)) as DeviceProviderAttribute)?.TypeCode;
+                ManualDevices[Code] = Name;
+            }
+
+            await context.SendDataAsync(new
+            {
+                ControllerImages = ControllerImages,
+                IconImages = IconImages,
+                ManualDevices = ManualDevices,
+            });
         }
+
 
         private static async Task PollOther(IHttpContext context)
         {
@@ -287,28 +396,50 @@ namespace ExtendInputControllerTester
             }
         }
 
-        private static async Task ActivateController(IHttpContext context)
+        private static async Task ActivateController(IWebSocketContext context, string ControllerID)
         {
             await ControllersLock.WaitAsync();
             try
             {
-                if (activeController != null)
-                    activeController.GetState().ControllerStateUpdate -= Program_ControllerStateUpdate;
-                activeController?.DeInitalize();
-                activeController = null;
-                State = null;
-
-                string ControllerID = await context.GetRequestBodyAsStringAsync();
-
-                if (!string.IsNullOrWhiteSpace(ControllerID) && Controllers.ContainsKey(ControllerID))
-                {
-                    activeController = Controllers[ControllerID];
-                    await context.SendDataAsync(true);
-                    activeController.Initalize();
-                    activeController.GetState().ControllerStateUpdate += Program_ControllerStateUpdate;
+                //if (activeController != null)
+                //    activeController.GetState().ControllerStateUpdate -= Program_ControllerStateUpdate;
+                if (!Controllers.ContainsKey(ControllerID))
                     return;
+
+                if(!ActiveControllers.ContainsKey(context))
+                    ActiveControllers[context] = new HashSet<string>();
+
+                if (ActiveControllers[context].Contains(ControllerID))
+                {
+                    ActiveContextsPerController[ControllerID].Remove(context);
+                    if (ActiveContextsPerController[ControllerID].Count == 0)
+                        ActiveContextsPerController.Remove(ControllerID);
+                    ActiveControllerCounts[ControllerID]--; // it is impossible for this key to not be present unless we're fucked up really badly
+                    if (ActiveControllerCounts[ControllerID] == 0)
+                    {
+                        Controllers[ControllerID].ControllerStateUpdate -= Program_ControllerStateUpdate;
+                        ActiveControllers[context].Remove(ControllerID);
+                        Controllers[ControllerID].DeInitalize();
+                        ActiveControllerCounts.Remove(ControllerID);
+                    }
                 }
-                await context.SendDataAsync(false);
+                else
+                {
+                    if (!ActiveContextsPerController.ContainsKey(ControllerID))
+                        ActiveContextsPerController[ControllerID] = new HashSet<IWebSocketContext>();
+                    ActiveContextsPerController[ControllerID].Add(context);
+                    ActiveControllers[context].Add(ControllerID);
+                    if (!ActiveControllerCounts.ContainsKey(ControllerID))
+                    {
+                        ActiveControllerCounts[ControllerID] = 1;
+                        Controllers[ControllerID].Initalize();
+                        Controllers[ControllerID].ControllerStateUpdate += Program_ControllerStateUpdate;
+                    }
+                    else
+                    {
+                        ActiveControllerCounts[ControllerID]++;
+                    }
+                }
             }
             finally
             {
@@ -316,14 +447,68 @@ namespace ExtendInputControllerTester
             }
         }
 
-        private static void Program_ControllerStateUpdate(ControlCollection controls)
+        private static void Program_ControllerStateUpdate(IController sender, ControlCollection controls)
         {
-            State = (ControlCollection)controls.Clone();
+            //State = (ControlCollection)controls.Clone();
+            //websocket.SendMessage("DeviceManager:ControllerState", controls);
+
+            ControlCollection State = (ControlCollection)controls.Clone();
+
+            ControllersLock.Wait();
+            try
+            {
+                if(!ActiveContextsPerController.ContainsKey(sender.ConnectionUniqueID))
+                {
+                    // TODO: this should never happen, so probably should disable the controller and clean up any mess
+                    {
+                        //ActiveContextsPerController[sender.ConnectionUniqueID].Remove(context);
+                        ActiveControllerCounts[sender.ConnectionUniqueID]--;
+                        if (ActiveControllerCounts[sender.ConnectionUniqueID] == 0)
+                        {
+                            Controllers[sender.ConnectionUniqueID].ControllerStateUpdate -= Program_ControllerStateUpdate;
+                            //ActiveControllers[context].Remove(sender.ConnectionUniqueID);
+                            Controllers[sender.ConnectionUniqueID].DeInitalize();
+                            ActiveControllerCounts.Remove(sender.ConnectionUniqueID);
+                        }
+                    }
+                    return;
+                }
+
+                //if (activeController == null) return;
+                if (State == null) return;
+                JsonSerializer serializer = new JsonSerializer();
+                serializer.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
+
+                JObject controlsJ = new JObject();
+                foreach (string key in State.Keys)
+                {
+                    JObject obj = new JObject();
+                    string TypeCodeString = State[key]?.GetType()?.ToString();
+                    if (!string.IsNullOrWhiteSpace(TypeCodeString))
+                        TypeCodeString = Regex.Replace(TypeCodeString, @"`[^\[\]]+\[", "[");
+                    obj["Type"] = TypeCodeString;
+                    obj["Data"] = State[key] != null ? JObject.FromObject(State[key], serializer) : null;
+                    controlsJ[key] = obj;
+                }
+                JObject output = new JObject()
+                {
+                    ["State"] = controlsJ,
+                    ["ControllerTypeCode"] = sender.ControllerTypeCode?.First(),
+                    ["ConnectionUniqueID"] = sender.ConnectionUniqueID,
+                };
+                //await context.SendDataAsync(output);
+                //await context.SendStringAsync(output.ToString(Newtonsoft.Json.Formatting.None), "application/json", Encoding.UTF8);
+                websocket.SendMessage("DeviceManager:ControllerState", output, ActiveContextsPerController[sender.ConnectionUniqueID]);
+            }
+            finally
+            {
+                ControllersLock.Release();
+            }
         }
 
         private static async Task ActivateControlMode(IHttpContext context)
         {
-            await ControllersLock.WaitAsync();
+            /*await ControllersLock.WaitAsync();
             try
             {
                 if (activeController != null)
@@ -352,32 +537,68 @@ namespace ExtendInputControllerTester
             finally
             {
                 ControllersLock.Release();
-            }
+            }*/
         }
     }
 
-    /*class WebSocketControllerModule : WebSocketModule
+    class WebSocketControllerModule : WebSocketModule
     {
+        public event EventHandler Connected;
+        public event EventHandler<IWebSocketContext> Disconnected;
+        public event EventHandler<(IWebSocketContext, JObject)> MessageReceived;
+
         public WebSocketControllerModule(string urlPath) : base(urlPath, true)
         {
             // placeholder
         }
 
-        protected override Task OnMessageReceivedAsync(
+        protected async override Task OnMessageReceivedAsync(
             IWebSocketContext context,
             byte[] rxBuffer,
             IWebSocketReceiveResult rxResult)
-            => SendToOthersAsync(context, Encoding.GetString(rxBuffer));
+        {
+            //return SendToOthersAsync(context, Encoding.GetString(rxBuffer));
+            //return Task.Run(() => Thread.Sleep(10));
+            MessageReceived?.Invoke(this, (context, JObject.Parse(Encoding.GetString(rxBuffer))));
+        }
 
-        protected override Task OnClientConnectedAsync(IWebSocketContext context)
-            => Task.WhenAll(
-                SendAsync(context, "Welcome to the chat room!"),
-                SendToOthersAsync(context, "Someone joined the chat room."));
+        protected async override Task OnClientConnectedAsync(IWebSocketContext context)
+        {
+            //return Task.WhenAll(
+            //    SendAsync(context, "Welcome to the chat room!"),
+            //    SendToOthersAsync(context, "Someone joined the chat room."));
+            Connected?.Invoke(this, null);
+        }
 
-        protected override Task OnClientDisconnectedAsync(IWebSocketContext context)
-            => SendToOthersAsync(context, "Someone left the chat room.");
+        protected async override Task OnClientDisconnectedAsync(IWebSocketContext context)
+        {
+            //return SendToOthersAsync(context, "Someone left the chat room.");
+            Disconnected?.Invoke(this, context);
+        }
 
-        private Task SendToOthersAsync(IWebSocketContext context, string payload)
-            => BroadcastAsync(payload, c => c != context);
-    }*/
+        /*private Task SendToOthersAsync(IWebSocketContext context, string payload)
+        {
+            return BroadcastAsync(payload, c => c != context);
+        }*/
+
+        SemaphoreSlim MessageSendLock = new SemaphoreSlim(1);
+
+        public async Task SendMessage(string function, object payload, HashSet<IWebSocketContext> contexts = null)
+        {
+            await MessageSendLock.WaitAsync();
+            try
+            {
+                await BroadcastAsync(new JObject()
+                {
+                    { "function", function },
+                    { "data", payload is string ? (JToken)new JValue(payload) : (JToken)JObject.FromObject(payload) },
+                }.ToString(), c => contexts?.Contains(c) ?? true);
+                Console.WriteLine($"Sending {function}");
+            }
+            finally
+            {
+                MessageSendLock.Release();
+            }
+        }
+    }
 }
