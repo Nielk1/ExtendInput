@@ -127,22 +127,23 @@
             ctrl.find(name).attr('rx', val * 25).attr('ry', val * 25);
         }
 
-        function RenderControl(control_id, controlData, controlType, $state_data, NewSubtype, knownChildren, childWidth) {
-            var existing = $state_data.children('#state_' + control_id);
+        function RenderControl(controller_id, control_id, controlData, controlType, $state_data, NewSubtype, knownChildren, childWidth) {
+            var existing = $state_data.children('#state_' + controller_id + '__' + control_id);
             //var control = data.controls[control_id];
 
             if (existing.length == 0) {
                 //var wrapper = $('<div class="col-sm-6 col-md-4 col-lg-3 pb-4"/>');
                 var wrapper = childWidth ? $('<div class="control_state col-12 pb-4"/>') : $('<div class="control_state col-sm-12 col-md-12 col-lg-6 col-xl-4 pb-4"/>');
-                wrapper.attr('id', 'state_' + control_id);
-                wrapper.attr('data-id', control_id);
+                wrapper.attr('id', 'state_' + controller_id + '__' + control_id);
+                wrapper.attr('data-id', controller_id + '__' + control_id);
+                wrapper.attr('data-controller-id', controller_id);
                 wrapper.append('<div class="card"><div class="pb-3"><h5 class="card-title text-center">' + control_id.replace('-', ':') + '</h5><div class="control_type card-title text-center small" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + controlType + '</div><div class="card-text control-value" style="white-space:pre;"></div></div></div>');
             } else {
                 wrapper = existing;
                 var controlTypeD = wrapper.find('.control_type');
                 if (controlTypeD.text() != controlType)
                     controlTypeD.text(controlType);
-                delete knownChildren['state_' + control_id];
+                delete knownChildren['state_' + controller_id + '__' + control_id];
             }
 
             switch (controlType == null ? controlType : controlType.split('[')[0]) {
@@ -152,7 +153,7 @@
                         renderElement.addClass('text-center');
                         if (NewSubtype || renderElement.children('svg').length == 0) {
                             renderElement.empty().append(
-                                '<svg id="control_render_' + control_id + '" width="182" height="182" xmlns="http://www.w3.org/2000/svg">' +
+                                '<svg id="control_render_' + controller_id + '__' + control_id + '" width="182" height="182" xmlns="http://www.w3.org/2000/svg">' +
                                 '<g>' +
                                 DrawButtonSvg("btn_n", 91, 31) +
                                 DrawButtonSvg("btn_e", 151, 91) +
@@ -161,7 +162,7 @@
                                 '</g>' +
                                 '</svg>');
                         }
-                        var ctrl = $('#control_render_' + control_id);
+                        var ctrl = $('#control_render_' + controller_id + '__' + control_id);
                         if (controlData.ButtonN) {
                             UpdateButtonSvg(ctrl, '.btn_n_data', 1);
                         } else {
@@ -190,13 +191,13 @@
                         renderElement.addClass('text-center');
                         if (NewSubtype || renderElement.children('svg').length == 0) {
                             renderElement.empty().append(
-                                '<svg id="control_render_' + control_id + '" width="62" height="62" xmlns="http://www.w3.org/2000/svg">' +
+                                '<svg id="control_render_' + controller_id + '__' + control_id + '" width="62" height="62" xmlns="http://www.w3.org/2000/svg">' +
                                 '<g>' +
                                 DrawButtonSvg("btn_x", 31, 31) +
                                 '</g>' +
                                 '</svg>');
                         }
-                        var ctrl = $('#control_render_' + control_id);
+                        var ctrl = $('#control_render_' + controller_id + '__' + control_id);
                         if (controlData.DigitalStage1) {
                             UpdateButtonSvg(ctrl, '.btn_x_data', 1);
                         } else {
@@ -210,17 +211,17 @@
                         renderElement.addClass('text-center');
                         if (NewSubtype || renderElement.children('svg').length == 0) {
                             renderElement.empty().append(
-                                '<svg id="control_render_' + control_id + '" width="62" height="62" xmlns="http://www.w3.org/2000/svg">' +
+                                '<svg id="control_render_' + controller_id + '__' + control_id + '" width="62" height="62" xmlns="http://www.w3.org/2000/svg">' +
                                 '<g>' +
                                 '<ellipse class="" ry="29" rx="29" cy="' + 31 + '" cx="' + 31 + '" stroke="#000" fill="#fff" />' +
                                 '<ellipse class="btn_x_data" ry="0" rx="0" cy="' + 31 + '" cx="' + 31 + '" stroke="#000" fill="#333" />' +
                                 '</g>' +
                                 '</svg>');
-                            var listElement = $('<div class="list-group p-1 control_state_list" id="control_state_list_' + control_id + '"/>');
+                            var listElement = $('<div class="list-group p-1 control_state_list" id="control_state_list_' + controller_id + '__' + control_id + '"/>');
                             renderElement.append(listElement);
                         }
-                        var ctrl = $('#control_render_' + control_id);
-                        var listElement = $('#control_state_list_' + control_id);
+                        var ctrl = $('#control_render_' + controller_id + '__' + control_id);
+                        var listElement = $('#control_state_list_' + controller_id + '__' + control_id);
                         if (controlData.States.length != listElement.children().length) {
                             listElement.empty();
                         } else {
@@ -252,13 +253,13 @@
                         renderElement.addClass('text-center');
                         if (NewSubtype || renderElement.children('svg').length == 0) {
                             renderElement.empty().append(
-                                '<svg id="control_render_' + control_id + '" width="62" height="62" xmlns="http://www.w3.org/2000/svg">' +
+                                '<svg id="control_render_' + controller_id + '__' + control_id + '" width="62" height="62" xmlns="http://www.w3.org/2000/svg">' +
                                 '<g>' +
                                 DrawButtonSvg("btn_x", 31, 31) +
                                 '</g>' +
                                 '</svg>');
                         }
-                        var ctrl = $('#control_render_' + control_id);
+                        var ctrl = $('#control_render_' + controller_id + '__' + control_id);
                         UpdateButtonSvg(ctrl, '.btn_x_data', controlData.AnalogStage1);
                     }
                     break;
@@ -268,13 +269,13 @@
                         renderElement.addClass('text-center');
                         if (NewSubtype || renderElement.children('svg').length == 0) {
                             renderElement.empty().append(
-                                '<svg id="control_render_' + control_id + '" width="62" height="62" xmlns="http://www.w3.org/2000/svg">' +
+                                '<svg id="control_render_' + controller_id + '__' + control_id + '" width="62" height="62" xmlns="http://www.w3.org/2000/svg">' +
                                 '<g>' +
                                 DrawButton2StageSvg("btn_x", 31, 31) +
                                 '</g>' +
                                 '</svg>');
                         }
-                        var ctrl = $('#control_render_' + control_id);
+                        var ctrl = $('#control_render_' + controller_id + '__' + control_id);
                         UpdateButton2StageSvg(ctrl, '.btn_x_data', controlData.AnalogStage1);
                         if (controlData.DigitalStage2) ctrl.find('.btn_x_click').addClass('active-o'); else ctrl.find('.btn_x_click').removeClass('active-o');
                     }
@@ -285,7 +286,7 @@
                         renderElement.addClass('text-center');
                         if (NewSubtype || renderElement.children('svg').length == 0) {
                             renderElement.empty().append(
-                                '<svg id="control_render_' + control_id + '" width="182" height="182" xmlns="http://www.w3.org/2000/svg">' +
+                                '<svg id="control_render_' + controller_id + '__' + control_id + '" width="182" height="182" xmlns="http://www.w3.org/2000/svg">' +
                                 '<g>' +
                                 '<path class="btn_n" d="M 091,031 m 0,0 30,60 30,-60 z" stroke="#000" fill="#fff" transform="rotate(180 091 031) translate(-30,-30)"></path>' +
                                 '<path class="btn_e" d="M 151,091 m 0,0 30,60 30,-60 z" stroke="#000" fill="#fff" transform="rotate(-90 151 091) translate(-30,-30)"></path>' +
@@ -294,7 +295,7 @@
                                 '</g>' +
                                 '</svg>');
                         }
-                        var ctrl = $('#control_render_' + control_id);
+                        var ctrl = $('#control_render_' + controller_id + '__' + control_id);
                         switch (controlData.Direction) {
                             case "None":
                             case 0: ctrl.find('.btn_n,.btn_e,.btn_s,.btn_w').removeClass('active'); break;
@@ -323,7 +324,7 @@
                         renderElement.addClass('text-center');
                         if (NewSubtype || renderElement.children('svg').length == 0) {
                             renderElement.empty().append(
-                                '<svg id="control_render_' + control_id + '" width="140" height="140" xmlns="http://www.w3.org/2000/svg">' +
+                                '<svg id="control_render_' + controller_id + '__' + control_id + '" width="140" height="140" xmlns="http://www.w3.org/2000/svg">' +
                                 '<g>' +
                                 //'<path class="stick_click" d="M 2,2 m 0,136 136,0 0,-136 -136,0 z" stroke="#999" fill="none" stroke-width="3"></path>' +
                                 '<path class="" d="M 6,6 m 0,128 128,0 0,-128 -128,0 z" stroke="#000" fill="#fff"></path>' +
@@ -335,7 +336,7 @@
                                 '</g>' +
                                 '</svg>');
                         }
-                        var ctrl = $('#control_render_' + control_id);
+                        var ctrl = $('#control_render_' + controller_id + '__' + control_id);
                         var stickFloat = ctrl.find('.stick_float');
                         stickFloat.attr('transform', 'translate(' + (70 + controlData.X * 63) + ',' + (70 + controlData.Y * 63) + ')');
                         stickFloat.children('.stick_float_text').attr('transform', 'translate(' + (controlData.X > 0 ? 0 : 6) + ',' + (controlData.Y > 0 ? -6 : 6) + ')').attr('text-anchor', (controlData.X > 0 ? "end" : "initial")).text(cord_formatter.format(controlData.X) + ',' + cord_formatter.format(controlData.Y));
@@ -347,7 +348,7 @@
                         renderElement.addClass('text-center');
                         if (NewSubtype || renderElement.children('svg').length == 0) {
                             renderElement.empty().append(
-                                '<svg id="control_render_' + control_id + '" width="140" height="140" xmlns="http://www.w3.org/2000/svg">' +
+                                '<svg id="control_render_' + controller_id + '__' + control_id + '" width="140" height="140" xmlns="http://www.w3.org/2000/svg">' +
                                 '<g>' +
                                 '<path class="stick_click" d="M 2,2 m 0,136 136,0 0,-136 -136,0 z" stroke="#999" fill="none" stroke-width="3"></path>' +
                                 '<path class="" d="M 6,6 m 0,128 128,0 0,-128 -128,0 z" stroke="#000" fill="#fff"></path>' +
@@ -359,7 +360,7 @@
                                 '</g>' +
                                 '</svg>');
                         }
-                        var ctrl = $('#control_render_' + control_id);
+                        var ctrl = $('#control_render_' + controller_id + '__' + control_id);
                         var stickFloat = ctrl.find('.stick_float');
                         stickFloat.attr('transform', 'translate(' + (70 + controlData.X * 63) + ',' + (70 + controlData.Y * 63) + ')');
                         stickFloat.children('.stick_float_text').attr('transform', 'translate(' + (controlData.X > 0 ? 0 : 6) + ',' + (controlData.Y > 0 ? -6 : 6) + ')').attr('text-anchor', (controlData.X > 0 ? "end" : "initial")).text(cord_formatter.format(controlData.X) + ',' + cord_formatter.format(controlData.Y));
@@ -383,7 +384,7 @@
                         }
                         if (NewSubtype || renderElement.children('svg').length == 0) {
                             var domString =
-                                '<svg id="control_render_' + control_id + '" width="140" height="140" xmlns="http://www.w3.org/2000/svg">' +
+                                '<svg id="control_render_' + controller_id + '__' + control_id + '" width="140" height="140" xmlns="http://www.w3.org/2000/svg">' +
                                 '<g transform="translate(' + (((1 - ratioW) / 2) * 130) + ',' + (((1 - ratioH) / 2) * 130) + ')">' +
                                 '<path class="pad_click" d="M 2,2 m 0,' + (128 * ratioH + 8) + ' ' + (128 * ratioW + 8) + ',0 0,-' + (128 * ratioH + 8) + ' -' + (128 * ratioW + 8) + ',0 z" stroke="#999" fill="none" stroke-width="3"></path>' +
                                 '<path class="" d="M 6,6 m 0,' + (128 * ratioH) + ' ' + (128 * ratioW) + ',0 0,-' + (128 * ratioH) + ' -' + (128 * ratioW) + ',0 z" stroke="#000" fill="#fff"></path>';
@@ -403,7 +404,7 @@
                                 '</svg>';
                             renderElement.empty().append(domString);
                         }
-                        var ctrl = $('#control_render_' + control_id);
+                        var ctrl = $('#control_render_' + controller_id + '__' + control_id);
                         for (var i = 0; i < controlData.Touch.length; i++) {
                             var stickFloat = ctrl.find('.pad_float_' + i);
                             if (controlData.Touch[i]) {
@@ -425,7 +426,7 @@
                         renderElement.addClass('text-center');
                         if (NewSubtype || renderElement.children('svg').length == 0) {
                             var domString =
-                                '<svg id="control_render_' + control_id + '" width="140" height="140" xmlns="http://www.w3.org/2000/svg">' +
+                                '<svg id="control_render_' + controller_id + '__' + control_id + '" width="140" height="140" xmlns="http://www.w3.org/2000/svg">' +
                                 '<g>';
                             for (var x = 0; x < controlData.Button.length; x++) {
                                 for (var y = 0; y < controlData.Button[0].length; y++) {
@@ -439,7 +440,7 @@
                                 '</svg>'
                             renderElement.empty().append(domString);
                         }
-                        var ctrl = $('#control_render_' + control_id);
+                        var ctrl = $('#control_render_' + controller_id + '__' + control_id);
                         '<g>';
                         for (var x = 0; x < controlData.Button.length; x++) {
                             for (var y = 0; y < controlData.Button[0].length; y++) {
@@ -459,7 +460,7 @@
                         renderElement.addClass('text-center');
                         if (NewSubtype || renderElement.children('svg').length == 0) {
                             renderElement.empty().append(
-                                '<svg id="control_render_' + control_id + '" width="182" height="62" xmlns="http://www.w3.org/2000/svg">' +
+                                '<svg id="control_render_' + controller_id + '__' + control_id + '" width="182" height="62" xmlns="http://www.w3.org/2000/svg">' +
                                 '<g>' +
 
                                 //'<ellipse class="btn_l_click" ry="29" rx="29" cy="31" cx="031" stroke="#ccc" fill="none" stroke-width="3" />' +
@@ -475,7 +476,7 @@
                                 '</g>' +
                                 '</svg>');
                         }
-                        var ctrl = $('#control_render_' + control_id);
+                        var ctrl = $('#control_render_' + controller_id + '__' + control_id);
                         if (controlData.Left.Button0) {
                             ctrl.find('.btn_l_data').attr('rx', 25).attr('ry', 25);
                         } else {
@@ -494,77 +495,77 @@
                     {
                         var renderElement = wrapper.find('.control-value');
                         //renderElement.addClass('text-center');
-                        var ctrl = $('#control_render_' + control_id);
+                        var ctrl = $('#control_render_' + controller_id + '__' + control_id);
                         if (controlData.Button0) ctrl.find('.btn_x').addClass('active'); else ctrl.find('.btn_x').removeClass('active');
 
-                        RenderControl(control_id + "-Left", controlData.Left, controlType.split('[')[1].split(']')[0], renderElement, NewSubtype, knownChildren, true);
-                        RenderControl(control_id + "-Right", controlData.Right, controlType.split('[')[1].split(']')[0], renderElement, NewSubtype, knownChildren, true);
+                        RenderControl(controller_id + '__' + control_id + "-Left", controlData.Left, controlType.split('[')[1].split(']')[0], renderElement, NewSubtype, knownChildren, true);
+                        RenderControl(controller_id + '__' + control_id + "-Right", controlData.Right, controlType.split('[')[1].split(']')[0], renderElement, NewSubtype, knownChildren, true);
 
-                        //RenderControl(control_id + "-Left", controlData.Left, controlType.split('[')[1].split(']')[0], $state_data, NewSubtype, knownChildren);
-                        //RenderControl(control_id + "-Right", controlData.Right, controlType.split('[')[1].split(']')[0], $state_data, NewSubtype, knownChildren);
+                        //RenderControl(controller_id + '__' + control_id + "-Left", controlData.Left, controlType.split('[')[1].split(']')[0], $state_data, NewSubtype, knownChildren);
+                        //RenderControl(controller_id + '__' + control_id + "-Right", controlData.Right, controlType.split('[')[1].split(']')[0], $state_data, NewSubtype, knownChildren);
                     }
                     break;*/
-                case 'ExtendInput.Controls.ControlMotion':
-                    {
-                        var renderElement = wrapper.find('.control-value');
-                        if (NewSubtype || renderElement.children('div.model').length == 0) {
-                            renderElement.empty().append('<div class="model"/>');
-                            var container = renderElement.children('div.model')[0];
-                            var renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-                            renderer.setSize(container.clientWidth, container.clientHeight);
-                            container.innerHTML = '';
-                            container.appendChild(renderer.domElement);
-                            renderer.setClearColor(0xFFFFFF, 0);
-                            renderer.clear();
-                            window.camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 100);
-                            //camera.position.x = -1; camera.position.y = 1; camera.position.z = -1;
-                            camera.position.z = 1;
-                            /*var cameraControls;
-                            cameraControls = new THREE.OrbitControls(camera, renderer.domElement);
-                            cameraControls.target.set(0, 0, 0);
-                            cameraControls.maxDistance = 0.5;
-                            cameraControls.minDistance = 0.3;
-                            cameraControls.update();*/
+                //case 'ExtendInput.Controls.ControlMotion':
+                //    {
+                //        var renderElement = wrapper.find('.control-value');
+                //        if (NewSubtype || renderElement.children('div.model').length == 0) {
+                //            renderElement.empty().append('<div class="model"/>');
+                //            var container = renderElement.children('div.model')[0];
+                //            var renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+                //            renderer.setSize(container.clientWidth, container.clientHeight);
+                //            container.innerHTML = '';
+                //            container.appendChild(renderer.domElement);
+                //            renderer.setClearColor(0xFFFFFF, 0);
+                //            renderer.clear();
+                //            window.camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 100);
+                //            //camera.position.x = -1; camera.position.y = 1; camera.position.z = -1;
+                //            camera.position.z = 1;
+                //            /*var cameraControls;
+                //            cameraControls = new THREE.OrbitControls(camera, renderer.domElement);
+                //            cameraControls.target.set(0, 0, 0);
+                //            cameraControls.maxDistance = 0.5;
+                //            cameraControls.minDistance = 0.3;
+                //            cameraControls.update();*/
 
-                            var scene = new THREE.Scene();
+                //            var scene = new THREE.Scene();
 
-                            var ambientLight = new THREE.AmbientLight(0x888888);
-                            scene.add(ambientLight);
+                //            var ambientLight = new THREE.AmbientLight(0x888888);
+                //            scene.add(ambientLight);
 
-                            var light = new THREE.SpotLight();
-                            light.castShadow = true;
-                            light.position.set(170, 330, -160);
-                            scene.add(light);
+                //            var light = new THREE.SpotLight();
+                //            light.castShadow = true;
+                //            light.position.set(170, 330, -160);
+                //            scene.add(light);
 
-                            var loader = new THREE.ColladaLoader();
-                            loader.load("./3d/model.dae", function (geometry, materials) {
-                                //geometry.scene = geometry.scene.translateZ(-0.5);
-                                scene.add(geometry.scene);
-                                model_bz1 = geometry.scene;
-                                model_bz1.visible = true;
-                            });
+                //            var loader = new THREE.ColladaLoader();
+                //            loader.load("./3d/model.dae", function (geometry, materials) {
+                //                //geometry.scene = geometry.scene.translateZ(-0.5);
+                //                scene.add(geometry.scene);
+                //                model_bz1 = geometry.scene;
+                //                model_bz1.visible = true;
+                //            });
 
-                            scene.add(camera);
-                            pointLight = new THREE.PointLight(0x888888);
-                            pointLight.position.set(1, 1, 2);
-                            camera.add(pointLight);
+                //            scene.add(camera);
+                //            pointLight = new THREE.PointLight(0x888888);
+                //            pointLight.position.set(1, 1, 2);
+                //            camera.add(pointLight);
 
-                            renderer.render(scene, camera);
+                //            renderer.render(scene, camera);
 
-                            $(container).data('render', renderer);
+                //            $(container).data('render', renderer);
 
-                            setTimeout(onWindowResize, 100);
+                //            setTimeout(onWindowResize, 100);
 
-                            function update() {
-                                requestAnimationFrame(update);
-                                //cameraControls.update();
-                                renderer.render(scene, camera);
-                            }
+                //            function update() {
+                //                requestAnimationFrame(update);
+                //                //cameraControls.update();
+                //                renderer.render(scene, camera);
+                //            }
 
-                            update();
-                        }
-                    }
-                    break;
+                //            update();
+                //        }
+                //    }
+                //    break;
                 default:
                     wrapper.find('.control-value').addClass('text-monospace small').text(JSON.stringify(controlData, null, 2));
                     break;
@@ -610,6 +611,10 @@
                         console.log("DeviceManager:ControllerRemoved ", eventData.data);
                         RemoveController(eventData.data);
                         break;
+                    case "DeviceManager:ActiveControllers":
+                        console.log("DeviceManager:ActiveControllers ", eventData.data);
+                        ControllersActive(eventData.data);
+                        break;
                     case "DeviceManager:ControllerState":
                         //console.log("DeviceManager:ControllerState ", eventData.data);
                         ControllerStateUpdate(eventData.data);
@@ -626,17 +631,35 @@
             //};
         }
 
+        function ControllersActive(data) {
+            var knownChildren = {};
+            $controllers.children().each((i, elem) => knownChildren[elem.id] = true);
+            data.forEach((val, idx) => {
+                var controller_id = cyrb53(val);
+                knownChildren['controller_' + controller_id] = false;
+                $('#controller_' + controller_id).addClass('controller-active');
+            });
+            var $state_data = $('#state_data');
+            for (const key in knownChildren) {
+                if (knownChildren[key]) {
+                    $('#' + key).removeClass('controller-active');
+                    $state_data.children('[data-controller-id="2052943359973790"]').remove();
+                }
+            }
+        }
+
         function ControllerStateUpdate(data) {
             var $state_data = $('#state_data');
             var knownChildren = {};
             $state_data.children().each((i, elem) => knownChildren[elem.id] = true);
             var NewSubtype = (ControllerActiveSubtype != data.ControllerTypeCode);
             ControllerActiveSubtype = data.ControllerTypeCode;
+            var controller_id = cyrb53(data.ConnectionUniqueID);
             for (const control_id in data.State) {
-                RenderControl(control_id, data.State[control_id].Data, data.State[control_id].Type, $state_data, NewSubtype, knownChildren);
+                RenderControl(controller_id, control_id, data.State[control_id].Data, data.State[control_id].Type, $state_data, NewSubtype, knownChildren);
             }
             for (const control_id in knownChildren) {
-                $state_data.children('#' + control_id).remove();
+                $state_data.children('#' + controller_id + '__' + control_id).remove();
             }
         }
 
@@ -889,199 +912,199 @@
 
 
             function PollOtherFunc() {/*
-                    $.get("/poll_other", function (data) {
-                        var knownChildren = {};
-                        $controllers.children().each((i, elem) => knownChildren[elem.id] = true);
-                        for (const controller_id in data.Controllers) {
-                            var controller = data.Controllers[controller_id];
+                        $.get("/poll_other", function (data) {
+                            var knownChildren = {};
+                            $controllers.children().each((i, elem) => knownChildren[elem.id] = true);
+                            for (const controller_id in data.Controllers) {
+                                var controller = data.Controllers[controller_id];
 
-                            var ConnectionIcon = null;
-                            for (var idx in controller.ConnectionTypeCode) {
-                                var code = controller.ConnectionTypeCode[idx];
-                                if (data.IconImages[code] != null) {
-                                    ConnectionIcon = data.IconImages[code];
-                                    break;
-                                }
-                            }
-
-                            var ControllerIcon = null;
-                            var ControllerImage = null;
-                            for (var idx in controller.ControllerTypeCode) {
-                                var code = controller.ControllerTypeCode[idx];
-                                if (ControllerIcon == null && data.IconImages[code] != null) {
-                                    ControllerIcon = data.IconImages[code];
-                                }
-                                if (ControllerImage == null && data.ControllerImages[code] != null) {
-                                    ControllerImage = data.ControllerImages[code];
-                                }
-                                if (ControllerIcon != null && ControllerImage != null)
-                                    break;
-                            }
-
-                            var existing = $controllers.children('#controller_' + controller_id);
-                            if (existing.length == 0) {
-                                //var wrapper = $('<div class="controller col-md-6 col-lg-4 pb-4"/>');
-                                var wrapper = $('<div class="controller col-12 pb-4"/>');
-                                wrapper.attr('id', 'controller_' + controller_id);
-                                var cardWrapper = $('<div class="card" />');
-                                if (ControllerImage != null) {
-                                    var cardImage = $('<img class="controller_image" />');
-                                    cardImage.attr("src", "/images/controller/" + ControllerImage);
-                                    cardImage.attr("alt", controller.Name);
-                                    cardWrapper.append(cardImage);
-                                } else {
-                                    var cardImage = $('<img class="controller_image" />');
-                                    cardImage.attr("src", "/images/controller/placeholder.png");
-                                    cardImage.attr("alt", controller.Name);
-                                    cardWrapper.append(cardImage);
-                                }
-
-                                cardWrapper.append('<div class="card-body"><h5 class="card-title"><img class="connection_icon" /><img class="controller_icon" /><span class="controller_name"></span></h5><p class="card-text controller_name_details" style="white-space:pre;"></p><p class="card-text controller_connection_unique_id"></p><p class="card-text controller_device_unique_id"></p></div>');
-
-                                if (ControllerIcon != null) {
-                                    var cardImage = cardWrapper.find('.controller_icon');
-                                    cardImage.attr("src", "/images/icon/" + ControllerIcon);
-                                    cardImage.attr("alt", controller.Name);
-                                } else {
-                                    var cardImage = cardWrapper.find('.controller_icon');
-                                    cardImage.attr("src", "/images/icon/DEVICE_UNKNOWN.png");
-                                    cardImage.attr("alt", controller.Name);
-                                }
-                                if (ConnectionIcon != null) {
-                                    var cardImage = cardWrapper.find('.connection_icon');
-                                    cardImage.attr("src", "/images/icon/" + ConnectionIcon);
-                                    cardImage.attr("alt", controller.Name);
-                                } else {
-                                    var cardImage = cardWrapper.find('.connection_icon');
-                                    cardImage.attr("src", "/images/icon/DEVICE_UNKNOWN.png");
-                                    cardImage.attr("alt", controller.Name);
-                                }
-
-                                var menu = $('<div class="list-group small alternate_controller_list" />');
-                                menu.append('<h6 class="list-group-item">Alternate Controllers</h6>');
-
-                                //if (controller.HasSelectableAlternatives) {
-                                {
-                                    for (var alternate in controller.Alternates) {
-                                        var alternate_item = $('<a class="alternate_controller list-group-item list-group-item-action" href="#" />');
-                                        alternate_item.attr('data-id', alternate);
-                                        alternate_item.text(controller.Alternates[alternate]);
-                                        menu.append(alternate_item);
+                                var ConnectionIcon = null;
+                                for (var idx in controller.ConnectionTypeCode) {
+                                    var code = controller.ConnectionTypeCode[idx];
+                                    if (data.IconImages[code] != null) {
+                                        ConnectionIcon = data.IconImages[code];
+                                        break;
                                     }
-                                    var alternateBody = $('<div class="card-body" />');
-                                    alternateBody.append(menu);
-                                    cardWrapper.append(alternateBody);
+                                }
 
-                                    if (controller.HasSelectableAlternatives) {
-                                        alternateBody.show();
+                                var ControllerIcon = null;
+                                var ControllerImage = null;
+                                for (var idx in controller.ControllerTypeCode) {
+                                    var code = controller.ControllerTypeCode[idx];
+                                    if (ControllerIcon == null && data.IconImages[code] != null) {
+                                        ControllerIcon = data.IconImages[code];
+                                    }
+                                    if (ControllerImage == null && data.ControllerImages[code] != null) {
+                                        ControllerImage = data.ControllerImages[code];
+                                    }
+                                    if (ControllerIcon != null && ControllerImage != null)
+                                        break;
+                                }
+
+                                var existing = $controllers.children('#controller_' + controller_id);
+                                if (existing.length == 0) {
+                                    //var wrapper = $('<div class="controller col-md-6 col-lg-4 pb-4"/>');
+                                    var wrapper = $('<div class="controller col-12 pb-4"/>');
+                                    wrapper.attr('id', 'controller_' + controller_id);
+                                    var cardWrapper = $('<div class="card" />');
+                                    if (ControllerImage != null) {
+                                        var cardImage = $('<img class="controller_image" />');
+                                        cardImage.attr("src", "/images/controller/" + ControllerImage);
+                                        cardImage.attr("alt", controller.Name);
+                                        cardWrapper.append(cardImage);
                                     } else {
-                                        alternateBody.hide();
+                                        var cardImage = $('<img class="controller_image" />');
+                                        cardImage.attr("src", "/images/controller/placeholder.png");
+                                        cardImage.attr("alt", controller.Name);
+                                        cardWrapper.append(cardImage);
+                                    }
+
+                                    cardWrapper.append('<div class="card-body"><h5 class="card-title"><img class="connection_icon" /><img class="controller_icon" /><span class="controller_name"></span></h5><p class="card-text controller_name_details" style="white-space:pre;"></p><p class="card-text controller_connection_unique_id"></p><p class="card-text controller_device_unique_id"></p></div>');
+
+                                    if (ControllerIcon != null) {
+                                        var cardImage = cardWrapper.find('.controller_icon');
+                                        cardImage.attr("src", "/images/icon/" + ControllerIcon);
+                                        cardImage.attr("alt", controller.Name);
+                                    } else {
+                                        var cardImage = cardWrapper.find('.controller_icon');
+                                        cardImage.attr("src", "/images/icon/DEVICE_UNKNOWN.png");
+                                        cardImage.attr("alt", controller.Name);
+                                    }
+                                    if (ConnectionIcon != null) {
+                                        var cardImage = cardWrapper.find('.connection_icon');
+                                        cardImage.attr("src", "/images/icon/" + ConnectionIcon);
+                                        cardImage.attr("alt", controller.Name);
+                                    } else {
+                                        var cardImage = cardWrapper.find('.connection_icon');
+                                        cardImage.attr("src", "/images/icon/DEVICE_UNKNOWN.png");
+                                        cardImage.attr("alt", controller.Name);
+                                    }
+
+                                    var menu = $('<div class="list-group small alternate_controller_list" />');
+                                    menu.append('<h6 class="list-group-item">Alternate Controllers</h6>');
+
+                                    //if (controller.HasSelectableAlternatives) {
+                                    {
+                                        for (var alternate in controller.Alternates) {
+                                            var alternate_item = $('<a class="alternate_controller list-group-item list-group-item-action" href="#" />');
+                                            alternate_item.attr('data-id', alternate);
+                                            alternate_item.text(controller.Alternates[alternate]);
+                                            menu.append(alternate_item);
+                                        }
+                                        var alternateBody = $('<div class="card-body" />');
+                                        alternateBody.append(menu);
+                                        cardWrapper.append(alternateBody);
+
+                                        if (controller.HasSelectableAlternatives) {
+                                            alternateBody.show();
+                                        } else {
+                                            alternateBody.hide();
+                                        }
+                                    }
+
+                                    cardWrapper.append('<a href="#" class="btn btn-primary btn-lg btn-block activate_controller" role="button" data-id="' + controller_id + '"></a>');
+                                    wrapper.append(cardWrapper);
+                                } else {
+                                    wrapper = existing;
+                                    delete knownChildren['controller_' + controller_id];
+
+                                    var menu = wrapper.find('.alternate_controller_list');
+                                    if (controller.HasSelectableAlternatives) {
+                                        menu.parent().show();
+                                    } else {
+                                        menu.parent().hide();
+                                    }
+                                    for (var alternate in controller.Alternates) {
+                                        if (menu.children('.alternate_controller[data-id="' + alternate + '"]').length == 0) {
+                                            var alternate_item = $('<a class="alternate_controller list-group-item list-group-item-action" href="#" />');
+                                            alternate_item.attr('data-id', alternate);
+                                            alternate_item.text(controller.Alternates[alternate]);
+                                            menu.append(alternate_item);
+                                        }
+                                    }
+
+                                    if (ControllerImage != null) {
+                                        var cardImage = wrapper.find('.controller_image');
+                                        cardImage.attr("src", "/images/controller/" + ControllerImage);
+                                        cardImage.attr("alt", controller.Name);
+                                    } else {
+                                        var cardImage = wrapper.find('.controller_image');
+                                        cardImage.attr("src", "/images/controller/placeholder.png");
+                                        cardImage.attr("alt", controller.Name);
+                                    }
+
+                                    if (ControllerIcon != null) {
+                                        var cardImage = wrapper.find('.controller_icon');
+                                        cardImage.attr("src", "/images/icon/" + ControllerIcon);
+                                        cardImage.attr("alt", controller.Name);
+                                    } else {
+                                        var cardImage = wrapper.find('.controller_icon');
+                                        cardImage.attr("src", "/images/icon/DEVICE_UNKNOWN.png");
+                                        cardImage.attr("alt", controller.Name);
+                                    }
+                                    if (ConnectionIcon != null) {
+                                        var cardImage = wrapper.find('.connection_icon');
+                                        cardImage.attr("src", "/images/icon/" + ConnectionIcon);
+                                        cardImage.attr("alt", controller.Name);
+                                    } else {
+                                        var cardImage = wrapper.find('.connection_icon');
+                                        cardImage.attr("src", "/images/icon/DEVICE_UNKNOWN.png");
+                                        cardImage.attr("alt", controller.Name);
                                     }
                                 }
 
-                                cardWrapper.append('<a href="#" class="btn btn-primary btn-lg btn-block activate_controller" role="button" data-id="' + controller_id + '"></a>');
-                                wrapper.append(cardWrapper);
-                            } else {
-                                wrapper = existing;
-                                delete knownChildren['controller_' + controller_id];
+                                var knownAlternates = {};
+                                var alternate_controller_list_dom = wrapper.find('.alternate_controller_list');
+                                alternate_controller_list_dom.children('.alternate_controller').each((i, elem) => knownAlternates[$(elem).data('id')] = true);
+                                for (const alternate in knownAlternates) {
+                                    if (!controller.Alternates[alternate])
+                                        alternate_controller_list_dom.children('.alternate_controller[data-id="' + alternate + '"]').remove();
+                                }
 
-                                var menu = wrapper.find('.alternate_controller_list');
-                                if (controller.HasSelectableAlternatives) {
-                                    menu.parent().show();
+
+                                wrapper.find('.controller_name').text(controller.Name);
+                                if (controller.NameDetails != null) {
+                                    wrapper.find('.controller_name_details').text(controller.NameDetails.join('\r\n'));
                                 } else {
-                                    menu.parent().hide();
+                                    wrapper.find('.controller_name_details').text('');
                                 }
-                                for (var alternate in controller.Alternates) {
-                                    if (menu.children('.alternate_controller[data-id="' + alternate + '"]').length == 0) {
-                                        var alternate_item = $('<a class="alternate_controller list-group-item list-group-item-action" href="#" />');
-                                        alternate_item.attr('data-id', alternate);
-                                        alternate_item.text(controller.Alternates[alternate]);
-                                        menu.append(alternate_item);
-                                    }
-                                }
-
-                                if (ControllerImage != null) {
-                                    var cardImage = wrapper.find('.controller_image');
-                                    cardImage.attr("src", "/images/controller/" + ControllerImage);
-                                    cardImage.attr("alt", controller.Name);
+                                if (controller.ConnectionUniqueID != null) {
+                                    wrapper.find('.controller_connection_unique_id').text("Connection:\r\n" + controller.ConnectionUniqueID);
                                 } else {
-                                    var cardImage = wrapper.find('.controller_image');
-                                    cardImage.attr("src", "/images/controller/placeholder.png");
-                                    cardImage.attr("alt", controller.Name);
+                                    wrapper.find('.controller_connection_unique_id').text('');
                                 }
-
-                                if (ControllerIcon != null) {
-                                    var cardImage = wrapper.find('.controller_icon');
-                                    cardImage.attr("src", "/images/icon/" + ControllerIcon);
-                                    cardImage.attr("alt", controller.Name);
+                                if (controller.DeviceUniqueID != null) {
+                                    wrapper.find('.controller_device_unique_id').text("Device:\r\n" + controller.DeviceUniqueID);
                                 } else {
-                                    var cardImage = wrapper.find('.controller_icon');
-                                    cardImage.attr("src", "/images/icon/DEVICE_UNKNOWN.png");
-                                    cardImage.attr("alt", controller.Name);
+                                    wrapper.find('.controller_device_unique_id').text('');
                                 }
-                                if (ConnectionIcon != null) {
-                                    var cardImage = wrapper.find('.connection_icon');
-                                    cardImage.attr("src", "/images/icon/" + ConnectionIcon);
-                                    cardImage.attr("alt", controller.Name);
+
+                                if (existing.length == 0) {
+                                    $controllers.append(wrapper);
+                                }
+                            }
+                            for (const controller_id in knownChildren) {
+                                //if (controller_id == "controller_state") continue;
+                                $controllers.children('#' + controller_id).remove();
+                            }
+                            var existing_manual = {};
+                            $('#manual').children().each(function (idx, elem) { existing_manual[$(elem).data('id')] = elem; });
+                            for (const device_id in data.ManualDevices) {
+                                var manualDevice = data.ManualDevices[device_id];
+                                if (existing_manual["60BA"] != null) {
+                                    delete existing_manual["60BA"];
                                 } else {
-                                    var cardImage = wrapper.find('.connection_icon');
-                                    cardImage.attr("src", "/images/icon/DEVICE_UNKNOWN.png");
-                                    cardImage.attr("alt", controller.Name);
+                                    var elem = $('<a href="#" class="list-group-item list-group-item-action" />');
+                                    elem.attr('data-id', device_id);
+                                    elem.text(manualDevice);
+                                    $('#manual').append(elem);
                                 }
                             }
-
-                            var knownAlternates = {};
-                            var alternate_controller_list_dom = wrapper.find('.alternate_controller_list');
-                            alternate_controller_list_dom.children('.alternate_controller').each((i, elem) => knownAlternates[$(elem).data('id')] = true);
-                            for (const alternate in knownAlternates) {
-                                if (!controller.Alternates[alternate])
-                                    alternate_controller_list_dom.children('.alternate_controller[data-id="' + alternate + '"]').remove();
+                            for (var manual_elem_key in existing_manual) {
+                                $(existing_manual[manual_elem_key]).remove();
                             }
-
-
-                            wrapper.find('.controller_name').text(controller.Name);
-                            if (controller.NameDetails != null) {
-                                wrapper.find('.controller_name_details').text(controller.NameDetails.join('\r\n'));
-                            } else {
-                                wrapper.find('.controller_name_details').text('');
-                            }
-                            if (controller.ConnectionUniqueID != null) {
-                                wrapper.find('.controller_connection_unique_id').text("Connection:\r\n" + controller.ConnectionUniqueID);
-                            } else {
-                                wrapper.find('.controller_connection_unique_id').text('');
-                            }
-                            if (controller.DeviceUniqueID != null) {
-                                wrapper.find('.controller_device_unique_id').text("Device:\r\n" + controller.DeviceUniqueID);
-                            } else {
-                                wrapper.find('.controller_device_unique_id').text('');
-                            }
-
-                            if (existing.length == 0) {
-                                $controllers.append(wrapper);
-                            }
-                        }
-                        for (const controller_id in knownChildren) {
-                            //if (controller_id == "controller_state") continue;
-                            $controllers.children('#' + controller_id).remove();
-                        }
-                        var existing_manual = {};
-                        $('#manual').children().each(function (idx, elem) { existing_manual[$(elem).data('id')] = elem; });
-                        for (const device_id in data.ManualDevices) {
-                            var manualDevice = data.ManualDevices[device_id];
-                            if (existing_manual["60BA"] != null) {
-                                delete existing_manual["60BA"];
-                            } else {
-                                var elem = $('<a href="#" class="list-group-item list-group-item-action" />');
-                                elem.attr('data-id', device_id);
-                                elem.text(manualDevice);
-                                $('#manual').append(elem);
-                            }
-                        }
-                        for (var manual_elem_key in existing_manual) {
-                            $(existing_manual[manual_elem_key]).remove();
-                        }
-                    }).done(setTimeout(function () { PollOtherFunc() }, 1000));
-                */}
+                        }).done(setTimeout(function () { PollOtherFunc() }, 1000));
+                    */}
             $('#manual').on('click', function (evt) {
                 evt.preventDefault();
 

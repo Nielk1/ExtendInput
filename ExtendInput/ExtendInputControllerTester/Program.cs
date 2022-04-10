@@ -97,6 +97,7 @@ namespace ExtendInputControllerTester
                         Controllers[ControllerID].ControllerStateUpdate -= Program_ControllerStateUpdate;
                         ActiveControllers[e].Remove(ControllerID);
                         Controllers[ControllerID].DeInitalize();
+                        Console.WriteLine($"Removing Controller {ControllerID}");
                         ActiveControllerCounts.Remove(ControllerID);
                     }
                 }
@@ -420,6 +421,7 @@ namespace ExtendInputControllerTester
                         Controllers[ControllerID].ControllerStateUpdate -= Program_ControllerStateUpdate;
                         ActiveControllers[context].Remove(ControllerID);
                         Controllers[ControllerID].DeInitalize();
+                        Console.WriteLine($"Removing Controller {ControllerID}");
                         ActiveControllerCounts.Remove(ControllerID);
                     }
                 }
@@ -440,6 +442,8 @@ namespace ExtendInputControllerTester
                         ActiveControllerCounts[ControllerID]++;
                     }
                 }
+
+                websocket.SendMessage("DeviceManager:ActiveControllers", ActiveControllers[context], new IWebSocketContext[] { context });
             }
             finally
             {
@@ -468,6 +472,7 @@ namespace ExtendInputControllerTester
                             Controllers[sender.ConnectionUniqueID].ControllerStateUpdate -= Program_ControllerStateUpdate;
                             //ActiveControllers[context].Remove(sender.ConnectionUniqueID);
                             Controllers[sender.ConnectionUniqueID].DeInitalize();
+                            Console.WriteLine($"Removing Controller {sender.ConnectionUniqueID}");
                             ActiveControllerCounts.Remove(sender.ConnectionUniqueID);
                         }
                     }
@@ -583,7 +588,7 @@ namespace ExtendInputControllerTester
 
         SemaphoreSlim MessageSendLock = new SemaphoreSlim(1);
 
-        public async Task SendMessage(string function, object payload, HashSet<IWebSocketContext> contexts = null)
+        public async Task SendMessage(string function, object payload, IEnumerable<IWebSocketContext> contexts = null)
         {
             await MessageSendLock.WaitAsync();
             try
@@ -591,9 +596,11 @@ namespace ExtendInputControllerTester
                 await BroadcastAsync(new JObject()
                 {
                     { "function", function },
-                    { "data", payload is string ? (JToken)new JValue(payload) : (JToken)JObject.FromObject(payload) },
+                    { "data", payload is string              ? (JToken)new JValue(payload) :
+                              payload is JObject             ? (JToken)payload :
+                              payload is IEnumerable<object> ? (JToken)JArray.FromObject(payload) : (JToken)JObject.FromObject(payload) },
                 }.ToString(), c => contexts?.Contains(c) ?? true);
-                Console.WriteLine($"Sending {function}");
+                //Console.WriteLine($"Sending {function}");
             }
             finally
             {
