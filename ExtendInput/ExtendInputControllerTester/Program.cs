@@ -138,16 +138,23 @@ namespace ExtendInputControllerTester
         {
             ControllersLock.Wait();
             {
-                //string md5 = CreateMD5(UniqueKey);
-                //if (Controllers.ContainsKey(md5))
-                //    Controllers[md5].Dispose(); // hack solution until this is added to the DeviceManager
-                //Controllers.Remove(md5);
-                //websocket.SendMessage("DeviceManager:ControllerRemoved", md5);
-
                 if (Controllers.ContainsKey(UniqueKey))
                     Controllers[UniqueKey].Dispose(); // hack solution until this is added to the DeviceManager
                 Controllers.Remove(UniqueKey);
                 websocket.SendMessage("DeviceManager:ControllerRemoved", UniqueKey);
+
+                if (ActiveContextsPerController.ContainsKey(UniqueKey))
+                {
+                    HashSet<IWebSocketContext> contextsWithController = ActiveContextsPerController[UniqueKey];
+                    ActiveControllerCounts.Remove(UniqueKey);
+                    ActiveContextsPerController.Remove(UniqueKey);
+
+                    foreach (IWebSocketContext context in contextsWithController)
+                    {
+                        ActiveControllers[context].Remove(UniqueKey);
+                        websocket.SendMessage("DeviceManager:ActiveControllers", ActiveControllers[context], new IWebSocketContext[] { context });
+                    }
+                }
             }
             ControllersLock.Release();
         }
@@ -402,8 +409,6 @@ namespace ExtendInputControllerTester
             await ControllersLock.WaitAsync();
             try
             {
-                //if (activeController != null)
-                //    activeController.GetState().ControllerStateUpdate -= Program_ControllerStateUpdate;
                 if (!Controllers.ContainsKey(ControllerID))
                     return;
 

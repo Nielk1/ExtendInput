@@ -634,16 +634,23 @@
         function ControllersActive(data) {
             var knownChildren = {};
             $controllers.children().each((i, elem) => knownChildren[elem.id] = true);
+            var knownStateChildren = {};
+            var $state_data = $('#state_data');
+            $state_data.children().each((i, elem) => knownStateChildren[$(elem).data('controller-id')] = true);
             data.forEach((val, idx) => {
                 var controller_id = cyrb53(val);
                 knownChildren['controller_' + controller_id] = false;
+                knownStateChildren[controller_id] = false;
                 $('#controller_' + controller_id).addClass('controller-active');
             });
-            var $state_data = $('#state_data');
             for (const key in knownChildren) {
                 if (knownChildren[key]) {
                     $('#' + key).removeClass('controller-active');
-                    $state_data.children('[data-controller-id="2052943359973790"]').remove();
+                }
+            }
+            for (const key in knownStateChildren) {
+                if (knownStateChildren[key]) {
+                    $state_data.children('[data-controller-id="' + key + '"]').remove();
                 }
             }
         }
@@ -912,199 +919,199 @@
 
 
             function PollOtherFunc() {/*
-                        $.get("/poll_other", function (data) {
-                            var knownChildren = {};
-                            $controllers.children().each((i, elem) => knownChildren[elem.id] = true);
-                            for (const controller_id in data.Controllers) {
-                                var controller = data.Controllers[controller_id];
+                                $.get("/poll_other", function (data) {
+                                    var knownChildren = {};
+                                    $controllers.children().each((i, elem) => knownChildren[elem.id] = true);
+                                    for (const controller_id in data.Controllers) {
+                                        var controller = data.Controllers[controller_id];
 
-                                var ConnectionIcon = null;
-                                for (var idx in controller.ConnectionTypeCode) {
-                                    var code = controller.ConnectionTypeCode[idx];
-                                    if (data.IconImages[code] != null) {
-                                        ConnectionIcon = data.IconImages[code];
-                                        break;
-                                    }
-                                }
-
-                                var ControllerIcon = null;
-                                var ControllerImage = null;
-                                for (var idx in controller.ControllerTypeCode) {
-                                    var code = controller.ControllerTypeCode[idx];
-                                    if (ControllerIcon == null && data.IconImages[code] != null) {
-                                        ControllerIcon = data.IconImages[code];
-                                    }
-                                    if (ControllerImage == null && data.ControllerImages[code] != null) {
-                                        ControllerImage = data.ControllerImages[code];
-                                    }
-                                    if (ControllerIcon != null && ControllerImage != null)
-                                        break;
-                                }
-
-                                var existing = $controllers.children('#controller_' + controller_id);
-                                if (existing.length == 0) {
-                                    //var wrapper = $('<div class="controller col-md-6 col-lg-4 pb-4"/>');
-                                    var wrapper = $('<div class="controller col-12 pb-4"/>');
-                                    wrapper.attr('id', 'controller_' + controller_id);
-                                    var cardWrapper = $('<div class="card" />');
-                                    if (ControllerImage != null) {
-                                        var cardImage = $('<img class="controller_image" />');
-                                        cardImage.attr("src", "/images/controller/" + ControllerImage);
-                                        cardImage.attr("alt", controller.Name);
-                                        cardWrapper.append(cardImage);
-                                    } else {
-                                        var cardImage = $('<img class="controller_image" />');
-                                        cardImage.attr("src", "/images/controller/placeholder.png");
-                                        cardImage.attr("alt", controller.Name);
-                                        cardWrapper.append(cardImage);
-                                    }
-
-                                    cardWrapper.append('<div class="card-body"><h5 class="card-title"><img class="connection_icon" /><img class="controller_icon" /><span class="controller_name"></span></h5><p class="card-text controller_name_details" style="white-space:pre;"></p><p class="card-text controller_connection_unique_id"></p><p class="card-text controller_device_unique_id"></p></div>');
-
-                                    if (ControllerIcon != null) {
-                                        var cardImage = cardWrapper.find('.controller_icon');
-                                        cardImage.attr("src", "/images/icon/" + ControllerIcon);
-                                        cardImage.attr("alt", controller.Name);
-                                    } else {
-                                        var cardImage = cardWrapper.find('.controller_icon');
-                                        cardImage.attr("src", "/images/icon/DEVICE_UNKNOWN.png");
-                                        cardImage.attr("alt", controller.Name);
-                                    }
-                                    if (ConnectionIcon != null) {
-                                        var cardImage = cardWrapper.find('.connection_icon');
-                                        cardImage.attr("src", "/images/icon/" + ConnectionIcon);
-                                        cardImage.attr("alt", controller.Name);
-                                    } else {
-                                        var cardImage = cardWrapper.find('.connection_icon');
-                                        cardImage.attr("src", "/images/icon/DEVICE_UNKNOWN.png");
-                                        cardImage.attr("alt", controller.Name);
-                                    }
-
-                                    var menu = $('<div class="list-group small alternate_controller_list" />');
-                                    menu.append('<h6 class="list-group-item">Alternate Controllers</h6>');
-
-                                    //if (controller.HasSelectableAlternatives) {
-                                    {
-                                        for (var alternate in controller.Alternates) {
-                                            var alternate_item = $('<a class="alternate_controller list-group-item list-group-item-action" href="#" />');
-                                            alternate_item.attr('data-id', alternate);
-                                            alternate_item.text(controller.Alternates[alternate]);
-                                            menu.append(alternate_item);
+                                        var ConnectionIcon = null;
+                                        for (var idx in controller.ConnectionTypeCode) {
+                                            var code = controller.ConnectionTypeCode[idx];
+                                            if (data.IconImages[code] != null) {
+                                                ConnectionIcon = data.IconImages[code];
+                                                break;
+                                            }
                                         }
-                                        var alternateBody = $('<div class="card-body" />');
-                                        alternateBody.append(menu);
-                                        cardWrapper.append(alternateBody);
 
-                                        if (controller.HasSelectableAlternatives) {
-                                            alternateBody.show();
+                                        var ControllerIcon = null;
+                                        var ControllerImage = null;
+                                        for (var idx in controller.ControllerTypeCode) {
+                                            var code = controller.ControllerTypeCode[idx];
+                                            if (ControllerIcon == null && data.IconImages[code] != null) {
+                                                ControllerIcon = data.IconImages[code];
+                                            }
+                                            if (ControllerImage == null && data.ControllerImages[code] != null) {
+                                                ControllerImage = data.ControllerImages[code];
+                                            }
+                                            if (ControllerIcon != null && ControllerImage != null)
+                                                break;
+                                        }
+
+                                        var existing = $controllers.children('#controller_' + controller_id);
+                                        if (existing.length == 0) {
+                                            //var wrapper = $('<div class="controller col-md-6 col-lg-4 pb-4"/>');
+                                            var wrapper = $('<div class="controller col-12 pb-4"/>');
+                                            wrapper.attr('id', 'controller_' + controller_id);
+                                            var cardWrapper = $('<div class="card" />');
+                                            if (ControllerImage != null) {
+                                                var cardImage = $('<img class="controller_image" />');
+                                                cardImage.attr("src", "/images/controller/" + ControllerImage);
+                                                cardImage.attr("alt", controller.Name);
+                                                cardWrapper.append(cardImage);
+                                            } else {
+                                                var cardImage = $('<img class="controller_image" />');
+                                                cardImage.attr("src", "/images/controller/placeholder.png");
+                                                cardImage.attr("alt", controller.Name);
+                                                cardWrapper.append(cardImage);
+                                            }
+
+                                            cardWrapper.append('<div class="card-body"><h5 class="card-title"><img class="connection_icon" /><img class="controller_icon" /><span class="controller_name"></span></h5><p class="card-text controller_name_details" style="white-space:pre;"></p><p class="card-text controller_connection_unique_id"></p><p class="card-text controller_device_unique_id"></p></div>');
+
+                                            if (ControllerIcon != null) {
+                                                var cardImage = cardWrapper.find('.controller_icon');
+                                                cardImage.attr("src", "/images/icon/" + ControllerIcon);
+                                                cardImage.attr("alt", controller.Name);
+                                            } else {
+                                                var cardImage = cardWrapper.find('.controller_icon');
+                                                cardImage.attr("src", "/images/icon/DEVICE_UNKNOWN.png");
+                                                cardImage.attr("alt", controller.Name);
+                                            }
+                                            if (ConnectionIcon != null) {
+                                                var cardImage = cardWrapper.find('.connection_icon');
+                                                cardImage.attr("src", "/images/icon/" + ConnectionIcon);
+                                                cardImage.attr("alt", controller.Name);
+                                            } else {
+                                                var cardImage = cardWrapper.find('.connection_icon');
+                                                cardImage.attr("src", "/images/icon/DEVICE_UNKNOWN.png");
+                                                cardImage.attr("alt", controller.Name);
+                                            }
+
+                                            var menu = $('<div class="list-group small alternate_controller_list" />');
+                                            menu.append('<h6 class="list-group-item">Alternate Controllers</h6>');
+
+                                            //if (controller.HasSelectableAlternatives) {
+                                            {
+                                                for (var alternate in controller.Alternates) {
+                                                    var alternate_item = $('<a class="alternate_controller list-group-item list-group-item-action" href="#" />');
+                                                    alternate_item.attr('data-id', alternate);
+                                                    alternate_item.text(controller.Alternates[alternate]);
+                                                    menu.append(alternate_item);
+                                                }
+                                                var alternateBody = $('<div class="card-body" />');
+                                                alternateBody.append(menu);
+                                                cardWrapper.append(alternateBody);
+
+                                                if (controller.HasSelectableAlternatives) {
+                                                    alternateBody.show();
+                                                } else {
+                                                    alternateBody.hide();
+                                                }
+                                            }
+
+                                            cardWrapper.append('<a href="#" class="btn btn-primary btn-lg btn-block activate_controller" role="button" data-id="' + controller_id + '"></a>');
+                                            wrapper.append(cardWrapper);
                                         } else {
-                                            alternateBody.hide();
+                                            wrapper = existing;
+                                            delete knownChildren['controller_' + controller_id];
+
+                                            var menu = wrapper.find('.alternate_controller_list');
+                                            if (controller.HasSelectableAlternatives) {
+                                                menu.parent().show();
+                                            } else {
+                                                menu.parent().hide();
+                                            }
+                                            for (var alternate in controller.Alternates) {
+                                                if (menu.children('.alternate_controller[data-id="' + alternate + '"]').length == 0) {
+                                                    var alternate_item = $('<a class="alternate_controller list-group-item list-group-item-action" href="#" />');
+                                                    alternate_item.attr('data-id', alternate);
+                                                    alternate_item.text(controller.Alternates[alternate]);
+                                                    menu.append(alternate_item);
+                                                }
+                                            }
+
+                                            if (ControllerImage != null) {
+                                                var cardImage = wrapper.find('.controller_image');
+                                                cardImage.attr("src", "/images/controller/" + ControllerImage);
+                                                cardImage.attr("alt", controller.Name);
+                                            } else {
+                                                var cardImage = wrapper.find('.controller_image');
+                                                cardImage.attr("src", "/images/controller/placeholder.png");
+                                                cardImage.attr("alt", controller.Name);
+                                            }
+
+                                            if (ControllerIcon != null) {
+                                                var cardImage = wrapper.find('.controller_icon');
+                                                cardImage.attr("src", "/images/icon/" + ControllerIcon);
+                                                cardImage.attr("alt", controller.Name);
+                                            } else {
+                                                var cardImage = wrapper.find('.controller_icon');
+                                                cardImage.attr("src", "/images/icon/DEVICE_UNKNOWN.png");
+                                                cardImage.attr("alt", controller.Name);
+                                            }
+                                            if (ConnectionIcon != null) {
+                                                var cardImage = wrapper.find('.connection_icon');
+                                                cardImage.attr("src", "/images/icon/" + ConnectionIcon);
+                                                cardImage.attr("alt", controller.Name);
+                                            } else {
+                                                var cardImage = wrapper.find('.connection_icon');
+                                                cardImage.attr("src", "/images/icon/DEVICE_UNKNOWN.png");
+                                                cardImage.attr("alt", controller.Name);
+                                            }
+                                        }
+
+                                        var knownAlternates = {};
+                                        var alternate_controller_list_dom = wrapper.find('.alternate_controller_list');
+                                        alternate_controller_list_dom.children('.alternate_controller').each((i, elem) => knownAlternates[$(elem).data('id')] = true);
+                                        for (const alternate in knownAlternates) {
+                                            if (!controller.Alternates[alternate])
+                                                alternate_controller_list_dom.children('.alternate_controller[data-id="' + alternate + '"]').remove();
+                                        }
+
+
+                                        wrapper.find('.controller_name').text(controller.Name);
+                                        if (controller.NameDetails != null) {
+                                            wrapper.find('.controller_name_details').text(controller.NameDetails.join('\r\n'));
+                                        } else {
+                                            wrapper.find('.controller_name_details').text('');
+                                        }
+                                        if (controller.ConnectionUniqueID != null) {
+                                            wrapper.find('.controller_connection_unique_id').text("Connection:\r\n" + controller.ConnectionUniqueID);
+                                        } else {
+                                            wrapper.find('.controller_connection_unique_id').text('');
+                                        }
+                                        if (controller.DeviceUniqueID != null) {
+                                            wrapper.find('.controller_device_unique_id').text("Device:\r\n" + controller.DeviceUniqueID);
+                                        } else {
+                                            wrapper.find('.controller_device_unique_id').text('');
+                                        }
+
+                                        if (existing.length == 0) {
+                                            $controllers.append(wrapper);
                                         }
                                     }
-
-                                    cardWrapper.append('<a href="#" class="btn btn-primary btn-lg btn-block activate_controller" role="button" data-id="' + controller_id + '"></a>');
-                                    wrapper.append(cardWrapper);
-                                } else {
-                                    wrapper = existing;
-                                    delete knownChildren['controller_' + controller_id];
-
-                                    var menu = wrapper.find('.alternate_controller_list');
-                                    if (controller.HasSelectableAlternatives) {
-                                        menu.parent().show();
-                                    } else {
-                                        menu.parent().hide();
+                                    for (const controller_id in knownChildren) {
+                                        //if (controller_id == "controller_state") continue;
+                                        $controllers.children('#' + controller_id).remove();
                                     }
-                                    for (var alternate in controller.Alternates) {
-                                        if (menu.children('.alternate_controller[data-id="' + alternate + '"]').length == 0) {
-                                            var alternate_item = $('<a class="alternate_controller list-group-item list-group-item-action" href="#" />');
-                                            alternate_item.attr('data-id', alternate);
-                                            alternate_item.text(controller.Alternates[alternate]);
-                                            menu.append(alternate_item);
+                                    var existing_manual = {};
+                                    $('#manual').children().each(function (idx, elem) { existing_manual[$(elem).data('id')] = elem; });
+                                    for (const device_id in data.ManualDevices) {
+                                        var manualDevice = data.ManualDevices[device_id];
+                                        if (existing_manual["60BA"] != null) {
+                                            delete existing_manual["60BA"];
+                                        } else {
+                                            var elem = $('<a href="#" class="list-group-item list-group-item-action" />');
+                                            elem.attr('data-id', device_id);
+                                            elem.text(manualDevice);
+                                            $('#manual').append(elem);
                                         }
                                     }
-
-                                    if (ControllerImage != null) {
-                                        var cardImage = wrapper.find('.controller_image');
-                                        cardImage.attr("src", "/images/controller/" + ControllerImage);
-                                        cardImage.attr("alt", controller.Name);
-                                    } else {
-                                        var cardImage = wrapper.find('.controller_image');
-                                        cardImage.attr("src", "/images/controller/placeholder.png");
-                                        cardImage.attr("alt", controller.Name);
+                                    for (var manual_elem_key in existing_manual) {
+                                        $(existing_manual[manual_elem_key]).remove();
                                     }
-
-                                    if (ControllerIcon != null) {
-                                        var cardImage = wrapper.find('.controller_icon');
-                                        cardImage.attr("src", "/images/icon/" + ControllerIcon);
-                                        cardImage.attr("alt", controller.Name);
-                                    } else {
-                                        var cardImage = wrapper.find('.controller_icon');
-                                        cardImage.attr("src", "/images/icon/DEVICE_UNKNOWN.png");
-                                        cardImage.attr("alt", controller.Name);
-                                    }
-                                    if (ConnectionIcon != null) {
-                                        var cardImage = wrapper.find('.connection_icon');
-                                        cardImage.attr("src", "/images/icon/" + ConnectionIcon);
-                                        cardImage.attr("alt", controller.Name);
-                                    } else {
-                                        var cardImage = wrapper.find('.connection_icon');
-                                        cardImage.attr("src", "/images/icon/DEVICE_UNKNOWN.png");
-                                        cardImage.attr("alt", controller.Name);
-                                    }
-                                }
-
-                                var knownAlternates = {};
-                                var alternate_controller_list_dom = wrapper.find('.alternate_controller_list');
-                                alternate_controller_list_dom.children('.alternate_controller').each((i, elem) => knownAlternates[$(elem).data('id')] = true);
-                                for (const alternate in knownAlternates) {
-                                    if (!controller.Alternates[alternate])
-                                        alternate_controller_list_dom.children('.alternate_controller[data-id="' + alternate + '"]').remove();
-                                }
-
-
-                                wrapper.find('.controller_name').text(controller.Name);
-                                if (controller.NameDetails != null) {
-                                    wrapper.find('.controller_name_details').text(controller.NameDetails.join('\r\n'));
-                                } else {
-                                    wrapper.find('.controller_name_details').text('');
-                                }
-                                if (controller.ConnectionUniqueID != null) {
-                                    wrapper.find('.controller_connection_unique_id').text("Connection:\r\n" + controller.ConnectionUniqueID);
-                                } else {
-                                    wrapper.find('.controller_connection_unique_id').text('');
-                                }
-                                if (controller.DeviceUniqueID != null) {
-                                    wrapper.find('.controller_device_unique_id').text("Device:\r\n" + controller.DeviceUniqueID);
-                                } else {
-                                    wrapper.find('.controller_device_unique_id').text('');
-                                }
-
-                                if (existing.length == 0) {
-                                    $controllers.append(wrapper);
-                                }
-                            }
-                            for (const controller_id in knownChildren) {
-                                //if (controller_id == "controller_state") continue;
-                                $controllers.children('#' + controller_id).remove();
-                            }
-                            var existing_manual = {};
-                            $('#manual').children().each(function (idx, elem) { existing_manual[$(elem).data('id')] = elem; });
-                            for (const device_id in data.ManualDevices) {
-                                var manualDevice = data.ManualDevices[device_id];
-                                if (existing_manual["60BA"] != null) {
-                                    delete existing_manual["60BA"];
-                                } else {
-                                    var elem = $('<a href="#" class="list-group-item list-group-item-action" />');
-                                    elem.attr('data-id', device_id);
-                                    elem.text(manualDevice);
-                                    $('#manual').append(elem);
-                                }
-                            }
-                            for (var manual_elem_key in existing_manual) {
-                                $(existing_manual[manual_elem_key]).remove();
-                            }
-                        }).done(setTimeout(function () { PollOtherFunc() }, 1000));
-                    */}
+                                }).done(setTimeout(function () { PollOtherFunc() }, 1000));
+                            */}
             $('#manual').on('click', function (evt) {
                 evt.preventDefault();
 
