@@ -127,7 +127,7 @@
             ctrl.find(name).attr('rx', val * 25).attr('ry', val * 25);
         }
 
-        function RenderControl(controller_id, control_id, controlData, controlType, $state_data, NewSubtype, knownChildren, childWidth) {
+        function RenderControl(ConnectionUniqueID, controller_id, control_id, controlData, controlType, $state_data, NewSubtype, knownChildren, childWidth) {
             var existing = $state_data.children('#state_' + controller_id + '__' + control_id);
             //var control = data.controls[control_id];
 
@@ -137,6 +137,7 @@
                 wrapper.attr('id', 'state_' + controller_id + '__' + control_id);
                 wrapper.attr('data-id', controller_id + '__' + control_id);
                 wrapper.attr('data-controller-id', controller_id);
+                wrapper.attr('data-controller', ConnectionUniqueID);
                 wrapper.append('<div class="card"><div class="pb-3"><h5 class="card-title text-center">' + control_id.replace('-', ':') + '</h5><div class="control_type card-title text-center small" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + controlType + '</div><div class="card-text control-value" style="white-space:pre;"></div></div></div>');
             } else {
                 wrapper = existing;
@@ -636,7 +637,7 @@
             $controllers.children().each((i, elem) => knownChildren[elem.id] = true);
             var knownStateChildren = {};
             var $state_data = $('#state_data');
-            $state_data.children().each((i, elem) => knownStateChildren[$(elem).data('controller-id')] = true);
+            $state_data.children().each((i, elem) => knownStateChildren[$(elem) .data('controller-id')] = true);
             data.forEach((val, idx) => {
                 var controller_id = cyrb53(val);
                 knownChildren['controller_' + controller_id] = false;
@@ -663,7 +664,7 @@
             ControllerActiveSubtype = data.ControllerTypeCode;
             var controller_id = cyrb53(data.ConnectionUniqueID);
             for (const control_id in data.State) {
-                RenderControl(controller_id, control_id, data.State[control_id].Data, data.State[control_id].Type, $state_data, NewSubtype, knownChildren);
+                RenderControl(data.ConnectionUniqueID, controller_id, control_id, data.State[control_id].Data, data.State[control_id].Type, $state_data, NewSubtype, knownChildren);
             }
             for (const control_id in knownChildren) {
                 $state_data.children('#' + controller_id + '__' + control_id).remove();

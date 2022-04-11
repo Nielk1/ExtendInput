@@ -11,6 +11,7 @@ namespace ExtendInput.Controller.Valve
     {
         //Dictionary<string, WeakReference<SemaphoreSlim>> SharedDongleLocks = new Dictionary<string, WeakReference<SemaphoreSlim>>();
         Dictionary<Guid, WeakReference<SemaphoreSlim>> SharedDongleLocks = new Dictionary<Guid, WeakReference<SemaphoreSlim>>();
+        private Dictionary<string, SteamController> Controllers = new Dictionary<string, SteamController>();
 
         public Dictionary<string, dynamic>[] DeviceWhitelist => new Dictionary<string, dynamic>[]
         {
@@ -41,25 +42,31 @@ namespace ExtendInput.Controller.Valve
             {
                 string devicePath = _device.DevicePath.ToString();
 
+                uint[] Usages = device.Properties.ContainsKey("Usages") ? device.Properties["Usages"] as uint[] : null;
+
                 EConnectionType ConType = EConnectionType.Unknown;
                 SteamController.EControllerType CtrlType = SteamController.EControllerType.Gordon;
                 switch (_device.ProductId)
                 {
                     case SteamController.ProductIdBT:
-                        if (!devicePath.Contains("col03")) return null; // skip anything that isn't the controller's custom HID device
+                        if (!Usages.Contains(0xff000001u)) // skip anything that isn't the controller's custom HID device
+                            return null;
                         ConType = EConnectionType.Bluetooth;
                         break;
                     case SteamController.ProductIdWired:
-                        if (!devicePath.Contains("mi_02")) return null; // skip anything that isn't the controller's custom HID device
+                        if (!Usages.Contains(0xff000001u)) // skip anything that isn't the controller's custom HID device
+                            return null;
                         ConType = EConnectionType.USB;
                         break;
                     case SteamController.ProductIdDongle:
-                        if (devicePath.Contains("mi_00")) return null; // skip the dongle itself
+                        if (!Usages.Contains(0xff000001u)) // skip anything that isn't the controller's custom HID device
+                            return null;
                         ConType = EConnectionType.Dongle;
                         break;
                     case SteamController.ProductIdChell:
-                        if (!devicePath.Contains("mi_02")) return null; // skip odd 2nd device
-                        ConType = EConnectionType.USB;
+                        //if (!devicePath.Contains("mi_02")) return null; // skip odd 2nd device
+                        ConType = EConnectionType.USB; if (!Usages.Contains(0xff000001u)) // TODO: confirm this is the correct vendor and page for the Chell SC
+                            return null;
                         CtrlType = SteamController.EControllerType.Chell;
                         break;
                 }
@@ -81,6 +88,7 @@ namespace ExtendInput.Controller.Valve
                             Console.WriteLine(ContrainerID.Value.ToString());
 
                             // clear any dead refs
+                            // TODO consider switching to a permit counting storage method instead as WeakRefs only eject on higher memory pressure
                             foreach (Guid key in SharedDongleLocks.Keys.ToList()) // ToList to clone the key list so we can modify it
                                 if (!SharedDongleLocks[key].TryGetTarget(out _))
                                     SharedDongleLocks.Remove(key);
@@ -88,6 +96,8 @@ namespace ExtendInput.Controller.Valve
                 }
 
                 SteamController ctrl = new SteamController(_device, SharedDongleLock, ConType, CtrlType);
+                lock (Controllers)
+                    Controllers[ctrl.ConnectionUniqueID] = ctrl;
                 //ctrl.HalfInitalize();
                 return ctrl;
             }
@@ -95,7 +105,21 @@ namespace ExtendInput.Controller.Valve
 
         public string RemoveDevice(string UniqueKey)
         {
-            // TODO IMPLEMENT
+            lock (Controllers)
+            {
+                //Console.WriteLine($"Removing {UniqueKey}");
+                if (Controllers.ContainsKey(UniqueKey))
+                {
+                    SteamController ctrl = Controllers[UniqueKey];
+                    string UniqueControllerId = ctrl.ConnectionUniqueID;
+
+                    ctrl.DeInitalize();
+                    ctrl.Dispose();
+                    Controllers.Remove(UniqueKey);
+
+                    return UniqueControllerId;
+                }
+            }
             return null;
         }
     }
