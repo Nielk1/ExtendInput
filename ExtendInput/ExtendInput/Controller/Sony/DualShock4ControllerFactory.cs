@@ -18,6 +18,20 @@ namespace ExtendInput.Controller.Sony
             new Dictionary<string, dynamic>(){ { "VID", DualShock4Controller.VENDOR_SONY }, { "PID", DualShock4Controller.PRODUCT_SONY_DS4V2 } },
             new Dictionary<string, dynamic>(){ { "VID", DualShock4Controller.VENDOR_BROOK }, { "PID", DualShock4Controller.PRODUCT_BROOK_MARS } },
         };
+
+        public DualShock4ControllerFactory()
+        {
+            string[] oldDevicePaths = StoredDataHandler.GetStoredMacConectionIdList();
+            if (oldDevicePaths != null)
+                foreach (string path in oldDevicePaths)
+                {
+                    string deviceInstanceId = DevPKey.PnpDevicePropertyAPI.devicePathToInstanceId(path);
+                    Guid? ContrainerID = DevPKey.PnpDevicePropertyAPI.GetDeviceContainerId(deviceInstanceId);
+                    if (!ContrainerID.HasValue)
+                        StoredDataHandler.RemoveStoredMacForConectionId(path);
+                }
+        }
+
         public IController NewDevice(IDevice device)
         {
             HidDevice _device = device as HidDevice;

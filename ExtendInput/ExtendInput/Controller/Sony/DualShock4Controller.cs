@@ -22,6 +22,7 @@ namespace ExtendInput.Controller.Sony
             public Int16 PhysicalHeight { get; private set; }
             public string Name { get; private set; }
             public string IdentitySha256 { get; private set; }
+            public string[] MacPrefixes { get; private set; }
             public int USB_VID { get; private set; }
             public int USB_PID { get; private set; }
             public int BT_VID { get; private set; }
@@ -40,6 +41,7 @@ namespace ExtendInput.Controller.Sony
                 string[] Token,
                 string Name,
                 string IdentitySha256 = null,
+                string[] MacPrefixes = null,
                 Int16 PadMaxX = -1,
                 Int16 PadMaxY = -1,
                 Int16 PhysicalWidth = -1,
@@ -65,6 +67,7 @@ namespace ExtendInput.Controller.Sony
                 this.PhysicalHeight = PhysicalHeight >= 0 ? PhysicalHeight : this.PadMaxY;
                 this.Name = Name;
                 this.IdentitySha256 = IdentitySha256;
+                this.MacPrefixes = MacPrefixes;
                 this.USB_VID = USB_VID;
                 this.USB_PID = USB_PID;
                 this.BT_VID = BT_VID;
@@ -101,6 +104,8 @@ namespace ExtendInput.Controller.Sony
         #region Identity Hashes
         private const string AUTH_IDENTITY_SHA256_2E2415CA = @"2e2415ca56598006b94f1274d15e64a1b99385c53e91102ae7708b8919fe124f";
         #endregion Identity Hashes
+
+        public const string MAC_NINTENDO = "98:B6:E9";
 
         #region String Definitions
         private const string ATOM_CONNECTION_WIRE = "CONNECTION_WIRE";
@@ -253,6 +258,7 @@ namespace ExtendInput.Controller.Sony
                 Name: "Model No. PS4-8952",
                 NoTemperture: true,
                 IdentitySha256: AUTH_IDENTITY_SHA256_2E2415CA,
+                MacPrefixes: new string[] { MAC_NINTENDO },
                 USB_VID: VENDOR_SONY, USB_PID: PRODUCT_SONY_DS4V1,
                 BT_VID: VENDOR_SONY, BT_PID: PRODUCT_SONY_DS4V2,
                 ExtraButton: true,
@@ -793,8 +799,9 @@ namespace ExtendInput.Controller.Sony
 
         private DS4SubType GetControllerInitialTypeCode(UInt16 VID, UInt16 PID, bool HaveSeenNonZeroRawTemp, string IdentityHash)
         {
-            const int ID_MATCH               = 0x100000;
-            const int HAS_NO_ID              = 0x080000;
+            const int ID_MATCH               = 0x200000;
+            const int HAS_NO_ID              = 0x100000;
+            const int MAC_PREFIX_MATCH       = 0x080000;
             const int BATTERY_STATUS         = 0x040000;
             const int HAS_MATCHING_AUTH_HASH = 0x020000;
             const int HAS_NO_AUTH_HASH       = 0x010000;
@@ -840,6 +847,12 @@ namespace ExtendInput.Controller.Sony
                 else if (attr.USB_VID == -1 && attr.USB_PID == -1 && attr.BT_VID == -1 && attr.BT_PID == -1)
                 {
                     Rank += HAS_NO_ID;
+                }
+                if (!attr.NoMac && attr.MacPrefixes != null && SerialNumber != null && attr.MacPrefixes.Any(prefix => SerialNumber.StartsWith(prefix)))
+                {
+                    Rank += MAC_PREFIX_MATCH;
+                    Rank += TYPE_AUTH - (int)subType;
+                    Candidates.Add(new Tuple<int, DS4SubType>(Rank, subType));
                 }
                 // we have some sort of match from above
                 if (Rank > 0)
@@ -901,6 +914,10 @@ namespace ExtendInput.Controller.Sony
         private Regex MacAsSerialNumber = new Regex("^[0-9a-fA-F]{12}$");
         private string GetSerialNumber()
         {
+            string StoredMac = StoredDataHandler.GetStoredMacForConectionId(_device.DevicePath);
+            if (!string.IsNullOrWhiteSpace(StoredMac))
+                return StoredMac;
+
             // try asking the device for its MAC
             {
                 byte[] FeatureBuffer;
@@ -914,6 +931,7 @@ namespace ExtendInput.Controller.Sony
                         Serial = string.Join(":", FeatureBuffer.Skip(1).Take(6).Reverse().Select(dr => $"{dr:X2}").ToArray());
                         if (Serial != "00:00:00:00:00:00")
                         {
+                            StoredDataHandler.SaveStoredMacForConnectionId(_device.DevicePath, Serial);
                             return Serial;
                         }
                     }
@@ -930,6 +948,7 @@ namespace ExtendInput.Controller.Sony
                         SerialNumber = $"{SerialNumber.Substring(0, 2)}:{SerialNumber.Substring(2, 2)}:{SerialNumber.Substring(4, 2)}:{SerialNumber.Substring(6, 2)}:{SerialNumber.Substring(8, 2)}:{SerialNumber.Substring(10, 2)}".ToUpperInvariant();
                     if (SerialNumber != "00:00:00:00:00:00")
                     {
+                        StoredDataHandler.SaveStoredMacForConnectionId(ConnectionUniqueID, SerialNumber);
                         return SerialNumber;
                     }
                 }
@@ -1355,7 +1374,7 @@ namespace ExtendInput.Controller.Sony
                                     ControllerSubType = GetControllerInitialTypeCode((UInt16)_device.VendorId, (UInt16)_device.ProductId, HaveSeenNonZeroRawTemp, IdentityHash);
                                     break;
                             }
-                        ChangeControllerSubType(ControllerSubType);
+                            ChangeControllerSubType(ControllerSubType);
 
                             ControllerMetadataUpdate?.Invoke(this);
                         }

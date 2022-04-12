@@ -65,8 +65,9 @@ namespace ExtendInput.Controller.Valve
                         break;
                     case SteamController.ProductIdChell:
                         //if (!devicePath.Contains("mi_02")) return null; // skip odd 2nd device
-                        ConType = EConnectionType.USB; if (!Usages.Contains(0xff000001u)) // TODO: confirm this is the correct vendor and page for the Chell SC
+                        if (!Usages.Contains(0xff000001u)) // TODO: confirm this is the correct vendor and page for the Chell SC
                             return null;
+                        ConType = EConnectionType.USB;
                         CtrlType = SteamController.EControllerType.Chell;
                         break;
                 }
