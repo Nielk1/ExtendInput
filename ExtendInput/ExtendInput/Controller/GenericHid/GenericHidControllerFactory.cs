@@ -12,7 +12,7 @@ namespace ExtendInput.Controller.GenericHid
     public class ControllerDbEntry
     {
         public string Name { get; set; }
-        public string Token { get; set; }
+        public string[] Tokens { get; set; }
         public Dictionary<string, dynamic> Select { get; set; }
         public decimal Version { get; set; }
         public Dictionary<string, dynamic[]> Controls { get; set; }
@@ -29,9 +29,9 @@ namespace ExtendInput.Controller.GenericHid
         {
             this.AccessMode = AccessMode;
 
-            if (File.Exists("controllerdb.txt"))
+            if (File.Exists("controllerdb.jsonl"))
             {
-                using (StreamReader reader = File.OpenText("controllerdb.txt"))
+                using (StreamReader reader = File.OpenText("controllerdb.jsonl"))
                 {
                     while(!reader.EndOfStream)
                     {

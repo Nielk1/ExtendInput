@@ -14,9 +14,9 @@ namespace ExtendInput.Controller.GenericHid
     {
         public EConnectionType ConnectionType => EConnectionType.Unknown;
 
-        public string[] ConnectionTypeCode => new string[] { "DEVICE_UNKNOWN" };
+        public string[] ConnectionTypeCode => new string[] { "CONNECTION_UNKNOWN" };
+        public string[] ControllerTypeCode => genericControllerData.Tokens ?? new string[] { "DEVICE_UNKNOWN" };
 
-        public string[] ControllerTypeCode => new string[] { "CONNECTION_UNKNOWN" };
 
         public bool HasSelectableAlternatives => false;
 
