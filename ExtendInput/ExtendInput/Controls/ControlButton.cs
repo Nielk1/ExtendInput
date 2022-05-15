@@ -1,4 +1,6 @@
-﻿using System;
+﻿using ExtendInput.Controller.GenericHid;
+using ExtendInput.DeviceProvider;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,12 +13,19 @@ namespace ExtendInput.Controls
         bool DigitalStage1 { get; set; }
 
     }
-    public class ControlButton : IControlButton
+
+    [GenericControl("Button")]
+    public class ControlButton : IControlButton, IGenericControl
     {
         public bool DigitalStage1 { get; set; }
 
-        public ControlButton()
+        public ControlButton() { }
+
+
+        private AddressableValue[] addressableValues;
+        public ControlButton(AddressableValue[] addressableValues)
         {
+            this.addressableValues = addressableValues;
         }
 
         public T Value<T>(string key)
@@ -41,6 +50,11 @@ namespace ExtendInput.Controls
             newData.DigitalStage1 = this.DigitalStage1;
 
             return newData;
+        }
+
+        public void SetGenericValue(IReport report)
+        {
+            DigitalStage1 = addressableValues[0].GetBoolean(report) ?? DigitalStage1;
         }
     }
 }

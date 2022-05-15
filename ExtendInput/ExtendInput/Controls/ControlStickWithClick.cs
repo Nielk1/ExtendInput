@@ -1,4 +1,6 @@
-﻿using System;
+﻿using ExtendInput.Controller.GenericHid;
+using ExtendInput.DeviceProvider;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,12 +14,20 @@ namespace ExtendInput.Controls
         float Y { get; set; }
         bool Click { get; set; }
     }
-    public class ControlStickWithClick : ControlStick, IControlStickWithClick, IControlStick
+    [GenericControl("StickWithClick")]
+    public class ControlStickWithClick : ControlStick, IControlStickWithClick, IControlStick, IGenericControl
     {
         public bool Click { get; set; }
 
         public ControlStickWithClick() { }
-        
+
+
+        private AddressableValue[] addressableValues;
+        public ControlStickWithClick(AddressableValue[] addressableValues)
+        {
+            this.addressableValues = addressableValues;
+        }
+
         public override T Value<T>(string key)
         {
             switch (key)
@@ -48,6 +58,13 @@ namespace ExtendInput.Controls
             newData.Click = this.Click;
 
             return newData;
+        }
+
+        public void SetGenericValue(IReport report)
+        {
+            X = addressableValues[0].GetFloat(report) ?? X;
+            Y = addressableValues[1].GetFloat(report) ?? Y;
+            Click = addressableValues[2].GetBoolean(report) ?? Click;
         }
     }
 }

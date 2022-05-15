@@ -8,21 +8,22 @@ using System.Threading.Tasks;
 
 namespace ExtendInput.Controls
 {
-    public interface IControlTrigger : IControl
+    public interface IButtonPressure : IControl
     {
         float AnalogStage1 { get; set; }
 
     }
-    [GenericControl("Trigger")]
-    public class ControlTrigger : IControlTrigger, IGenericControl
+    [GenericControl("ButtonPressure")]
+    public class ControlButtonPressure : IButtonPressure, IGenericControl
     {
+        public bool DigitalStage1 { get; set; }
         public float AnalogStage1 { get; set; }
 
-        public ControlTrigger() { }
+        public ControlButtonPressure() { }
 
 
         private AddressableValue[] addressableValues;
-        public ControlTrigger(AddressableValue[] addressableValues)
+        public ControlButtonPressure(AddressableValue[] addressableValues)
         {
             this.addressableValues = addressableValues;
         }
@@ -44,8 +45,9 @@ namespace ExtendInput.Controls
 
         public virtual object Clone()
         {
-            ControlTrigger newData = new ControlTrigger();
+            ControlButtonPressure newData = new ControlButtonPressure();
 
+            newData.DigitalStage1 = this.DigitalStage1;
             newData.AnalogStage1 = this.AnalogStage1;
 
             return newData;
@@ -53,7 +55,14 @@ namespace ExtendInput.Controls
 
         public void SetGenericValue(IReport report)
         {
-            AnalogStage1 = addressableValues[0].GetFloat(report) ?? AnalogStage1;
+            DigitalStage1 = addressableValues[0].GetBoolean(report) ?? DigitalStage1;
+            AnalogStage1 = addressableValues[1].GetFloat(report) ?? AnalogStage1;
+
+            if (AnalogStage1 == 0)
+                AnalogStage1 = DigitalStage1 ? 1.0f : 0f; // if analog is off, try to supply it via digital
+
+            if (!DigitalStage1)
+                DigitalStage1 = AnalogStage1 > 0; // if digital is off, check analog is 0
         }
     }
 }

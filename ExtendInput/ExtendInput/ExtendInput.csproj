@@ -92,13 +92,17 @@
     <Compile Include="Controller\IControllerFactory.cs" />
     <Compile Include="Controller\SixtyBeat\SixtyBeatGamepadControllerFactory.cs" />
     <Compile Include="Controller\SixtyBeat\SixtyBeatGamepadController.cs" />
+    <Compile Include="Controls\ControlButtonPressure.cs" />
     <Compile Include="Controls\ControlButtonPS5Mute.cs" />
+    <Compile Include="Controls\ControlButtonQuadPressure.cs" />
     <Compile Include="Controls\ControlButtonWithStateLight.cs" />
+    <Compile Include="Controls\ControlDPadPressure.cs" />
     <Compile Include="Controls\ControlTrigger2Stage.cs" />
     <Compile Include="Controls\ControlTrigger.cs" />
     <Compile Include="Controls\ControlButton.cs" />
     <Compile Include="Controls\ControlRocker.cs" />
     <Compile Include="Controls\ControlStickWithClick.cs" />
+    <Compile Include="Controls\IGenericControl.cs" />
     <Compile Include="DeviceProvider\ReportData.cs" />
     <Compile Include="MadgwickAHRS.cs" />
     <Compile Include="QueueWorker.cs" />

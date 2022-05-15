@@ -3,6 +3,7 @@ using ExtendInput.DeviceProvider;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -59,22 +60,39 @@ namespace ExtendInput.Controller.GenericHid
             this.AccessMode = AccessMode;
             this.genericControllerData = candidateController;
 
-            foreach (var control in candidateController.Controls)
+            if (candidateController.Controls.Count > 0)
             {
-                string controlName = control.Key;
-                // TODO use reflection here, probably via a control manager
-                switch (control.Value[0])
+                Dictionary<string, Type> ControlTypes = new Dictionary<string, Type>();
+
+                foreach (Type item in typeof(IGenericControl).GetTypeInfo().Assembly.GetTypes())
                 {
-                    case "Button":
+                    if (item.GetInterfaces().Contains(typeof(IGenericControl)))
+                    {
+                        GenericControlAttribute attr = item.GetCustomAttributes(false).OfType<GenericControlAttribute>().SingleOrDefault();
+                        if (attr != null)
                         {
-                            AddressableValue val = new AddressableValue(control.Value[1]);
-                            State.Controls[controlName] = new ControlButton();
-                            AddressableValues[controlName] = new AddressableValue[] { val };
+                            ConstructorInfo con = item.GetConstructor(new Type[] { typeof(AddressableValue[]) });
+                            if (con != null)
+                                ControlTypes[attr.Name] = item;
                         }
-                        break;
-                    default:
+                    }
+                }
+
+                foreach (var control in candidateController.Controls)
+                {
+                    string controlName = control.Key;
+                    // TODO implement a control manager to factory contols instead
+
+                    if (!ControlTypes.ContainsKey(control.Value[0]))
+                    {
                         Console.WriteLine($"Unknown control {control.Value[0]}");
-                        break;
+                        continue;
+                    }
+
+                    var addressables = control.Value.Skip(1).Select(dr => new AddressableValue(dr)).ToArray();
+                    IControl controlInstance = (IControl)Activator.CreateInstance(ControlTypes[control.Value[0]], (object)addressables);
+                    State.Controls[controlName] = controlInstance;
+                    AddressableValues[controlName] = addressables;
                 }
             }
 
@@ -106,10 +124,7 @@ namespace ExtendInput.Controller.GenericHid
                     {
                         foreach (string controlName in State.Controls.Keys)
                         {
-                            // TODO add a common function here that takes in an array of AddressableValues for generic use
-                            bool? val = AddressableValues[controlName][0].GetBoolean(reportData.ReportId, reportData.ReportBytes);
-                            if (val.HasValue)
-                                (State.Controls[controlName] as ControlButton).DigitalStage1 = val.Value;
+                            (State.Controls[controlName] as IGenericControl).SetGenericValue(reportData);
                         }
                     }
                     finally
@@ -182,6 +197,7 @@ namespace ExtendInput.Controller.GenericHid
             
         }
 
+        [GenericControl("Button")]
         public bool SetControlState(string control, string state)
         {
             return false;
@@ -206,7 +222,7 @@ namespace ExtendInput.Controller.GenericHid
         }
     }
 
-    class AddressableValue
+    public class AddressableValue
     {
         const string numerics = "0123456789ABCDEF";
 
@@ -344,19 +360,26 @@ namespace ExtendInput.Controller.GenericHid
             }
         }
 
-        private int? GetWorkingValue(int reportID, byte[] report)
+        private int? GetWorkingValue(IReport report)
         {
+            // TODO removed reliance on the report being a HID report
+
+            if (report.ReportTypeCode != REPORT_TYPE.HID)
+                return null;
+
+            HidReport reportData = (HidReport)report;
+
             int Working = 0;
             if (RawValue.HasValue)
             {
                 Working = RawValue.Value;
             }
-            else if (reportID != ReportID) return null;
-            else if (ByteOffset >= report.Length) return null;
-            else if (ByteOffset + Length > report.Length) return null;
+            else if (reportData.ReportId != ReportID) return null;
+            else if (ByteOffset >= reportData.ReportBytes.Length) return null;
+            else if (ByteOffset + Length > reportData.ReportBytes.Length) return null;
             else
             {
-                Working = report[ByteOffset]; // TODO rewrite this to handle sizes other than 1 and also deal with Endian order
+                Working = reportData.ReportBytes[ByteOffset]; // TODO rewrite this to handle sizes other than 1 and also deal with Endian order
             }
             foreach (var opr in Operations)
             {
@@ -379,43 +402,46 @@ namespace ExtendInput.Controller.GenericHid
 
             return Working;
         }
-        public bool? GetBoolean(int reportID, byte[] report)
+        public bool? GetBoolean(IReport report)
         {
-            int? Working = GetWorkingValue(reportID, report);
+            int? Working = GetWorkingValue(report);
             if (!Working.HasValue) return null;
             if (BitOffset >= 0) return (Working.Value & (1 << BitOffset)) != 0;
             return Working.Value != 0;
         }
-        public byte? GetByte(int reportID, byte[] report)
+        public byte? GetByte(IReport report)
         {
-            int? Working = GetWorkingValue(reportID, report);
+            int? Working = GetWorkingValue(report);
             if (!Working.HasValue) return null;
             return (byte)Working.Value;
         }
-        public sbyte? GetSByte(int reportID, byte[] report)
+        public sbyte? GetSByte(IReport report)
         {
-            int? Working = GetWorkingValue(reportID, report);
+            int? Working = GetWorkingValue(report);
             if (!Working.HasValue) return null;
             return (sbyte)Working.Value;
         }
-        public float? GetFloat(int reportID, byte[] report)
+        public float? GetFloat(IReport report)
         {
-            int? Working = GetWorkingValue(reportID, report);
+            int? Working = GetWorkingValue(report);
             if (!Working.HasValue) return null;
 
             int localMax = Maximum;
             int localMin = Minimum;
-            int invert = 1;
+            bool invert = false;
             if(Minimum > Maximum)
             {
                 localMin = Maximum;
                 localMax = Minimum;
-                invert = -1;
+                invert = true;
             }
 
             Working = Math.Max(Math.Min(Working.Value, localMax), localMin);
 
-            float fVal = 1f * (Working.Value - localMin) / (localMax - localMin);
+            float fVal = 1.0f * (Working.Value - localMin) / (localMax - localMin);
+
+            if (invert)
+                fVal = 1 - fVal;
 
             if (AnalogCenter)
                 return fVal * 2f - 1f;
