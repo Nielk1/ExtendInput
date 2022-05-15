@@ -439,8 +439,8 @@ namespace ExtendInputControllerTester
                     if (!ActiveControllerCounts.ContainsKey(ControllerID))
                     {
                         ActiveControllerCounts[ControllerID] = 1;
-                        Controllers[ControllerID].Initalize();
                         Controllers[ControllerID].ControllerStateUpdate += Program_ControllerStateUpdate;
+                        Controllers[ControllerID].Initalize();
                     }
                     else
                     {

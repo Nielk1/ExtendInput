@@ -164,6 +164,11 @@ namespace ExtendInput.Controller.GenericHid
             //touch_last_frame = false;
 
             PollingState = EPollingState.Active;
+            new Thread(() =>
+            {
+                State.StartStateChange();
+                State.EndStateChange();
+            }).Start(); // fire this off in a thread so we don't get stuck as what called us to Initalize is probably locking in a way that will block their event handler
             _device.StartReading();
         }
 
@@ -197,7 +202,6 @@ namespace ExtendInput.Controller.GenericHid
             
         }
 
-        [GenericControl("Button")]
         public bool SetControlState(string control, string state)
         {
             return false;

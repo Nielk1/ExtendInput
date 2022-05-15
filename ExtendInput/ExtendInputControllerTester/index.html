@@ -167,7 +167,7 @@
                                 '</g>' +
                                 '</svg>');
                         }
-                        var ctrl = $('#control_render_' + controller_id + '__' + control_id);
+                        var ctrl = renderElement.find('#control_render_' + controller_id + '__' + control_id);
                         if (controlData.ButtonN) {
                             UpdateButtonSvg(ctrl, '.btn_n_data', 1);
                         } else {
@@ -206,7 +206,7 @@
                                 '</g>' +
                                 '</svg>');
                         }
-                        var ctrl = $('#control_render_' + controller_id + '__' + control_id);
+                        var ctrl = renderElement.find('#control_render_' + controller_id + '__' + control_id);
                         if (controlData.ButtonN) {
                             ctrl.find('.btn_n').addClass('active-low');
                         } else {
@@ -246,7 +246,7 @@
                                 '</g>' +
                                 '</svg>');
                         }
-                        var ctrl = $('#control_render_' + controller_id + '__' + control_id);
+                        var ctrl = renderElement.find('#control_render_' + controller_id + '__' + control_id);
                         if (controlData.DigitalStage1) {
                             UpdateButtonSvg(ctrl, '.btn_x_data', 1);
                         } else {
@@ -269,7 +269,7 @@
                             var listElement = $('<div class="list-group p-1 control_state_list" id="control_state_list_' + controller_id + '__' + control_id + '"/>');
                             renderElement.append(listElement);
                         }
-                        var ctrl = $('#control_render_' + controller_id + '__' + control_id);
+                        var ctrl = renderElement.find('#control_render_' + controller_id + '__' + control_id);
                         var listElement = $('#control_state_list_' + controller_id + '__' + control_id);
                         if (controlData.States.length != listElement.children().length) {
                             listElement.empty();
@@ -309,7 +309,7 @@
                                 '</g>' +
                                 '</svg>');
                         }
-                        var ctrl = $('#control_render_' + controller_id + '__' + control_id);
+                        var ctrl = renderElement.find('#control_render_' + controller_id + '__' + control_id);
                         UpdateButtonSvg(ctrl, '.btn_x_data', controlData.AnalogStage1);
                         if (controlData.DigitalStage1)
                             ctrl.find('.btn_x').addClass('active-low');
@@ -329,7 +329,7 @@
                                 '</g>' +
                                 '</svg>');
                         }
-                        var ctrl = $('#control_render_' + controller_id + '__' + control_id);
+                        var ctrl = renderElement.find('#control_render_' + controller_id + '__' + control_id);
                         UpdateButton2StageSvg(ctrl, '.btn_x_data', controlData.AnalogStage1);
                         if (controlData.DigitalStage2) ctrl.find('.btn_x_click').addClass('active-o'); else ctrl.find('.btn_x_click').removeClass('active-o');
                     }
@@ -349,7 +349,7 @@
                                 '</g>' +
                                 '</svg>');
                         }
-                        var ctrl = $('#control_render_' + controller_id + '__' + control_id);
+                        var ctrl = renderElement.find('#control_render_' + controller_id + '__' + control_id);
                         switch (controlData.Direction) {
                             case "None":
                             case 0: ctrl.find('.btn_n,.btn_e,.btn_s,.btn_w').removeClass('active'); break;
@@ -391,7 +391,7 @@
                                 '</g>' +
                                 '</svg>');
                         }
-                        var ctrl = $('#control_render_' + controller_id + '__' + control_id);
+                        var ctrl = renderElement.find('#control_render_' + controller_id + '__' + control_id);
                         switch (controlData.Direction) {
                             case "None":
                             case 0: ctrl.find('.btn_n,.btn_e,.btn_s,.btn_w').removeClass('active-low'); break;
@@ -436,7 +436,7 @@
                                 '</g>' +
                                 '</svg>');
                         }
-                        var ctrl = $('#control_render_' + controller_id + '__' + control_id);
+                        var ctrl = renderElement.find('#control_render_' + controller_id + '__' + control_id);
                         var stickFloat = ctrl.find('.stick_float');
                         stickFloat.attr('transform', 'translate(' + (70 + controlData.X * 63) + ',' + (70 + controlData.Y * 63) + ')');
                         stickFloat.children('.stick_float_text').attr('transform', 'translate(' + (controlData.X > 0 ? 0 : 6) + ',' + (controlData.Y > 0 ? -6 : 6) + ')').attr('text-anchor', (controlData.X > 0 ? "end" : "initial")).text(cord_formatter.format(controlData.X) + ',' + cord_formatter.format(controlData.Y));
@@ -460,7 +460,7 @@
                                 '</g>' +
                                 '</svg>');
                         }
-                        var ctrl = $('#control_render_' + controller_id + '__' + control_id);
+                        var ctrl = renderElement.find('#control_render_' + controller_id + '__' + control_id);
                         var stickFloat = ctrl.find('.stick_float');
                         stickFloat.attr('transform', 'translate(' + (70 + controlData.X * 63) + ',' + (70 + controlData.Y * 63) + ')');
                         stickFloat.children('.stick_float_text').attr('transform', 'translate(' + (controlData.X > 0 ? 0 : 6) + ',' + (controlData.Y > 0 ? -6 : 6) + ')').attr('text-anchor', (controlData.X > 0 ? "end" : "initial")).text(cord_formatter.format(controlData.X) + ',' + cord_formatter.format(controlData.Y));
@@ -504,7 +504,7 @@
                                 '</svg>';
                             renderElement.empty().append(domString);
                         }
-                        var ctrl = $('#control_render_' + controller_id + '__' + control_id);
+                        var ctrl = renderElement.find('#control_render_' + controller_id + '__' + control_id);
                         for (var i = 0; i < controlData.Touch.length; i++) {
                             var stickFloat = ctrl.find('.pad_float_' + i);
                             if (controlData.Touch[i]) {
@@ -540,7 +540,7 @@
                                 '</svg>'
                             renderElement.empty().append(domString);
                         }
-                        var ctrl = $('#control_render_' + controller_id + '__' + control_id);
+                        var ctrl = renderElement.find('#control_render_' + controller_id + '__' + control_id);
                         '<g>';
                         for (var x = 0; x < controlData.Button.length; x++) {
                             for (var y = 0; y < controlData.Button[0].length; y++) {
@@ -576,7 +576,7 @@
                                 '</g>' +
                                 '</svg>');
                         }
-                        var ctrl = $('#control_render_' + controller_id + '__' + control_id);
+                        var ctrl = renderElement.find('#control_render_' + controller_id + '__' + control_id);
                         if (controlData.Left.Button0) {
                             ctrl.find('.btn_l_data').attr('rx', 25).attr('ry', 25);
                         } else {
@@ -595,7 +595,7 @@
                     {
                         var renderElement = wrapper.find('.control-value');
                         //renderElement.addClass('text-center');
-                        var ctrl = $('#control_render_' + controller_id + '__' + control_id);
+                        var ctrl = renderElement.find('#control_render_' + controller_id + '__' + control_id);
                         if (controlData.Button0) ctrl.find('.btn_x').addClass('active'); else ctrl.find('.btn_x').removeClass('active');
 
                         RenderControl(controller_id + '__' + control_id + "-Left", controlData.Left, controlType.split('[')[1].split(']')[0], renderElement, NewSubtype, knownChildren, true);
