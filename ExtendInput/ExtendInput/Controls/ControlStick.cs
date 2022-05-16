@@ -1,4 +1,6 @@
-﻿using System;
+﻿using ExtendInput.Controller.GenericHid;
+using ExtendInput.DeviceProvider;
+using System;
 
 namespace ExtendInput.Controls
 {
@@ -7,13 +9,23 @@ namespace ExtendInput.Controls
         float X { get; set; }
         float Y { get; set; }
     }
-    public class ControlStick : IControlStick
+    [GenericControl("Stick")]
+    public class ControlStick : IControlStick, IGenericControl
     {
         public float X { get; set; }
         public float Y { get; set; }
 
         public ControlStick() { }
-        
+
+
+        private AddressableValue[] addressableValues;
+        private string factoryName;
+        public ControlStick(string factoryName, AddressableValue[] addressableValues)
+        {
+            this.factoryName = factoryName;
+            this.addressableValues = addressableValues;
+        }
+
         public virtual T Value<T>(string key)
         {
             switch (key)
@@ -47,6 +59,12 @@ namespace ExtendInput.Controls
             newData.Y = this.Y;
 
             return newData;
+        }
+
+        public void SetGenericValue(IReport report)
+        {
+            X = addressableValues[0].GetFloat(report) ?? X;
+            Y = addressableValues[1].GetFloat(report) ?? Y;
         }
     }
 }

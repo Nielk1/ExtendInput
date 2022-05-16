@@ -23,8 +23,10 @@ namespace ExtendInput.Controls
 
 
         private AddressableValue[] addressableValues;
-        public ControlStickWithClick(AddressableValue[] addressableValues)
+        private string factoryName;
+        public ControlStickWithClick(string factoryName, AddressableValue[] addressableValues)
         {
+            this.factoryName = factoryName;
             this.addressableValues = addressableValues;
         }
 

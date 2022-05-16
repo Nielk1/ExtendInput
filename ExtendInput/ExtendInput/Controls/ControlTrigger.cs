@@ -22,8 +22,10 @@ namespace ExtendInput.Controls
 
 
         private AddressableValue[] addressableValues;
-        public ControlTrigger(AddressableValue[] addressableValues)
+        private string factoryName;
+        public ControlTrigger(string factoryName, AddressableValue[] addressableValues)
         {
+            this.factoryName = factoryName;
             this.addressableValues = addressableValues;
         }
 

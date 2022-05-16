@@ -9,13 +9,22 @@ using System.Threading.Tasks;
 
 namespace ExtendInput.Controller.GenericHid
 {
+    public class ControlData
+    {
+        [JsonProperty("c")]
+        public string ControlName { get; set; }
+        [JsonProperty("f")]
+        public string FactoryName { get; set; }
+        [JsonProperty("p")]
+        public dynamic[] Paramaters { get; set; }
+    }
     public class ControllerDbEntry
     {
         public string Name { get; set; }
         public string[] Tokens { get; set; }
         public Dictionary<string, dynamic> Select { get; set; }
         public decimal Version { get; set; }
-        public Dictionary<string, dynamic[]> Controls { get; set; }
+        public Dictionary<string, ControlData> Controls { get; set; }
     }
     public class GenericHidControllerFactory : IControllerFactory
     {

@@ -71,7 +71,7 @@ namespace ExtendInput.Controller.GenericHid
                         GenericControlAttribute attr = item.GetCustomAttributes(false).OfType<GenericControlAttribute>().SingleOrDefault();
                         if (attr != null)
                         {
-                            ConstructorInfo con = item.GetConstructor(new Type[] { typeof(AddressableValue[]) });
+                            ConstructorInfo con = item.GetConstructor(new Type[] { typeof(string), typeof(AddressableValue[]) });
                             if (con != null)
                                 ControlTypes[attr.Name] = item;
                         }
@@ -83,14 +83,14 @@ namespace ExtendInput.Controller.GenericHid
                     string controlName = control.Key;
                     // TODO implement a control manager to factory contols instead
 
-                    if (!ControlTypes.ContainsKey(control.Value[0]))
+                    if (!ControlTypes.ContainsKey(control.Value.ControlName))
                     {
-                        Console.WriteLine($"Unknown control {control.Value[0]}");
+                        Console.WriteLine($"Unknown control {control.Value.ControlName}");
                         continue;
                     }
 
-                    var addressables = control.Value.Skip(1).Select(dr => new AddressableValue(dr)).ToArray();
-                    IControl controlInstance = (IControl)Activator.CreateInstance(ControlTypes[control.Value[0]], (object)addressables);
+                    var addressables = control.Value.Paramaters.Select(dr => new AddressableValue(dr)).ToArray();
+                    IControl controlInstance = (IControl)Activator.CreateInstance(ControlTypes[control.Value.ControlName], control.Value.FactoryName, (object)addressables);
                     State.Controls[controlName] = controlInstance;
                     AddressableValues[controlName] = addressables;
                 }

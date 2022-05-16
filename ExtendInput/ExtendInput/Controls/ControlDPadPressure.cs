@@ -29,8 +29,10 @@ namespace ExtendInput.Controls
 
 
         private AddressableValue[] addressableValues;
-        public ControlDPadPressure(AddressableValue[] addressableValues)
+        private string factoryName;
+        public ControlDPadPressure(string factoryName, AddressableValue[] addressableValues)
         {
+            this.factoryName = factoryName;
             this.addressableValues = addressableValues;
         }
 

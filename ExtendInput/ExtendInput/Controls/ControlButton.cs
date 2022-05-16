@@ -23,8 +23,10 @@ namespace ExtendInput.Controls
 
 
         private AddressableValue[] addressableValues;
-        public ControlButton(AddressableValue[] addressableValues)
+        private string factoryName;
+        public ControlButton(string factoryName, AddressableValue[] addressableValues)
         {
+            this.factoryName = factoryName;
             this.addressableValues = addressableValues;
         }
 

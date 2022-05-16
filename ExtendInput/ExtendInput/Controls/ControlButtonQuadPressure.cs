@@ -32,8 +32,10 @@ namespace ExtendInput.Controls
 
 
         private AddressableValue[] addressableValues;
-        public ControlButtonQuadPressure(AddressableValue[] addressableValues)
+        private string factoryName;
+        public ControlButtonQuadPressure(string factoryName, AddressableValue[] addressableValues)
         {
+            this.factoryName = factoryName;
             this.addressableValues = addressableValues;
         }
 
