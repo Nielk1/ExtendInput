@@ -98,6 +98,8 @@
     <Compile Include="Controls\ControlButtonQuadPressure.cs" />
     <Compile Include="Controls\ControlButtonWithStateLight.cs" />
     <Compile Include="Controls\ControlDPadPressure.cs" />
+    <Compile Include="Controls\ControlCombinedTrigger.cs" />
+    <Compile Include="Controls\ControlSlider.cs" />
     <Compile Include="Controls\ControlTrigger2Stage.cs" />
     <Compile Include="Controls\ControlTrigger.cs" />
     <Compile Include="Controls\ControlButton.cs" />
