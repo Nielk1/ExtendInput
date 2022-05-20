@@ -48,6 +48,12 @@ namespace ExtendInput.DeviceProvider
                 Properties["ProductName"] = internalDevice.GetProductName();
             }
             catch { }
+            //try
+            //{
+            //    //Properties["Descriptor"] = internalDevice.GetRawReportDescriptor();
+            //    Console.WriteLine($"{internalDevice.VendorID:X4}:{internalDevice.ProductID:X4} {BitConverter.ToString(internalDevice.GetRawReportDescriptor()).Replace("-", " ")}");
+            //}
+            //catch { }
 
             try
             {

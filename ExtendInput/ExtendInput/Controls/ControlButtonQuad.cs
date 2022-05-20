@@ -1,4 +1,6 @@
-﻿using System;
+﻿using ExtendInput.Controller.GenericHid;
+using ExtendInput.DeviceProvider;
+using System;
 
 namespace ExtendInput.Controls
 {
@@ -9,15 +11,24 @@ namespace ExtendInput.Controls
         bool ButtonS { get; set; }
         bool ButtonW { get; set; }
     }
-    public class ControlButtonQuad : IControlButtonQuad
+    [GenericControl("ButtonQuad")]
+    public class ControlButtonQuad : IControlButtonQuad, IGenericControl
     {
         public bool ButtonN { get; set; }
         public bool ButtonE { get; set; }
         public bool ButtonS { get; set; }
         public bool ButtonW { get; set; }
 
-        public ControlButtonQuad()
+        public ControlButtonQuad() { }
+
+
+
+        private AddressableValue[] addressableValues;
+        private string factoryName;
+        public ControlButtonQuad(string factoryName, AddressableValue[] addressableValues)
         {
+            this.factoryName = factoryName;
+            this.addressableValues = addressableValues;
         }
 
         public T Value<T>(string key)
@@ -51,6 +62,14 @@ namespace ExtendInput.Controls
             newData.ButtonW = this.ButtonW;
 
             return newData;
+        }
+
+        public void SetGenericValue(IReport report)
+        {
+            ButtonN = addressableValues[0].GetBoolean(report) ?? ButtonN;
+            ButtonE = addressableValues[1].GetBoolean(report) ?? ButtonE;
+            ButtonS = addressableValues[2].GetBoolean(report) ?? ButtonS;
+            ButtonW = addressableValues[3].GetBoolean(report) ?? ButtonW;
         }
     }
 }

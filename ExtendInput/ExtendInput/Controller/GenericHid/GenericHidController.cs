@@ -46,6 +46,7 @@ namespace ExtendInput.Controller.GenericHid
         int reportUsageLock = 0;
 
 
+        public Dictionary<string, dynamic> DeviceProperties => _device.Properties;
         private HidDevice _device;
         public AccessMode AccessMode { get; private set; }
         private ControllerDbEntry genericControllerData;

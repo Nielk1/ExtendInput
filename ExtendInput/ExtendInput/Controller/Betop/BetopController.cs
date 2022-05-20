@@ -77,6 +77,7 @@ namespace ExtendInput.Controller.Betop
         private bool ConfigModeKeyData = false;
 
 
+        public Dictionary<string, dynamic> DeviceProperties => null;
         private HidDevice deviceVendor => devices.Where(dr => dr.Usages?.Contains(0xff000003u) ?? false).FirstOrDefault();
 
 

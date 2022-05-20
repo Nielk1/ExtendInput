@@ -96,6 +96,7 @@
     <Compile Include="Controls\ControlButtonPS5Mute.cs" />
     <Compile Include="Controls\ControlButtonGenesis6.cs" />
     <Compile Include="Controls\ControlButtonQuadPressure.cs" />
+    <Compile Include="Controls\ControlButtonSfxFlower.cs" />
     <Compile Include="Controls\ControlButtonWithStateLight.cs" />
     <Compile Include="Controls\ControlDPadPressure.cs" />
     <Compile Include="Controls\ControlCombinedTrigger.cs" />

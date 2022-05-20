@@ -50,6 +50,7 @@ namespace ExtendInput.Controller.SixtyBeat
             }
         }
 
+        public Dictionary<string, dynamic> DeviceProperties => _device.Properties;
         public bool HasMotion => false;
         public bool IsReady => true;
         public bool IsPresent => true;

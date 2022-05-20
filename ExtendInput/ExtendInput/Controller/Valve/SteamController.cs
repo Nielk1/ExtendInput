@@ -123,6 +123,8 @@ namespace ExtendInput.Controller.Valve
             }
         }
 
+        public Dictionary<string, dynamic> DeviceProperties => _device.Properties;
+
         public bool HasSelectableAlternatives => false;
         public Dictionary<string, string> Alternates => null;
 
@@ -287,6 +289,7 @@ namespace ExtendInput.Controller.Valve
             Disconnected,
             Connected,
         }
+
         private InternalConState ConState;
         private DateTime ConnectedTime;
 

@@ -107,6 +107,8 @@ namespace ExtendInput.Controller
         /// </summary>
         bool IsVirtual { get; }
 
+        Dictionary<string, dynamic> DeviceProperties { get; }
+
         void DeInitalize();
 
         //[Obsolete("Need a proxy for the event instead of giving the State object this way", false)]

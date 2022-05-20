@@ -134,6 +134,7 @@ namespace ExtendInput.Controller.Sony
                 return new string[] { $"[{Serial ?? "No ID"}]" };
             }
         }
+        public Dictionary<string, dynamic> DeviceProperties => _device.Properties;
         public bool HasSelectableAlternatives => false;
         public Dictionary<string, string> Alternates => null;
 
