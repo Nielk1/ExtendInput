@@ -676,14 +676,17 @@ namespace ExtendInput.Controller.Flydigi
 
                                             (State.Controls["stick_left"] as IControlStickWithClick).X = ControllerMathTools.QuickStickToFloat(LStickX);
                                             (State.Controls["stick_left"] as IControlStickWithClick).Y = ControllerMathTools.QuickStickToFloat(LStickY);
-                                            (State.Controls["stick_left"] as IControlStickWithClick).Click = buttonL3;
                                             (State.Controls["stick_right"] as IControlStickWithClick).X = ControllerMathTools.QuickStickToFloat(RStickX);
                                             (State.Controls["stick_right"] as IControlStickWithClick).Y = ControllerMathTools.QuickStickToFloat(RStickY);
-                                            (State.Controls["stick_right"] as IControlStickWithClick).Click = buttonR3;
-                                            (State.Controls["bumper_left"] as IControlButton).DigitalStage1 = buttonL1;
-                                            (State.Controls["bumper_right"] as IControlButton).DigitalStage1 = buttonR1;
-                                            (State.Controls["menu_left"] as IControlButton).DigitalStage1 = buttonSelect;
-                                            (State.Controls["menu_right"] as IControlButton).DigitalStage1 = buttonStart;
+                                            if (!buttonPair)
+                                            {
+                                                (State.Controls["stick_left"] as IControlStickWithClick).Click = buttonL3;
+                                                (State.Controls["stick_right"] as IControlStickWithClick).Click = buttonR3;
+                                                (State.Controls["bumper_left"] as IControlButton).DigitalStage1 = buttonL1;
+                                                (State.Controls["bumper_right"] as IControlButton).DigitalStage1 = buttonR1;
+                                                (State.Controls["menu_left"] as IControlButton).DigitalStage1 = buttonSelect;
+                                                (State.Controls["menu_right"] as IControlButton).DigitalStage1 = buttonStart;
+                                            }
 
                                             if (ControllerAttributeInFlight.HasAnalogTrigger)
                                             {
@@ -692,8 +695,11 @@ namespace ExtendInput.Controller.Flydigi
                                             }
                                             else if (ControllerSubType != FlyDigiSubType.None && ControllerSubType != FlyDigiSubType.Unknown)
                                             {
-                                                if (State.Controls["trigger_left"] is IControlButton) (State.Controls["trigger_left"] as IControlButton).DigitalStage1 = buttonL2;
-                                                if (State.Controls["trigger_right"] is IControlButton) (State.Controls["trigger_right"] as IControlButton).DigitalStage1 = buttonR2;
+                                                if (!buttonPair)
+                                                {
+                                                    if (State.Controls["trigger_left"] is IControlButton) (State.Controls["trigger_left"] as IControlButton).DigitalStage1 = buttonL2;
+                                                    if (State.Controls["trigger_right"] is IControlButton) (State.Controls["trigger_right"] as IControlButton).DigitalStage1 = buttonR2;
+                                                }
                                             }
                                             //if (ControllerAttributeInFlight.HasLogo)
                                             //{
@@ -714,80 +720,96 @@ namespace ExtendInput.Controller.Flydigi
                                             if (ControllerAttributeInFlight.HasTopMenu || ControllerAttributeInFlight.HasBottomMenu)
                                             {
                                                 (State.Controls["cluster_middle"] as ControlButtonGrid).Button[0, 0] = buttonPair;
-                                                (State.Controls["cluster_middle"] as ControlButtonGrid).Button[1, 0] = buttonHome;
-                                                (State.Controls["cluster_middle"] as ControlButtonGrid).Button[2, 0] = buttonBack;
-                                            }
-                                            if (ControllerAttributeInFlight.HasCZBottom)
-                                            {
-                                                (State.Controls["c"] as IControlButton).DigitalStage1 = buttonC;
-                                                (State.Controls["z"] as IControlButton).DigitalStage1 = buttonZ;
-                                            }
-                                            if (ControllerAttributeInFlight.HasCZTop)
-                                            {
-                                                (State.Controls["c_top"] as IControlButton).DigitalStage1 = buttonC;
-                                                (State.Controls["z_top"] as IControlButton).DigitalStage1 = buttonZ;
-                                            }
-                                            if (ControllerAttributeInFlight.HasMRockers)
-                                            {
-                                                (State.Controls["grip_right"] as ControlRocker).Direction = buttonM1 || AirMouseClick ? EDPadDirection.East : buttonM3 ? EDPadDirection.West : EDPadDirection.None;
-                                                (State.Controls["grip_left"] as ControlRocker).Direction = buttonM4 ? EDPadDirection.East : buttonM2 ? EDPadDirection.West : EDPadDirection.None;
-                                            }
-                                            else if (ControllerAttributeInFlight.HasMButtons)
-                                            {
-                                                (State.Controls["grip_right_left"] as ControlButton).DigitalStage1 = buttonM3;
-                                                (State.Controls["grip_right_right"] as ControlButton).DigitalStage1 = buttonM1 || AirMouseClick;
-                                                (State.Controls["grip_left_left"] as ControlButton).DigitalStage1 = buttonM2;
-                                                (State.Controls["grip_left_right"] as ControlButton).DigitalStage1 = buttonM4;
-                                            }
-                                            if (ControllerAttributeInFlight.HasBumper2)
-                                            {
-                                                (State.Controls["shoulder_a_left"] as ControlButton).DigitalStage1 = buttonM6;
-                                                (State.Controls["shoulder_a_right"] as ControlButton).DigitalStage1 = buttonM5;
                                             }
                                             if (ControllerAttributeInFlight.HasWheel)
                                             {
-                                                (State.Controls["cluster_right"] as IControlButtonQuadSlider).ButtonN = buttonY; // wheel
-                                                (State.Controls["cluster_right"] as IControlButtonQuadSlider).ButtonE = buttonB;
-                                                (State.Controls["cluster_right"] as IControlButtonQuadSlider).ButtonS = buttonA;
-                                                (State.Controls["cluster_right"] as IControlButtonQuadSlider).ButtonW = buttonX;
+                                                //(State.Controls["cluster_right"] as IControlButtonQuadSlider).ButtonN = buttonY; // wheel
+                                                //(State.Controls["cluster_right"] as IControlButtonQuadSlider).ButtonE = buttonB;
+                                                //(State.Controls["cluster_right"] as IControlButtonQuadSlider).ButtonS = buttonA;
+                                                //(State.Controls["cluster_right"] as IControlButtonQuadSlider).ButtonW = buttonX;
                                                 (State.Controls["cluster_right"] as IControlButtonQuadSlider).X = ControllerMathTools.QuickStickToFloat(TriggerLeft);
                                                 (State.Controls["cluster_right"] as IControlButtonQuadSlider).Y = ControllerMathTools.QuickStickToFloat(TriggerRight);
                                             }
-                                            else if (ControllerSubType != FlyDigiSubType.None && ControllerSubType != FlyDigiSubType.Unknown)
+                                            if (!buttonPair)
                                             {
-                                                (State.Controls["cluster_right"] as IControlButtonQuad).ButtonN = buttonY;
-                                                (State.Controls["cluster_right"] as IControlButtonQuad).ButtonE = buttonB;
-                                                (State.Controls["cluster_right"] as IControlButtonQuad).ButtonS = buttonA;
-                                                (State.Controls["cluster_right"] as IControlButtonQuad).ButtonW = buttonX;
-                                            }
+                                                if (ControllerAttributeInFlight.HasTopMenu || ControllerAttributeInFlight.HasBottomMenu)
+                                                {
+                                                    //(State.Controls["cluster_middle"] as ControlButtonGrid).Button[0, 0] = buttonPair;
+                                                    (State.Controls["cluster_middle"] as ControlButtonGrid).Button[1, 0] = buttonHome;
+                                                    (State.Controls["cluster_middle"] as ControlButtonGrid).Button[2, 0] = buttonBack;
+                                                }
+                                                if (ControllerAttributeInFlight.HasCZBottom)
+                                                {
+                                                    (State.Controls["c"] as IControlButton).DigitalStage1 = buttonC;
+                                                    (State.Controls["z"] as IControlButton).DigitalStage1 = buttonZ;
+                                                }
+                                                if (ControllerAttributeInFlight.HasCZTop)
+                                                {
+                                                    (State.Controls["c_top"] as IControlButton).DigitalStage1 = buttonC;
+                                                    (State.Controls["z_top"] as IControlButton).DigitalStage1 = buttonZ;
+                                                }
+                                                if (ControllerAttributeInFlight.HasMRockers)
+                                                {
+                                                    (State.Controls["grip_right"] as ControlRocker).Direction = buttonM1 || AirMouseClick ? EDPadDirection.East : buttonM3 ? EDPadDirection.West : EDPadDirection.None;
+                                                    (State.Controls["grip_left"] as ControlRocker).Direction = buttonM4 ? EDPadDirection.East : buttonM2 ? EDPadDirection.West : EDPadDirection.None;
+                                                }
+                                                else if (ControllerAttributeInFlight.HasMButtons)
+                                                {
+                                                    (State.Controls["grip_right_left"] as ControlButton).DigitalStage1 = buttonM3;
+                                                    (State.Controls["grip_right_right"] as ControlButton).DigitalStage1 = buttonM1 || AirMouseClick;
+                                                    (State.Controls["grip_left_left"] as ControlButton).DigitalStage1 = buttonM2;
+                                                    (State.Controls["grip_left_right"] as ControlButton).DigitalStage1 = buttonM4;
+                                                }
+                                                if (ControllerAttributeInFlight.HasBumper2)
+                                                {
+                                                    (State.Controls["shoulder_a_left"] as ControlButton).DigitalStage1 = buttonM6;
+                                                    (State.Controls["shoulder_a_right"] as ControlButton).DigitalStage1 = buttonM5;
+                                                }
+                                                if (ControllerAttributeInFlight.HasWheel)
+                                                {
+                                                    (State.Controls["cluster_right"] as IControlButtonQuadSlider).ButtonN = buttonY; // wheel
+                                                    (State.Controls["cluster_right"] as IControlButtonQuadSlider).ButtonE = buttonB;
+                                                    (State.Controls["cluster_right"] as IControlButtonQuadSlider).ButtonS = buttonA;
+                                                    (State.Controls["cluster_right"] as IControlButtonQuadSlider).ButtonW = buttonX;
+                                                    //(State.Controls["cluster_right"] as IControlButtonQuadSlider).X = ControllerMathTools.QuickStickToFloat(TriggerLeft);
+                                                    //(State.Controls["cluster_right"] as IControlButtonQuadSlider).Y = ControllerMathTools.QuickStickToFloat(TriggerRight);
+                                                }
+                                                else if (ControllerSubType != FlyDigiSubType.None && ControllerSubType != FlyDigiSubType.Unknown)
+                                                {
+                                                    (State.Controls["cluster_right"] as IControlButtonQuad).ButtonN = buttonY;
+                                                    (State.Controls["cluster_right"] as IControlButtonQuad).ButtonE = buttonB;
+                                                    (State.Controls["cluster_right"] as IControlButtonQuad).ButtonS = buttonA;
+                                                    (State.Controls["cluster_right"] as IControlButtonQuad).ButtonW = buttonX;
+                                                }
 
-                                            int padH = 0;
-                                            int padV = 0;
-                                            if (buttonUp) padV++;
-                                            if (buttonDown) padV--;
-                                            if (buttonRight) padH++;
-                                            if (buttonLeft) padH--;
-                                            if (padH > 0)
-                                                if (padV > 0)
-                                                    (State.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.NorthEast;
-                                                else if (padV < 0)
-                                                    (State.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.SouthEast;
+                                                int padH = 0;
+                                                int padV = 0;
+                                                if (buttonUp) padV++;
+                                                if (buttonDown) padV--;
+                                                if (buttonRight) padH++;
+                                                if (buttonLeft) padH--;
+                                                if (padH > 0)
+                                                    if (padV > 0)
+                                                        (State.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.NorthEast;
+                                                    else if (padV < 0)
+                                                        (State.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.SouthEast;
+                                                    else
+                                                        (State.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.East;
+                                                else if (padH < 0)
+                                                    if (padV > 0)
+                                                        (State.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.NorthWest;
+                                                    else if (padV < 0)
+                                                        (State.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.SouthWest;
+                                                    else
+                                                        (State.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.West;
                                                 else
-                                                    (State.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.East;
-                                            else if (padH < 0)
-                                                if (padV > 0)
-                                                    (State.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.NorthWest;
+                                                    if (padV > 0)
+                                                    (State.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.North;
                                                 else if (padV < 0)
-                                                    (State.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.SouthWest;
+                                                    (State.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.South;
                                                 else
-                                                    (State.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.West;
-                                            else
-                                                if (padV > 0)
-                                                (State.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.North;
-                                            else if (padV < 0)
-                                                (State.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.South;
-                                            else
-                                                (State.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.None;
+                                                    (State.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.None;
+                                            }
 
                                             //short yaw = ProcSignedByteNybble((short)(((report.Data[4] & 0x0f) << 8) + report.Data[3]));
                                             //short pitch = ProcSignedByteNybble((short)(((report.Data[4] & 0xf0) >> 4) + (report.Data[5] << 4)));
