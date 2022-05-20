@@ -167,7 +167,8 @@ namespace ExtendInput.Controller.Flydigi
                 HasBottomMenu: true,
                 HasMButtons: true,
                 HasCZBottom: true,
-                HasBumper2: true)]
+                HasBumper2: true,
+                HasWheel: true)]
             APEX_2,
 
             [ControllerSubType(
@@ -282,6 +283,7 @@ namespace ExtendInput.Controller.Flydigi
         //    return State;
         //}
 
+        public AccessMode AccessMode { get; private set; }
         public EConnectionType ConnectionType { get; private set; }
         public EPollingState PollingState { get; private set; }
 
@@ -408,11 +410,12 @@ namespace ExtendInput.Controller.Flydigi
         //bool EarlyDeviceRecheck = false;
         Thread CheckControllerStatusThread;
         Thread CheckControllerDongleAliveThread;
-        public FlydigiController(HidDevice device, EConnectionType ConnectionType = EConnectionType.Unknown)
+        public FlydigiController(HidDevice device, EConnectionType ConnectionType = EConnectionType.Unknown, AccessMode AccessMode = AccessMode.ReadOnly)
         {
             //LastData = DateTime.UtcNow;
             LastData = new DateTime();
             this.ConnectionType = ConnectionType;
+            this.AccessMode = AccessMode;
 
             _device = device;
 
@@ -677,8 +680,8 @@ namespace ExtendInput.Controller.Flydigi
                                             (State.Controls["stick_right"] as IControlStickWithClick).X = ControllerMathTools.QuickStickToFloat(RStickX);
                                             (State.Controls["stick_right"] as IControlStickWithClick).Y = ControllerMathTools.QuickStickToFloat(RStickY);
                                             (State.Controls["stick_right"] as IControlStickWithClick).Click = buttonR3;
-                                            (State.Controls["bumpers_left"] as IControlButton).DigitalStage1 = buttonL1;
-                                            (State.Controls["bumpers_right"] as IControlButton).DigitalStage1 = buttonR1;
+                                            (State.Controls["bumper_left"] as IControlButton).DigitalStage1 = buttonL1;
+                                            (State.Controls["bumper_right"] as IControlButton).DigitalStage1 = buttonR1;
                                             (State.Controls["menu_left"] as IControlButton).DigitalStage1 = buttonSelect;
                                             (State.Controls["menu_right"] as IControlButton).DigitalStage1 = buttonStart;
 
@@ -743,10 +746,12 @@ namespace ExtendInput.Controller.Flydigi
                                             }
                                             if (ControllerAttributeInFlight.HasWheel)
                                             {
-                                                (State.Controls["cluster_right"] as IControlButtonQuad).ButtonN = buttonY; // wheel
-                                                (State.Controls["cluster_right"] as IControlButtonQuad).ButtonE = buttonB;
-                                                (State.Controls["cluster_right"] as IControlButtonQuad).ButtonS = buttonA;
-                                                (State.Controls["cluster_right"] as IControlButtonQuad).ButtonW = buttonX;
+                                                (State.Controls["cluster_right"] as IControlButtonQuadSlider).ButtonN = buttonY; // wheel
+                                                (State.Controls["cluster_right"] as IControlButtonQuadSlider).ButtonE = buttonB;
+                                                (State.Controls["cluster_right"] as IControlButtonQuadSlider).ButtonS = buttonA;
+                                                (State.Controls["cluster_right"] as IControlButtonQuadSlider).ButtonW = buttonX;
+                                                (State.Controls["cluster_right"] as IControlButtonQuadSlider).X = ControllerMathTools.QuickStickToFloat(TriggerLeft);
+                                                (State.Controls["cluster_right"] as IControlButtonQuadSlider).Y = ControllerMathTools.QuickStickToFloat(TriggerRight);
                                             }
                                             else if (ControllerSubType != FlyDigiSubType.None && ControllerSubType != FlyDigiSubType.Unknown)
                                             {
@@ -985,6 +990,25 @@ namespace ExtendInput.Controller.Flydigi
             array[0] = 5;
             array[1] = 0xEC;
             bool success = _device.WriteReport(array);
+        }
+        private void SplitWheelAndStick()
+        {
+            byte[] data = new byte[12];
+
+            data[0] = 0x05;
+            data[1] = 0xE1;
+            data[2] = 0x01;
+            data[3] = 0;
+            data[4] = 0;
+            data[5] = 0;
+            data[6] = 0;
+            data[7] = 0;
+            data[8] = 0;
+            data[9] = 0;
+            data[10] = 0;
+            data[11] = 0;
+
+            bool success = _device.WriteReport(data);
         }
 
         object UpdateLocalDataLock = new object();
@@ -1318,7 +1342,7 @@ namespace ExtendInput.Controller.Flydigi
 
             if (ControllerSubType == NewControllerSubType && ControlsCreated)
             {
-                Log($"ChangeControllerSubType End {NewControllerSubType}", ConsoleColor.Green, false);
+                Log($"ChangeControllerSubType End(Early) {NewControllerSubType}", ConsoleColor.Green, false);
                 return;
             }
 
@@ -1457,11 +1481,15 @@ namespace ExtendInput.Controller.Flydigi
 
                     if (ControllerAttribute.HasWheel)
                     {
-                        State.Controls["cluster_right"] = new ControlButtonQuad(); // wheel
+                        State.Controls["cluster_right"] = new ControlButtonQuadSlider(true, true, false, true);
+                        Log("Device has \"Wheel\"");
+                        if (AccessMode == AccessMode.FullControl)
+                            SplitWheelAndStick();
                     }
                     else
                     {
                         State.Controls["cluster_right"] = new ControlButtonQuad();
+                        Log("Device does not have \"Wheel\"");
                     }
                 }
             }

@@ -93,6 +93,8 @@ namespace ExtendInput.Controller.GenericHid
         {
             lock (Controllers)
             {
+                if (!Controllers.ContainsKey(UniqueKey))
+                    return null;
                 GenericHidController ctrl = Controllers[UniqueKey];
                 string UniqueControllerId = ctrl.ConnectionUniqueID;
 

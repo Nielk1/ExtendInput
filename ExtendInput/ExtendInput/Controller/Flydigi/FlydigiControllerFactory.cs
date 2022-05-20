@@ -166,7 +166,7 @@ namespace ExtendInput.Controller.Flydigi
 
             lock (Controllers)
             {
-                FlydigiController ctrl = new FlydigiController(_device, ConType);
+                FlydigiController ctrl = new FlydigiController(_device, ConType, AccessMode);
                 Controllers[_device.UniqueKey] = ctrl;
                 //Console.WriteLine($"Controllers[\"{_device.UniqueKey}\"] = {ctrl};");
                 return ctrl;
