@@ -274,7 +274,7 @@ namespace ExtendInputControllerTester
                 ControllerImages = ControllerImages,
                 IconImages = IconImages,
                 ManualDevices = ManualDevices,
-            });
+            }, new IWebSocketContext[] { context });
         }
 
 
