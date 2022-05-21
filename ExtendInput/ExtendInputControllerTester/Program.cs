@@ -71,8 +71,9 @@ namespace ExtendInputControllerTester
             }
         }
 
-        private static void Websocket_Connected(object sender, EventArgs e)
+        private static void Websocket_Connected(object sender, IWebSocketContext context)
         {
+            StartupData(context).Wait();
             ControllersLock.Wait();
             {
                 foreach(var ctrl in Controllers)
@@ -190,7 +191,7 @@ namespace ExtendInputControllerTester
                 ////.WithModule(new FileModule("/images/controller", provider))
                 //.WithModule(new ActionModule("/poll_controller", HttpVerbs.Get, PollController))
                 //.WithModule(new ActionModule("/poll_other", HttpVerbs.Get, PollOther))
-                .WithModule(new ActionModule("/startup_data", HttpVerbs.Get, StartupData))
+                //.WithModule(new ActionModule("/startup_data", HttpVerbs.Get, StartupData))
                 .WithModule(new ActionModule("/manual_device", HttpVerbs.Post, ManualDevice))
                 //.WithModule(new ActionModule("/activate_controller", HttpVerbs.Post, ActivateController))
                 //.WithModule(new ActionModule("/alternate_controller", HttpVerbs.Post, AlternateController))
@@ -243,7 +244,7 @@ namespace ExtendInputControllerTester
         }*/
 
 
-        private static async Task StartupData(IHttpContext context)
+        private static async Task StartupData(IWebSocketContext context)
         {
             if (DeviceManager == null)
                 return;
@@ -268,7 +269,7 @@ namespace ExtendInputControllerTester
                 ManualDevices[Code] = Name;
             }
 
-            await context.SendDataAsync(new
+            await websocket.SendMessage("DeviceManager:StartupData", new
             {
                 ControllerImages = ControllerImages,
                 IconImages = IconImages,
@@ -552,7 +553,7 @@ namespace ExtendInputControllerTester
 
     class WebSocketControllerModule : WebSocketModule
     {
-        public event EventHandler Connected;
+        public event EventHandler<IWebSocketContext> Connected;
         public event EventHandler<IWebSocketContext> Disconnected;
         public event EventHandler<(IWebSocketContext, JObject)> MessageReceived;
 
@@ -576,7 +577,7 @@ namespace ExtendInputControllerTester
             //return Task.WhenAll(
             //    SendAsync(context, "Welcome to the chat room!"),
             //    SendToOthersAsync(context, "Someone joined the chat room."));
-            Connected?.Invoke(this, null);
+            Connected?.Invoke(this, context);
         }
 
         protected async override Task OnClientDisconnectedAsync(IWebSocketContext context)

@@ -917,6 +917,10 @@
             socket.addEventListener('message', function (event) {
                 var eventData = JSON.parse(event.data)
                 switch (eventData.function) {
+                    case "DeviceManager:StartupData":
+                        console.log("DeviceManager:StartupData ", eventData.data);
+                        StartupData(eventData.data);
+                        break;
                     case "DeviceManager:ControllerAdded":
                         console.log("DeviceManager:ControllerAdded ", eventData.data);
                         AddController(eventData.data);
@@ -985,6 +989,30 @@
             }
             for (const control_id in knownChildren) {
                 $state_data.children('#' + controller_id + '__' + control_id).remove();
+            }
+        }
+
+        function StartupData(data) {
+
+            ControllerImages = data.ControllerImages;
+            IconImages = data.IconImages;
+
+            // manual controller types
+            var existing_manual = {};
+            $('#manual').children().each(function (idx, elem) { existing_manual[$(elem).data('id')] = elem; });
+            for (const device_id in data.ManualDevices) {
+                var manualDevice = data.ManualDevices[device_id];
+                if (existing_manual[device_id] != null) {
+                    delete existing_manual[device_id];
+                } else {
+                    var elem = $('<a href="#" class="list-group-item list-group-item-action" />');
+                    elem.attr('data-id', device_id);
+                    elem.text(manualDevice);
+                    $('#manual').append(elem);
+                }
+            }
+            for (var manual_elem_key in existing_manual) {
+                $(existing_manual[manual_elem_key]).remove();
             }
         }
 
@@ -1476,7 +1504,7 @@
             });
 
             //PollOtherFunc();
-            $.get("/startup_data", function (data) {
+            /*$.get("/startup_data", function (data) {
 
                 ControllerImages = data.ControllerImages;
                 IconImages = data.IconImages;
@@ -1498,7 +1526,8 @@
                 for (var manual_elem_key in existing_manual) {
                     $(existing_manual[manual_elem_key]).remove();
                 }
-            }).done(SocketStartup);
+            }).done(SocketStartup);*/
+            SocketStartup();
         });
     </script>
 </body>
