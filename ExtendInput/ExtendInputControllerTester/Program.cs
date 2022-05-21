@@ -65,6 +65,9 @@ namespace ExtendInputControllerTester
                 case "DeviceManager::ActivateController":
                     ActivateController(e.Item1, data.Value<string>());
                     break;
+                case "DeviceManager::AlternateController":
+                    AlternateController(e.Item1, data["controller"].Value<string>(), data["alternate"].Value<string>());
+                    break;
             }
         }
 
@@ -131,7 +134,7 @@ namespace ExtendInputControllerTester
 
         private static void DeviceManager_ControllerMetadataUpdate(IController sender)
         {
-
+            websocket.SendMessage("DeviceManager:ControllerMetadataUpdate", sender);
         }
 
         private static void DeviceManager_ControllerRemoved(object sender, string UniqueKey)
@@ -190,7 +193,7 @@ namespace ExtendInputControllerTester
                 .WithModule(new ActionModule("/startup_data", HttpVerbs.Get, StartupData))
                 .WithModule(new ActionModule("/manual_device", HttpVerbs.Post, ManualDevice))
                 //.WithModule(new ActionModule("/activate_controller", HttpVerbs.Post, ActivateController))
-                .WithModule(new ActionModule("/alternate_controller", HttpVerbs.Post, AlternateController))
+                //.WithModule(new ActionModule("/alternate_controller", HttpVerbs.Post, AlternateController))
                 .WithModule(new ActionModule("/activate_control_mode", HttpVerbs.Post, ActivateControlMode))
                 .WithModule(new ActionModule("/", HttpVerbs.Get, ctx => ctx.SendStringAsync(File.ReadAllText("../../index.html"), "text/html", Encoding.UTF8)));
                 ////.WithStaticFolder("/images/controller/","../images/controller/",true, new FileModule(,)
@@ -382,21 +385,17 @@ namespace ExtendInputControllerTester
             public IDeviceManualTriggerContext Data { get; set; }
         }
 
-        private static async Task AlternateController(IHttpContext context)
+        private static async Task AlternateController(IWebSocketContext context, string ControllerID, string AlternateID)
         {
             await ControllersLock.WaitAsync();
             try
             {
-                string raw = await context.GetRequestBodyAsStringAsync();
-                var data = HttpUtility.ParseQueryString(raw);
-
-                if (Controllers.ContainsKey(data["controller"]))
+                if (Controllers.ContainsKey(ControllerID))
                 {
-                    Controllers[data["controller"]].SetActiveAlternateController(data["alternate"]);
-                    await context.SendDataAsync(true);
+                    Controllers[ControllerID].SetActiveAlternateController(AlternateID);
+                    websocket.SendMessage("DeviceManager:ControllerMetadataUpdate", Controllers[ControllerID], new IWebSocketContext[] { context });
                     return;
                 }
-                await context.SendDataAsync(false);
             }
             finally
             {
