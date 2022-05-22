@@ -154,5 +154,13 @@ namespace ExtendInput.Controller
                 _cur += (uint)overflow + 1;
             return (byte)(_cur - prev);
         }
+
+        public static short ProcSignedByteNybble(short b)
+        {
+            if ((b & 0x0800) == 0x0800)
+                //b |= (short)0xf000;
+                b |= -4096;
+            return b;
+        }
     }
 }

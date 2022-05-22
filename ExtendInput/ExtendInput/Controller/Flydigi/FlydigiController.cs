@@ -30,6 +30,7 @@ namespace ExtendInput.Controller.Flydigi
         public bool HasMButtons { get; private set; }
         public bool HasMRockers { get; private set; }
         public bool HasWheel { get; private set; }
+        public bool HasAirMouse { get; private set; }
 
         public ControllerSubTypeAttribute(
             string[] Token,
@@ -49,7 +50,8 @@ namespace ExtendInput.Controller.Flydigi
             bool HasBumper2 = false,
             bool HasMButtons = false,
             bool HasMRockers = false,
-            bool HasWheel = false)
+            bool HasWheel = false,
+            bool HasAirMouse = false)
         {
             this.Tokens = Token;
             this.Name = Name;
@@ -72,6 +74,7 @@ namespace ExtendInput.Controller.Flydigi
             this.HasMButtons = HasMButtons;
             this.HasMRockers = HasMRockers;
             this.HasWheel = HasWheel;
+            this.HasAirMouse = HasAirMouse;
         }
     }
 
@@ -168,7 +171,8 @@ namespace ExtendInput.Controller.Flydigi
                 HasMButtons: true,
                 HasCZBottom: true,
                 HasBumper2: true,
-                HasWheel: true)]
+                HasWheel: true,
+                HasAirMouse: true)]
             APEX_2,
 
             [ControllerSubType(
@@ -507,7 +511,19 @@ namespace ExtendInput.Controller.Flydigi
         public void AddSubDevice(HidDevice device)
         {
             lock (OtherDevices)
+            {
                 OtherDevices.Add(device);
+
+                /*if (AccessMode == AccessMode.FullControl)
+                {
+                    uint[] Usages = device.Properties.ContainsKey("Usages") ? device.Properties["Usages"] as uint[] : null;
+                    if (Usages != null && Usages.Contains(0x00010002u))
+                    {
+                        string deviceInstanceId = DevPKey.PnpDevicePropertyAPI.devicePathToInstanceId(_device.DevicePath);
+                        DevPKey.PnpDevicePropertyAPI.EnableDisableDevice(deviceInstanceId, false);
+                    }
+                }*/
+            }
         }
 
         public void Dispose()
@@ -527,6 +543,20 @@ namespace ExtendInput.Controller.Flydigi
                     }
                     break;
             }
+
+            /*if (AccessMode == AccessMode.FullControl)
+                lock (OtherDevices)
+                {
+                    foreach (HidDevice device in OtherDevices)
+                    {
+                        uint[] Usages = device.Properties.ContainsKey("Usages") ? device.Properties["Usages"] as uint[] : null;
+                        if (Usages != null && Usages.Contains(0x00010002u))
+                        {
+                            string deviceInstanceId = DevPKey.PnpDevicePropertyAPI.devicePathToInstanceId(_device.DevicePath);
+                            DevPKey.PnpDevicePropertyAPI.EnableDisableDevice(deviceInstanceId, true);
+                        }
+                    }
+                }*/
         }
 
         public void Initalize()
@@ -662,6 +692,12 @@ namespace ExtendInput.Controller.Flydigi
                                             byte TriggerLeft = reportData.ReportBytes[22];
                                             byte TriggerRight = reportData.ReportBytes[23];
                                             ////////////////////////////////////////////////////
+
+                                            if (ControllerAttributeInFlight.HasAirMouse)
+                                            {
+                                                (State.Controls["airmouse"] as ControlMotion).AngularVelocityX = ControllerMathTools.ProcSignedByteNybble((short)(((reportData.ReportBytes[4] & 0x0f) << 8) + reportData.ReportBytes[3])); // Yaw Accel
+                                                (State.Controls["airmouse"] as ControlMotion).AngularVelocityY = ControllerMathTools.ProcSignedByteNybble((short)(((reportData.ReportBytes[4] & 0xf0) >> 4) + (reportData.ReportBytes[5] << 4))); // Pitch Accel
+                                            }
 
                                             (State.Controls["stick_left"] as IControlStickWithClick).X = ControllerMathTools.QuickStickToFloat(LStickX);
                                             (State.Controls["stick_left"] as IControlStickWithClick).Y = ControllerMathTools.QuickStickToFloat(LStickY);
@@ -1015,6 +1051,26 @@ namespace ExtendInput.Controller.Flydigi
             data[2] = 0x01;
             data[3] = 0;
             data[4] = 0;
+            data[5] = 0;
+            data[6] = 0;
+            data[7] = 0;
+            data[8] = 0;
+            data[9] = 0;
+            data[10] = 0;
+            data[11] = 0;
+
+            bool success = _device.WriteReport(data);
+        }
+
+        private void HidInputPageDeviceControl(bool Gamepad, bool Multimedia, bool AirMouse)
+        {
+            byte[] data = new byte[12];
+
+            data[0] = 0x05;
+            data[1] = 0x10;
+            data[2] = (byte)(Gamepad ? 0 : 1);
+            data[3] = (byte)(Multimedia ? 0 : 1);
+            data[4] = (byte)(AirMouse ? 0 : 1);
             data[5] = 0;
             data[6] = 0;
             data[7] = 0;
@@ -1505,6 +1561,13 @@ namespace ExtendInput.Controller.Flydigi
                     {
                         State.Controls["cluster_right"] = new ControlButtonQuad();
                         Log("Device does not have \"Wheel\"");
+                    }
+
+                    if (ControllerAttribute.HasAirMouse)
+                    {
+                        State.Controls["airmouse"] = new ControlMotion();
+                        if (AccessMode == AccessMode.FullControl)
+                            HidInputPageDeviceControl(false, false, false);
                     }
                 }
             }
