@@ -114,6 +114,8 @@ namespace ExtendInput.Controller.Valve
                     SteamController ctrl = Controllers[UniqueKey];
                     string UniqueControllerId = ctrl.ConnectionUniqueID;
 
+                    // TODO deal with parent/child map?
+
                     ctrl.DeInitalize();
                     ctrl.Dispose();
                     Controllers.Remove(UniqueKey);

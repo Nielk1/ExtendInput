@@ -238,6 +238,7 @@ namespace ExtendInput.Controller.Flydigi
                 DeviceIdFromFeature: 0x43)]
             WASP_2,
         }
+
         //private FlyDigiSubType PreviousControllerSubType = FlyDigiSubType.None;
         private FlyDigiSubType ControllerSubType = FlyDigiSubType.None;
         private ControllerSubTypeAttribute ControllerAttribute = null;
@@ -404,6 +405,8 @@ namespace ExtendInput.Controller.Flydigi
         public Dictionary<string, dynamic> DeviceProperties => _device.Properties;
         public IDevice DeviceHackRef => _device;
 
+        private List<HidDevice> OtherDevices = new List<HidDevice>();
+
         ControllerState State = new ControllerState();
 
         bool AbortStatusThread = false;
@@ -440,29 +443,10 @@ namespace ExtendInput.Controller.Flydigi
                     {
                         for (; ; )
                         {
-                            //if (ControllerSubType != FlyDigiSubType.None && LastData.AddSeconds(PollingState == EPollingState.SlowPoll ? (_SLOW_POLL_MS + 100) / 1000f : 0.2) < DateTime.UtcNow)
                             if (ControllerSubType != FlyDigiSubType.None && LastData.AddSeconds((_SLOW_POLL_MS + 100) / 1000f) < DateTime.UtcNow)
                             {
                                 Log($"No report within timeout {(DateTime.UtcNow - LastData).TotalSeconds}", ConsoleColor.Cyan);
                                 ChangeControllerSubType(FlyDigiSubType.None);
-                                /*
-                                ControllerSubType = FlyDigiSubType.None;
-                                ControllerAttribute = ControllerSubType.GetAttribute<ControllerSubTypeAttribute>();
-                                MetadataMutationLock.Wait(); NoteMetadataMutationLock();
-                                try
-                                {
-                                    DetectedDeviceId = null;
-                                    ReportFESubType = null;
-                                    FixedValueFromByte28 = null;
-                                    //VersionFromByte30 = null;
-                                    FixedValueFromByte31 = null;
-                                    NoMetaForThisController = false;
-                                }
-                                finally
-                                {
-                                    MetadataMutationLock.Release();
-                                }
-                                */
                             }
                             if (AbortStatusThread)
                                 return;
@@ -519,6 +503,11 @@ namespace ExtendInput.Controller.Flydigi
                     _device.StartReading();
                 }
             }
+        }
+        public void AddSubDevice(HidDevice device)
+        {
+            lock (OtherDevices)
+                OtherDevices.Add(device);
         }
 
         public void Dispose()
@@ -676,8 +665,6 @@ namespace ExtendInput.Controller.Flydigi
 
                                             (State.Controls["stick_left"] as IControlStickWithClick).X = ControllerMathTools.QuickStickToFloat(LStickX);
                                             (State.Controls["stick_left"] as IControlStickWithClick).Y = ControllerMathTools.QuickStickToFloat(LStickY);
-                                            (State.Controls["stick_right"] as IControlStickWithClick).X = ControllerMathTools.QuickStickToFloat(RStickX);
-                                            (State.Controls["stick_right"] as IControlStickWithClick).Y = ControllerMathTools.QuickStickToFloat(RStickY);
                                             if (!buttonPair)
                                             {
                                                 (State.Controls["stick_left"] as IControlStickWithClick).Click = buttonL3;
@@ -723,12 +710,18 @@ namespace ExtendInput.Controller.Flydigi
                                             }
                                             if (ControllerAttributeInFlight.HasWheel)
                                             {
-                                                //(State.Controls["cluster_right"] as IControlButtonQuadSlider).ButtonN = buttonY; // wheel
-                                                //(State.Controls["cluster_right"] as IControlButtonQuadSlider).ButtonE = buttonB;
-                                                //(State.Controls["cluster_right"] as IControlButtonQuadSlider).ButtonS = buttonA;
-                                                //(State.Controls["cluster_right"] as IControlButtonQuadSlider).ButtonW = buttonX;
                                                 (State.Controls["cluster_right"] as IControlButtonQuadSlider).X = ControllerMathTools.QuickStickToFloat(TriggerLeft);
                                                 (State.Controls["cluster_right"] as IControlButtonQuadSlider).Y = ControllerMathTools.QuickStickToFloat(TriggerRight);
+                                                if (AccessMode == AccessMode.FullControl || TriggerLeft != RStickX || TriggerRight != RStickY || (TriggerLeft > (128 - 4) && TriggerLeft < (128 + 4) && TriggerRight > (128 - 4) && TriggerRight < (128 + 4)))
+                                                {
+                                                    (State.Controls["stick_right"] as IControlStickWithClick).X = ControllerMathTools.QuickStickToFloat(RStickX);
+                                                    (State.Controls["stick_right"] as IControlStickWithClick).Y = ControllerMathTools.QuickStickToFloat(RStickY);
+                                                }
+                                            }
+                                            else
+                                            {
+                                                (State.Controls["stick_right"] as IControlStickWithClick).X = ControllerMathTools.QuickStickToFloat(RStickX);
+                                                (State.Controls["stick_right"] as IControlStickWithClick).Y = ControllerMathTools.QuickStickToFloat(RStickY);
                                             }
                                             if (!buttonPair)
                                             {

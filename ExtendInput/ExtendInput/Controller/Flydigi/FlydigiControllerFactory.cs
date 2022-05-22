@@ -9,7 +9,21 @@ namespace ExtendInput.Controller.Flydigi
     public class FlydigiControllerFactory : IControllerFactory
     {
         private AccessMode AccessMode;
-        private Dictionary<string, FlydigiController> Controllers = new Dictionary<string, FlydigiController>();
+
+        /// <summary>
+        /// Controller instances stored by their parent collection ID
+        /// </summary>
+        private Dictionary<Guid, FlydigiController> Controllers = new Dictionary<Guid, FlydigiController>();
+
+        /// <summary>
+        /// Map of child device paths to parent collection IDs
+        /// </summary>
+        private Dictionary<string, Guid> ChildToParentMap = new Dictionary<string, Guid>();
+
+        /// <summary>
+        /// Map of parent collection IDs to child device paths and those devices
+        /// </summary>
+        private Dictionary<Guid, Dictionary<string, HidDevice>> ParentToChildMap = new Dictionary<Guid, Dictionary<string, HidDevice>>();
 
         public FlydigiControllerFactory(AccessMode AccessMode)
         {
@@ -131,18 +145,21 @@ namespace ExtendInput.Controller.Flydigi
 
             uint[] Usages = device.Properties.ContainsKey("Usages") ? device.Properties["Usages"] as uint[] : null;
             EConnectionType ConType = EConnectionType.Unknown;
+            bool subDevice = false;
             switch (_device.VendorId)
             {
                 case FlydigiController.VENDOR_FLYDIGI:
                     if (_device.Properties.ContainsKey("ProductName") && (((_device.Properties["ProductName"] as string)?.ToLowerInvariant()?.Contains("flydigi") ?? false) || ((_device.Properties["ProductName"] as string)?.ToLowerInvariant()?.Contains("feizhi") ?? false)))
                     {
                         //&& devicePath.Contains("mi_02")
-                        if (Usages.Contains(0xffa00001u))
+                        if (Usages == null || Usages.Contains(0xffa00001u))
                         {
+                            // we don't have a usage (not windows?) or we do and it's the custom device
                         }
                         else
                         {
-                            return null;
+                            subDevice = true;
+                            //return null;
                         }
                         //if (devicePath.Contains(bt_hid_id))
                         //{
@@ -164,12 +181,48 @@ namespace ExtendInput.Controller.Flydigi
                     break;
             }
 
+            string deviceInstanceId = DevPKey.PnpDevicePropertyAPI.devicePathToInstanceId(_device.DevicePath);
+            Guid? ContrainerID = DevPKey.PnpDevicePropertyAPI.GetDeviceContainerId(deviceInstanceId);
+
+            if (!ContrainerID.HasValue)
+                return null; // TODO handle non-windows, which means moving the entire device parent system
+
             lock (Controllers)
             {
-                FlydigiController ctrl = new FlydigiController(_device, ConType, AccessMode);
-                Controllers[_device.UniqueKey] = ctrl;
-                //Console.WriteLine($"Controllers[\"{_device.UniqueKey}\"] = {ctrl};");
-                return ctrl;
+                if (!ParentToChildMap.ContainsKey(ContrainerID.Value))
+                    ParentToChildMap[ContrainerID.Value] = new Dictionary<string, HidDevice>();
+                ParentToChildMap[ContrainerID.Value][_device.UniqueKey] = _device;
+                ChildToParentMap[_device.UniqueKey] = ContrainerID.Value;
+
+                if (subDevice)
+                {
+                    if (Controllers.ContainsKey(ContrainerID.Value))
+                    {
+                        FlydigiController ctrl = Controllers[ContrainerID.Value];
+                        ctrl.AddSubDevice(_device);
+                        return ctrl;
+                    }
+                    else
+                    {
+                        return null;
+                    }
+                }
+                else
+                {
+                    if (Controllers.ContainsKey(ContrainerID.Value))
+                    {
+                        return Controllers[ContrainerID.Value];// wtf?
+                    }
+                    else
+                    {
+                        FlydigiController ctrl = new FlydigiController(_device, ConType, AccessMode);
+                        if (ParentToChildMap.ContainsKey(ContrainerID.Value))
+                            foreach (var kv in ParentToChildMap[ContrainerID.Value])
+                                ctrl.AddSubDevice(kv.Value);
+                        Controllers[ContrainerID.Value] = ctrl;
+                        return ctrl;
+                    }
+                }
             }
         }
 
@@ -178,16 +231,29 @@ namespace ExtendInput.Controller.Flydigi
             lock (Controllers)
             {
                 //Console.WriteLine($"Removing {UniqueKey}");
-                if (Controllers.ContainsKey(UniqueKey))
+                if (ChildToParentMap.ContainsKey(UniqueKey))
                 {
-                    FlydigiController ctrl = Controllers[UniqueKey];
-                    string UniqueControllerId = ctrl.ConnectionUniqueID;
+                    Guid ParentKey = ChildToParentMap[UniqueKey];
 
-                    ctrl.DeInitalize();
-                    ctrl.Dispose();
-                    Controllers.Remove(UniqueKey);
+                    if (ParentToChildMap[ParentKey].ContainsKey(UniqueKey))
+                    {
+                        ParentToChildMap[ParentKey].Remove(UniqueKey);
+                        if (ParentToChildMap[ParentKey].Count == 0)
+                            ParentToChildMap.Remove(ParentKey);
+                    }
+                    ChildToParentMap.Remove(UniqueKey);
 
-                    return UniqueControllerId;
+                    if (Controllers.ContainsKey(ParentKey))
+                    {
+                        FlydigiController ctrl = Controllers[ParentKey];
+                        string UniqueControllerId = ctrl.ConnectionUniqueID;
+
+                        ctrl.DeInitalize();
+                        ctrl.Dispose();
+                        Controllers.Remove(ParentKey);
+
+                        return UniqueControllerId;
+                    }
                 }
             }
             return null;
