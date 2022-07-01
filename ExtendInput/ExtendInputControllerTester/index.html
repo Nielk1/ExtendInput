@@ -326,6 +326,28 @@
                     }
                     break;
 
+                case 'ExtendInput.Controls.ControlButtonGenesis3':
+                    {
+                        var renderElement = wrapper.find('.control-value');
+                        renderElement.addClass('text-center');
+                        if (NewSubtype || renderElement.children('svg').length == 0) {
+                            renderElement.empty().append(
+                                '<svg id="control_render_' + controller_id + '__' + control_id + '" width="202" height="122" xmlns="http://www.w3.org/2000/svg">' +
+                                '<g>' +
+                                DrawButtonSvg("btn_a", 31 + 10 + 10, 91) +
+                                DrawButtonSvg("btn_b", 91 + 10 + 10, 91 - 30) +
+                                DrawButtonSvg("btn_c", 151 + 10 + 10, 31) +
+                                '</g>' +
+                                '</svg>');
+                        }
+                        var ctrl = renderElement.find('#control_render_' + controller_id + '__' + control_id);
+                        if (controlData.ButtonA) { UpdateButtonSvg(ctrl, '.btn_a_data', 1); } else { UpdateButtonSvg(ctrl, '.btn_a_data', 0); }
+                        if (controlData.ButtonB) { UpdateButtonSvg(ctrl, '.btn_b_data', 1); } else { UpdateButtonSvg(ctrl, '.btn_b_data', 0); }
+                        if (controlData.ButtonC) { UpdateButtonSvg(ctrl, '.btn_c_data', 1); } else { UpdateButtonSvg(ctrl, '.btn_c_data', 0); }
+
+                    }
+                    break;
+
                 case 'ExtendInput.Controls.ControlButtonGenesis6':
                     {
                         var renderElement = wrapper.find('.control-value');
@@ -353,7 +375,6 @@
 
                     }
                     break;
-
                 case 'ExtendInput.Controls.ControlButton':
                     {
                         var renderElement = wrapper.find('.control-value');
@@ -629,6 +650,42 @@
                             ctrl.find('.btn_x_data2').show().attr('transform', 'rotate(' + (86 + controlData.AnalogStage1 * -85) + ' 70 6)');
                             ctrl.find('.btn_x_data').show().attr('transform', 'rotate(' + (86 + controlData.AnalogStage1 * -90) + ' 70 6)');
                         }
+                    }
+                    break;
+
+                case 'ExtendInput.Controls.ControlDualStrikePivot':
+                    {
+                        var renderElement = wrapper.find('.control-value');
+                        renderElement.addClass('text-center');
+                        if (NewSubtype || renderElement.children('svg').length == 0) {
+                            renderElement.empty().append(
+                                //'<svg id="control_render_' + controller_id + '__' + control_id + '" width="140" height="140" xmlns="http://www.w3.org/2000/svg">' +
+                                '<svg id="control_render_' + controller_id + '__' + control_id + '" width="182" height="182" xmlns="http://www.w3.org/2000/svg">' +
+                                '<g>' +
+                                '<path class="btn_n" d="M 091,031 m 0,0 30,60 30,-60 z" stroke="#000" fill="#fff" transform="rotate(180 091 031) translate(-30,-30)"></path>' +
+                                '<path class="btn_e" d="M 151,091 m 0,0 30,60 30,-60 z" stroke="#000" fill="#fff" transform="rotate(-90 151 091) translate(-30,-30)"></path>' +
+                                '<path class="btn_s" d="M 091,151 m 0,0 30,60 30,-60 z" stroke="#000" fill="#fff" transform="rotate(0 091 151) translate(-30,-30)"></path>' +
+                                '<path class="btn_w" d="M 031,091 m 0,0 30,60 30,-60 z" stroke="#000" fill="#fff" transform="rotate(90 031 091) translate(-30,-30)"></path>' +
+                                '</g>' +
+                                '<g transform="translate(21,21)">' +
+                                //'<path class="stick_click" d="M 2,2 m 0,136 136,0 0,-136 -136,0 z" stroke="#999" fill="none" stroke-width="3"></path>' +
+                                '<path class="" d="M 6,6 m 0,128 128,0 0,-128 -128,0 z" stroke="#000" fill="#fff"></path>' +
+                                '<ellipse class="" ry="64" rx="64" cy="70" cx="70" stroke="#000" fill="#fff" />' +
+                                '<g class="stick_float" cy="70" cx="70">' +
+                                '<ellipse ry="2" rx="2" cy="0" cx="0" fill="#000" />' +
+                                '<text class="chord_text stick_float_text" x="-4" y="4" transform="translate(5,-5)"></text>' +
+                                '</g>' +
+                                '</g>' +
+                                '</svg>');;
+                        }
+                        var ctrl = renderElement.find('#control_render_' + controller_id + '__' + control_id);
+                        var stickFloat = ctrl.find('.stick_float');
+                        stickFloat.attr('transform', 'translate(' + (70 + controlData.X * 63) + ',' + (70 + controlData.Y * 63) + ')');
+                        stickFloat.children('.stick_float_text').attr('transform', 'translate(' + (controlData.X > 0 ? 0 : 6) + ',' + (controlData.Y > 0 ? -6 : 6) + ')').attr('text-anchor', (controlData.X > 0 ? "end" : "initial")).text(cord_formatter.format(controlData.X) + ',' + cord_formatter.format(controlData.Y));
+                        if (controlData.XMin) { ctrl.find('.btn_w').addClass('active'); } else { ctrl.find('.btn_w').removeClass('active'); }
+                        if (controlData.XMax) { ctrl.find('.btn_e').addClass('active'); } else { ctrl.find('.btn_e').removeClass('active'); }
+                        if (controlData.YMin) { ctrl.find('.btn_n').addClass('active'); } else { ctrl.find('.btn_n').removeClass('active'); }
+                        if (controlData.YMax) { ctrl.find('.btn_s').addClass('active'); } else { ctrl.find('.btn_s').removeClass('active'); }
                     }
                     break;
 

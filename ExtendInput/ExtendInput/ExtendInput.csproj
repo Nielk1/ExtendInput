@@ -92,6 +92,7 @@
     <Compile Include="Controller\IControllerFactory.cs" />
     <Compile Include="Controller\SixtyBeat\SixtyBeatGamepadControllerFactory.cs" />
     <Compile Include="Controller\SixtyBeat\SixtyBeatGamepadController.cs" />
+    <Compile Include="Controls\ControlButtonGenesis3.cs" />
     <Compile Include="Controls\ControlButtonPressure.cs" />
     <Compile Include="Controls\ControlButtonPS5Mute.cs" />
     <Compile Include="Controls\ControlButtonGenesis6.cs" />
@@ -102,6 +103,7 @@
     <Compile Include="Controls\ControlDPadPressure.cs" />
     <Compile Include="Controls\ControlCombinedTrigger.cs" />
     <Compile Include="Controls\ControlSlider.cs" />
+    <Compile Include="Controls\ControlDualStrikePivot.cs" />
     <Compile Include="Controls\ControlTrigger2Stage.cs" />
     <Compile Include="Controls\ControlTrigger.cs" />
     <Compile Include="Controls\ControlButton.cs" />

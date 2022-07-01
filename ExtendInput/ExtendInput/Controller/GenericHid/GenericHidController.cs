@@ -231,12 +231,15 @@ namespace ExtendInput.Controller.GenericHid
     {
         const string numerics = "0123456789ABCDEF";
 
+        public int FormulaLength = 0;
         int ReportID = 0;
         int ByteOffset = 0;
         int BitOffset = -1;
         int Length = 1;
-        int Minimum = 0;
-        int Maximum = 255;
+        int RawMinimum = 0;
+        AddressableValue Minimum = null;
+        int RawMaximum = 255;
+        AddressableValue Maximum = null;
         bool AnalogCenter = false;
         bool BigEndian = false;
         int? RawValue = null; // TODO consider if it's even worth having constants, because that implies dynamics in other places and that might be unwise as we could just write a class then
@@ -290,22 +293,40 @@ namespace ExtendInput.Controller.GenericHid
                                 BitOffset = int.Parse(parsingToken, System.Globalization.NumberStyles.HexNumber);
                             break;
                         case '-': // minimum
-                            while (i + 1 < formula.Length && numerics.Contains(formula[i + 1]))
+                            if (formula[i + 1] == '(')
                             {
                                 i++;
-                                parsingToken += formula[i];
+                                Minimum = new AddressableValue(formula.Substring(i + 1));
+                                i += Minimum.FormulaLength + 1;
                             }
-                            if (parsingToken.Length > 0)
-                                Minimum = int.Parse(parsingToken, System.Globalization.NumberStyles.HexNumber);
+                            else
+                            {
+                                while (i + 1 < formula.Length && numerics.Contains(formula[i + 1]))
+                                {
+                                    i++;
+                                    parsingToken += formula[i];
+                                }
+                                if (parsingToken.Length > 0)
+                                    RawMinimum = int.Parse(parsingToken, System.Globalization.NumberStyles.HexNumber);
+                            }
                             break;
                         case '+': // maximum
-                            while (i + 1 < formula.Length && numerics.Contains(formula[i + 1]))
+                            if (formula[i + 1] == '(')
                             {
                                 i++;
-                                parsingToken += formula[i];
+                                Maximum = new AddressableValue(formula.Substring(i));
+                                i += Maximum.FormulaLength + 1;
                             }
-                            if (parsingToken.Length > 0)
-                                Maximum = int.Parse(parsingToken, System.Globalization.NumberStyles.HexNumber);
+                            else
+                            {
+                                while (i + 1 < formula.Length && numerics.Contains(formula[i + 1]))
+                                {
+                                    i++;
+                                    parsingToken += formula[i];
+                                }
+                                if (parsingToken.Length > 0)
+                                    RawMaximum = int.Parse(parsingToken, System.Globalization.NumberStyles.HexNumber);
+                            }
                             break;
                         case 'l': // length in bytes
                             while (i + 1 < formula.Length && numerics.Contains(formula[i + 1]))
@@ -358,10 +379,13 @@ namespace ExtendInput.Controller.GenericHid
                         case 'e': // big endian
                             BigEndian = true;
                             break;
+                        case ')': // abort any more formula reading
+                            return;
                         default:
                             break;
                     }
                 }
+                FormulaLength = i + 1;
             }
         }
 
@@ -384,7 +408,9 @@ namespace ExtendInput.Controller.GenericHid
             else if (ByteOffset + Length > reportData.ReportBytes.Length) return null;
             else
             {
-                Working = reportData.ReportBytes[ByteOffset]; // TODO rewrite this to handle sizes other than 1 and also deal with Endian order
+                Working = 0;
+                for (int i = 0; i < Length; i++)
+                    Working |= reportData.ReportBytes[ByteOffset + i] << (8 * i); // TODO rewrite this to deal with Endian order, might have to change endian to care about when in the sequence it is, or make it an operation
             }
             foreach (var opr in Operations)
             {
@@ -431,13 +457,14 @@ namespace ExtendInput.Controller.GenericHid
             int? Working = GetWorkingValue(report);
             if (!Working.HasValue) return null;
 
-            int localMax = Maximum;
-            int localMin = Minimum;
+            int localMax = Maximum?.GetWorkingValue(report) ?? RawMaximum;
+            int localMin = Minimum?.GetWorkingValue(report) ?? RawMinimum;
             bool invert = false;
-            if(Minimum > Maximum)
+            if(localMin > localMax)
             {
-                localMin = Maximum;
-                localMax = Minimum;
+                int localTmp = localMin;
+                localMin = localMax;
+                localMax = localTmp;
                 invert = true;
             }
 

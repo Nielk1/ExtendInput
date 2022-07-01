@@ -11,7 +11,6 @@ namespace ExtendInput.Controls
     public interface IControlButton : IControl
     {
         bool DigitalStage1 { get; set; }
-
     }
 
     [GenericControl("Button")]
