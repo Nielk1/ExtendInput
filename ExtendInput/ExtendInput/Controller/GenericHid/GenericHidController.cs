@@ -478,8 +478,6 @@ namespace ExtendInput.Controller.GenericHid
             if (AnalogCenter)
                 return fVal * 2f - 1f;
             return fVal;
-
-            // TODO deal with signed input, which currently makes no sense anyway
         }
     }
 }
