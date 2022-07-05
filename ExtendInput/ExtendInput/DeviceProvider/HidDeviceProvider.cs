@@ -13,7 +13,7 @@ namespace ExtendInput.DeviceProvider
         public event DeviceAddedEventHandler DeviceAdded;
         public event DeviceRemovedEventHandler DeviceRemoved;
 
-        HashSet<HidSharp.HidDevice> KnownDevices = new HashSet<HidSharp.HidDevice>();
+        Dictionary<HidSharp.HidDevice, IDevice> KnownDevices = new Dictionary<HidSharp.HidDevice, IDevice>();
         object lock_device_list = new object();
 
         HashSet<(UInt16, UInt16?)> Whitelist = new HashSet<(ushort, ushort?)>();
@@ -35,7 +35,7 @@ namespace ExtendInput.DeviceProvider
                 {
                     HashSet<HidSharp.Device> AllCurrentDevices = new HashSet<HidSharp.Device>(HidSharp.DeviceList.Local.GetHidDevices());
 
-                    foreach (HidSharp.HidDevice device in KnownDevices.ToList())
+                    foreach (HidSharp.HidDevice device in KnownDevices.Keys.ToList())
                     {
                         if (!AllCurrentDevices.Contains(device))
                         {
@@ -47,15 +47,15 @@ namespace ExtendInput.DeviceProvider
                             catch (IOException) { }
                             Debug.WriteLine($"Device Removed: {device.DevicePath.PadRight(100)} \"{FriendlyName}\"\r\n                {device.DevicePath.PadRight(100)} \"{device}\"");
 
-                            KnownDevices.Remove(device);
                             DeviceRemovedEventHandler threadSafeEventHandler = DeviceRemoved;
-                            threadSafeEventHandler?.Invoke(this, HidDevice.GetUniqueKey(device.DevicePath)); // we have to re-create the device key since the device is gone now unless we preserve it
+                            threadSafeEventHandler?.Invoke(this, KnownDevices[device].UniqueKey);
+                            KnownDevices.Remove(device);
                         }
                     }
 
                     foreach (HidSharp.HidDevice device in AllCurrentDevices.ToList())
                     {
-                        if ((Whitelist.Contains(((UInt16)device.VendorID, null)) || Whitelist.Contains(((UInt16)device.VendorID, (UInt16?)device.ProductID))) && !KnownDevices.Contains(device))
+                        if ((Whitelist.Contains(((UInt16)device.VendorID, null)) || Whitelist.Contains(((UInt16)device.VendorID, (UInt16?)device.ProductID))) && !KnownDevices.ContainsKey(device))
                         {
                             string FriendlyName = string.Empty;
                             try
@@ -65,9 +65,9 @@ namespace ExtendInput.DeviceProvider
                             catch (IOException) { }
                             Debug.WriteLine($"Device Added: {device.DevicePath.PadRight(100)} \"{FriendlyName}\"\r\n              {device.DevicePath.PadRight(100)} \"{device}\"");
 
-                            KnownDevices.Add(device);
+                            KnownDevices[device] = new HidDevice(device);
                             DeviceAddedEventHandler threadSafeEventHandler = DeviceAdded;
-                            threadSafeEventHandler?.Invoke(this, new HidDevice(device)); // consider preserving this object so we can use it in the removal code above to prevent double-generating device unique id
+                            threadSafeEventHandler?.Invoke(this, KnownDevices[device]);
                         }
                     }
                 }
