@@ -88,6 +88,8 @@
     <Compile Include="Controller\Betop\BetopControllerFactory.cs" />
     <Compile Include="Controller\GenericHid\GenericHidController.cs" />
     <Compile Include="Controller\GenericHid\GenericHidControllerFactory.cs" />
+    <Compile Include="Controller\GenericSdl\GenericSdlController.cs" />
+    <Compile Include="Controller\GenericSdl\GenericSdlControllerFactory.cs" />
     <Compile Include="Controller\Sony\DualSenseController.cs" />
     <Compile Include="Controller\Sony\DualSenseControllerFactory.cs" />
     <Compile Include="Controller\Flydigi\FlydigiController.cs" />

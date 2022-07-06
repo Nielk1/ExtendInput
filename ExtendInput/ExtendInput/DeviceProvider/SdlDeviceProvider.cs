@@ -15,12 +15,13 @@ namespace ExtendInput.DeviceProvider
         public event DeviceAddedEventHandler DeviceAdded;
         public event DeviceRemovedEventHandler DeviceRemoved;
 
-        object lock_device_list = new object();
+        //object lock_device_list = new object();
+        ReaderWriterLockSlim readwrite_lock_device_list = new ReaderWriterLockSlim();
 
         bool AbortStatusThread = false;
         Thread CheckControllerStatusThread;
 
-        Dictionary<int, IDevice> GameControllers = new Dictionary<int, IDevice>();
+        Dictionary<int, SdlDevice> GameControllers = new Dictionary<int, SdlDevice>();
 
         bool Active = false;
 
@@ -67,42 +68,74 @@ namespace ExtendInput.DeviceProvider
             }
 
             CheckControllerStatusThread = new Thread(() =>
+            {
+                for (; ; )
                 {
-                    for (; ; )
+                    SDL.SDL_Event evt;
+                    if (SDL.SDL_PollEvent(out evt) != 0)
                     {
-                        SDL.SDL_Event evt;
-                        if (SDL.SDL_PollEvent(out evt) != 0)
+                        switch (evt.type)
                         {
-                            switch(evt.type)
-                            {
-                                case SDL.SDL_EventType.SDL_CONTROLLERDEVICEADDED:
-                                    if (SDL.SDL_IsGameController(evt.cdevice.which) == SDL.SDL_bool.SDL_TRUE)
+                            case SDL.SDL_EventType.SDL_JOYDEVICEADDED:
+                                if (SDL.SDL_IsGameController(evt.jdevice.which) == SDL.SDL_bool.SDL_TRUE)
+                                {
+                                    ControllerAdded(evt.jdevice.which);
+                                    Console.WriteLine($"JDevice Added {evt.jdevice.which}");
+                                }
+                                else
+                                {
+                                    Console.WriteLine($"JDevice Added {evt.jdevice.which}");
+                                }
+                                break;
+                            case SDL.SDL_EventType.SDL_CONTROLLERDEVICEADDED:
+                                if (SDL.SDL_IsGameController(evt.cdevice.which) == SDL.SDL_bool.SDL_TRUE)
+                                {
+                                    ControllerAdded(evt.cdevice.which);
+                                    Console.WriteLine($"CDevice Added {evt.cdevice.which}");
+                                }
+                                else
+                                {
+                                    Console.WriteLine($"CDevice Added {evt.cdevice.which}");
+                                }
+                                break;
+                            case SDL.SDL_EventType.SDL_JOYDEVICEREMOVED:
+                                Console.WriteLine($"JDevice Removed {evt.jdevice.which}");
+                                ControllerRemoved(evt.jdevice.which);
+                                break;
+                            case SDL.SDL_EventType.SDL_CONTROLLERDEVICEREMOVED:
+                                Console.WriteLine($"CDevice Removed {evt.cdevice.which}");
+                                ControllerRemoved(evt.cdevice.which);
+                                break;
+                            case SDL.SDL_EventType.SDL_CONTROLLERBUTTONDOWN:
+                            case SDL.SDL_EventType.SDL_CONTROLLERBUTTONUP:
+                            case SDL.SDL_EventType.SDL_CONTROLLERAXISMOTION:
+                            case SDL.SDL_EventType.SDL_CONTROLLERTOUCHPADDOWN:
+                            case SDL.SDL_EventType.SDL_CONTROLLERTOUCHPADUP:
+                            case SDL.SDL_EventType.SDL_CONTROLLERTOUCHPADMOTION:
+                            case SDL.SDL_EventType.SDL_CONTROLLERSENSORUPDATE:
+                                readwrite_lock_device_list.EnterReadLock();
+                                try
+                                {
+                                    if (GameControllers.ContainsKey(evt.cbutton.which))
                                     {
-                                        IntPtr device_handle = SDL.SDL_JoystickOpen(evt.cdevice.which);
-                                        if (device_handle != IntPtr.Zero)
-                                        {
-                                            int instance_id = SDL.SDL_JoystickInstanceID(device_handle);
-                                            SDL.SDL_JoystickClose(device_handle);
-                                            ControllerAdded(instance_id);
-                                            //Console.WriteLine($"Device Added {evt.cdevice.which}");
-                                            //ScanNow();
-                                        }
+                                        GameControllers[evt.cbutton.which].SDL_Event(evt);
                                     }
-                                    break;
-                                case SDL.SDL_EventType.SDL_CONTROLLERDEVICEREMOVED:
-                                    ControllerRemoved(evt.cdevice.which);
-                                    //Console.WriteLine($"Device Removed {evt.cdevice.which}");
-                                    //ScanNow();
-                                    break;
-                            }
+                                }
+                                finally
+                                {
+                                    readwrite_lock_device_list.ExitReadLock();
+                                }
+                                break;
+                            //case SDL.SDL_EventType.SDL_CONTROLLERDEVICEREMAPPED:
                         }
-                        //Thread.Sleep(1000);
-                        Thread.Sleep(1);
-                        //ScanNow();
-                        if (AbortStatusThread)
-                            return;
                     }
-                });
+                    //Thread.Sleep(1000);
+                    Thread.Sleep(1);
+                    //ScanNow();
+                    if (AbortStatusThread)
+                        return;
+                }
+            });
             CheckControllerStatusThread.Start();
         }
 
@@ -119,29 +152,53 @@ namespace ExtendInput.DeviceProvider
         public void RegisterWhitelist(Dictionary<string, dynamic>[] deviceWhitelist)
         { }
 
-        private void ControllerAdded(int instance_id)
+        private void ControllerAdded(int device_index)//, int instance_id)
         {
-            lock (lock_device_list)
+            int instance_id = SDL.SDL_JoystickGetDeviceInstanceID(device_index);
+            if (instance_id < 0)
+                return;
+
+            readwrite_lock_device_list.EnterWriteLock();
+            try
             {
+                //Console.WriteLine(SDL.SDL_JoystickGetGUID(SDL.SDL_JoystickFromInstanceID(instance_id)));
+
                 if (!GameControllers.ContainsKey(instance_id))
                 {
+                    IntPtr device_handle = SDL.SDL_GameControllerOpen(device_index);
+                    GameControllers[instance_id] = new SdlDevice(instance_id, device_handle);
+
                     DeviceAddedEventHandler threadSafeEventHandler = DeviceAdded;
-                    GameControllers[instance_id] = new SdlDevice(instance_id);
                     threadSafeEventHandler?.Invoke(this, GameControllers[instance_id]);
                 }
+            }
+            finally
+            {
+                readwrite_lock_device_list.ExitWriteLock();
             }
         }
 
         private void ControllerRemoved(int instance_id)
         {
-            lock (lock_device_list)
+            readwrite_lock_device_list.EnterWriteLock();
+            try
             {
+                //Console.WriteLine(SDL.SDL_JoystickGetGUID(SDL.SDL_JoystickFromInstanceID(instance_id)));
+
                 if (GameControllers.ContainsKey(instance_id))
                 {
+                    SdlDevice device = GameControllers[instance_id];
+
                     DeviceRemovedEventHandler threadSafeEventHandler = DeviceRemoved;
-                    threadSafeEventHandler?.Invoke(this, $"SDL2:{instance_id}");
+                    threadSafeEventHandler?.Invoke(this, device.UniqueKey);
+
+                    GameControllers[instance_id].Dispose();
                     GameControllers.Remove(instance_id);
                 }
+            }
+            finally
+            {
+                readwrite_lock_device_list.ExitWriteLock();
             }
         }
 
@@ -150,93 +207,30 @@ namespace ExtendInput.DeviceProvider
             if (!Active)
                 return;
 
-            //lock (lock_device_list)
+            try
             {
-                //Console.WriteLine("---------------------");
+                HashSet<string> SeenActive = new HashSet<string>();
+                HashSet<string> SeenIDs = new HashSet<string>();
+                SDL.SDL_LockJoysticks();
                 try
                 {
-                    HashSet<string> SeenActive = new HashSet<string>();
-                    HashSet<string> SeenIDs = new HashSet<string>();
                     for (byte device_index = 0; device_index < SDL.SDL_NumJoysticks(); device_index++)
                     {
                         Guid controllerGUID = SDL.SDL_JoystickGetDeviceGUID(device_index);
 
                         if (SDL.SDL_IsGameController(device_index) == SDL.SDL_bool.SDL_TRUE)
                         {
-                            //string name = SDL.SDL_GameControllerNameForIndex(i);
-                            //string path = SDL_GameControllerPathForIndex(i)?.ToLowerInvariant();
-                            //SDL.SDL_GameControllerType controllerType = SDL.SDL_GameControllerTypeForIndex(i);
-                            //SDL.SDL_JoystickType joystickType = SDL.SDL_JoystickGetDeviceType(i);
-                            IntPtr device_handle = SDL.SDL_JoystickOpen(device_index);
-                            if (device_handle != IntPtr.Zero)
-                            {
-                                int instance_id = SDL.SDL_JoystickInstanceID(device_handle);
-                                SDL.SDL_JoystickClose(device_handle);
-                                ControllerAdded(instance_id);
-
-                                //string path = SDL_GameControllerPath(handle).ToLowerInvariant();
-
-                                //int ControllerID = SDL.SDL_JoystickGetDeviceInstanceID(device_index);
-                                //int ControllerID2 = SDL.SDL_JoystickInstanceID(handle);
-                                //Console.WriteLine($"SDL joystick {path}:{controllerGUID}:{ControllerID}:{ControllerID2}");
-
-                                //// skip repeated devices with the same path, such as DI versions of HID controllers, where SDL seems to put HID first
-                                ////if (SeenIDs.Contains(path))
-                                ////    continue;
-                                ////SeenIDs.Add(path);
-
-                                //string UniqueKey = $"{path}:{controllerGUID}";
-                                //bool attached = SDL.SDL_GameControllerGetAttached(handle) == SDL.SDL_bool.SDL_TRUE;
-                                //if (attached)
-                                //{
-                                //    SeenActive.Add(UniqueKey);
-                                //    if (GameControllers.ContainsKey(UniqueKey))
-                                //    {
-                                //        //Console.WriteLine($"SDL controller already exists {UniqueKey}");
-                                //        // TODO make sure to deal with swapping out a new handle (device index?) if our GUID is differnt, as the DI one might have gotten in first if we're HID based
-                                //    }
-                                //    else
-                                //    {
-                                //        GameControllers[UniqueKey] = new SdlDevice(UniqueKey, handle);
-
-                                //        DeviceAddedEventHandler threadSafeEventHandler = DeviceAdded;
-                                //        threadSafeEventHandler?.Invoke(this, GameControllers[UniqueKey]);
-
-                                //        //Console.WriteLine($"SDL controller Added {UniqueKey}");
-                                //    }
-                                //}
-                                //else
-                                //{
-                                //    SDL.SDL_GameControllerClose(handle);
-                                //}
-                                //string serial = SDL.SDL_GameControllerGetSerial(handle);
-                                //Console.WriteLine($"SDL controller at index {i}, {path}, {serial}, {attached}, {controllerGUID}, {joystickType}, {controllerType}, {name}");
-                            }
-                        }
-                        else
-                        {
-                            //string name = SDL.SDL_JoystickNameForIndex(i);
-                            //string path = SDL.SDL_JoystickPathForIndex(i);
-                            //Console.WriteLine($"SDL joystick at index {i}, {name}");
+                            int instance_id = SDL.SDL_JoystickGetDeviceInstanceID(device_index);
+                            ControllerAdded(instance_id);
                         }
                     }
-
-                    /*foreach (string UniqueId in GameControllers.Keys.ToList())
-                    {
-                        if (!SeenActive.Contains(UniqueId))
-                        {
-                            DeviceRemovedEventHandler threadSafeEventHandler = DeviceRemoved;
-                            //threadSafeEventHandler?.Invoke(this, GameControllers[UniqueId].UniqueKey);
-                            threadSafeEventHandler?.Invoke(this, UniqueId);
-                            //GameControllers[UniqueId] = null;
-                            GameControllers.Remove(UniqueId);
-
-                            //Console.WriteLine($"SDL controller Removed {UniqueId}");
-                        }
-                    }*/
                 }
-                catch { }
+                finally
+                {
+                    SDL.SDL_UnlockJoysticks();
+                }
             }
+            catch { }
         }
     }
 }

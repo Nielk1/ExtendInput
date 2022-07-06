@@ -62,95 +62,58 @@ namespace ExtendInput.DeviceProvider
 
 
 
-        public string DevicePath
-        {
-            get
-            {
-                IntPtr device_handle = SDL.SDL_JoystickFromInstanceID(instance_id);
-                if (device_handle != IntPtr.Zero)
-                {
-                    try
-                    {
-                        return SDL_GameControllerPath(device_handle);
-                    }
-                    finally
-                    {
-                        SDL.SDL_JoystickClose(device_handle);
-                    }
-                }
-                return null;
-            }
-        }
+        public string DevicePath { get; private set; }
         private int instance_id { get; set; }
+        private IntPtr device_handle { get; set; }
 
-        public int ProductId
-        {
-            get
-            {
-                IntPtr device_handle = SDL.SDL_JoystickFromInstanceID(instance_id);
-                if (device_handle != IntPtr.Zero)
-                {
-                    try
-                    {
-                        return SDL.SDL_GameControllerGetProduct(device_handle);
-                    }
-                    finally
-                    {
-                        SDL.SDL_JoystickClose(device_handle);
-                    }
-                }
-                return -1;
-            }
-        }
-        public int VendorId
-        {
-            get
-            {
-                IntPtr device_handle = SDL.SDL_JoystickFromInstanceID(instance_id);
-                if (device_handle != IntPtr.Zero)
-                {
-                    try
-                    {
-                        return SDL.SDL_GameControllerGetVendor(device_handle);
-                    }
-                    finally
-                    {
-                        SDL.SDL_JoystickClose(device_handle);
-                    }
-                }
-                return -1;
-            }
-        }
-        public int Revision
-        {
-            get
-            {
-                IntPtr device_handle = SDL.SDL_JoystickFromInstanceID(instance_id);
-                if (device_handle != IntPtr.Zero)
-                {
-                    try
-                    {
-                        return SDL.SDL_GameControllerGetProductVersion(device_handle);
-                    }
-                    finally
-                    {
-                        SDL.SDL_JoystickClose(device_handle);
-                    }
-                }
-                return -1;
-            }
-        }
+        public int ProductId { get; private set; }
+        public int VendorId { get; private set; }
+        public int Revision { get; private set; }
+
+        public SDL.SDL_GameControllerType ControllerType { get; private set; }
 
         //public bool IsConnected { get; private set; }
 
         public Dictionary<string, dynamic> Properties { get; private set; }
 
 
-        public SdlDevice(int instance_id)
+        public SdlDevice(int instance_id, IntPtr device_handle)
         {
             Properties = new Dictionary<string, dynamic>();
             this.instance_id = instance_id;
+            this.device_handle = device_handle;
             //this.IsConnected = true;
+
+            ControllerType = SDL.SDL_GameControllerType.SDL_CONTROLLER_TYPE_UNKNOWN;
+
+            if (device_handle != IntPtr.Zero)
+            {
+                DevicePath = SDL_GameControllerPath(device_handle);
+                ProductId = SDL.SDL_GameControllerGetProduct(device_handle);
+                VendorId = SDL.SDL_GameControllerGetVendor(device_handle);
+                Revision = SDL.SDL_GameControllerGetProductVersion(device_handle);
+                ControllerType = SDL.SDL_GameControllerGetType(device_handle);
+            }
+        }
+
+        public void SDL_Event(SDL.SDL_Event evt)
+        {
+            /*switch (evt.type)
+            {
+                case SDL.SDL_EventType.SDL_CONTROLLERBUTTONDOWN:
+                case SDL.SDL_EventType.SDL_CONTROLLERBUTTONUP:
+                    break;
+                case SDL.SDL_EventType.SDL_CONTROLLERAXISMOTION:
+                    break;
+                case SDL.SDL_EventType.SDL_CONTROLLERTOUCHPADDOWN:
+                case SDL.SDL_EventType.SDL_CONTROLLERTOUCHPADUP:
+                case SDL.SDL_EventType.SDL_CONTROLLERTOUCHPADMOTION:
+                    break;
+                case SDL.SDL_EventType.SDL_CONTROLLERSENSORUPDATE:
+                    break;
+            }*/
+            if (reading)
+                sendingQueue.EnqueueTask(new SdlReport() { Event = evt });
         }
 
         public bool WriteReport(byte[] data)
@@ -170,7 +133,7 @@ namespace ExtendInput.DeviceProvider
         {
             if (sendingQueue != null)
                 return;
-            sendingQueue = new QueueWorker<Wrapper<XInputReport>>(1, (report) =>
+            sendingQueue = new QueueWorker<Wrapper<SdlReport>>(1, (report) =>
             {
                 if (report != null)
                 {
@@ -213,6 +176,7 @@ namespace ExtendInput.DeviceProvider
 
         public void Dispose()
         {
+            //SDL.SDL_JoystickClose(device_handle);
             //if (MonitorDeviceEvents) MonitorDeviceEvents = false;
             //if (IsOpen) CloseDevice();
         }
@@ -226,7 +190,7 @@ namespace ExtendInput.DeviceProvider
         object readingLock = new object();
         Thread readingThread = null;
 
-        private QueueWorker<Wrapper<XInputReport>> sendingQueue = null;
+        private QueueWorker<Wrapper<SdlReport>> sendingQueue = null;
         public void StartReading()
         {
             lock (readingLock)
@@ -239,38 +203,9 @@ namespace ExtendInput.DeviceProvider
 
                 reading = true;
 
+                SDL.SDL_JoystickFromInstanceID(instance_id);
+
                 CreateSendingQueue();
-
-                Stopwatch InputTimer = new Stopwatch();
-
-                readingThread = new Thread(() =>
-                {
-                    while (reading)
-                    {
-                        if (DeviceReport == null)
-                        {
-                            break;
-                        }
-
-                        try
-                        {
-                            InputTimer.Restart();
-
-
-                            InputTimer.Stop();
-                            if (InputTimer.ElapsedMilliseconds < 10)
-                            {
-                                Thread.Sleep((int)(10 - InputTimer.ElapsedMilliseconds));
-                            }
-                        }
-                        catch
-                        {
-                            reading = false;
-                        }
-                    }
-                    reading = false;
-                });
-                readingThread.Start();
             }
         }
 
@@ -293,7 +228,7 @@ namespace ExtendInput.DeviceProvider
         }*/
 
         //public string UniqueKey => $"XInputDevice {DevPKey.PnpDevicePropertyAPI.devicePathToInstanceId(this.DevicePath)}";
-        public string UniqueKey => $"SDL2:{this.instance_id}";
+        public string UniqueKey => $"SDL2::{this.instance_id}";
 
         bool IEquatable<IDevice>.Equals(IDevice other)
         {
