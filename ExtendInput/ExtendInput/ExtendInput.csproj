@@ -114,8 +114,6 @@
     <Compile Include="Controls\ControlStickWithClick.cs" />
     <Compile Include="Controls\IGenericControl.cs" />
     <Compile Include="DeviceProvider\ReportData.cs" />
-    <Compile Include="DeviceProvider\SdlDeviceProvider.cs" />
-    <Compile Include="DeviceProvider\SdlDevice.cs" />
     <Compile Include="MadgwickAHRS.cs" />
     <Compile Include="QueueWorker.cs" />
     <Compile Include="Wrapper.cs" />
@@ -161,7 +159,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="controllerdb.jsonl">
+    <None Include="extendinputdb.jsonl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>

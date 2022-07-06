@@ -1,5 +1,6 @@
 ﻿using ExtendInput.DeviceProvider;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -20,10 +21,13 @@ namespace ExtendInput.Controller.GenericHid
     }
     public class ControllerDbEntry
     {
+        [JsonProperty("n")]
         public string Name { get; set; }
+        [JsonProperty("t")]
         public string[] Tokens { get; set; }
+        [JsonProperty("s")]
         public Dictionary<string, dynamic> Select { get; set; }
-        public decimal Version { get; set; }
+        [JsonProperty("c")]
         public Dictionary<string, ControlData> Controls { get; set; }
     }
     public class GenericHidControllerFactory : IControllerFactory
@@ -38,15 +42,20 @@ namespace ExtendInput.Controller.GenericHid
         {
             this.AccessMode = AccessMode;
 
-            if (File.Exists("controllerdb.jsonl"))
+            if (File.Exists("extendinputdb.jsonl"))
             {
-                using (StreamReader reader = File.OpenText("controllerdb.jsonl"))
+                using (StreamReader reader = File.OpenText("extendinputdb.jsonl"))
                 {
                     while(!reader.EndOfStream)
                     {
                         string line = reader.ReadLine();
-                        ControllerDbEntry entry = JsonConvert.DeserializeObject<ControllerDbEntry>(line);
-                        ControllerDefinitions.Add(entry);
+                        JObject obj = JObject.Parse(line); // TODO add a system that reads this config centrally and sends these tokens out to factories
+                        if (obj["t"].Value<string>() == "GHID")
+                        {
+                            //ControllerDbEntry entry = JsonConvert.DeserializeObject<ControllerDbEntry>(line);
+                            ControllerDbEntry entry = obj["d"].ToObject<ControllerDbEntry>();
+                            ControllerDefinitions.Add(entry);
+                        }
                     }
                 }
             }

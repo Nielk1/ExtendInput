@@ -1,0 +1,55 @@
+﻿{
+  "Name": "Gravis Xterminator Digital",
+  "Tokens": [ "DEVICE_GRAVIS_XTERMINATOR_DIGITAL_GAMEPAD", "DEVICE_GRAVIS_XTERMINATOR_GAMEPAD", "DEVICE_GAMEPAD" ],
+  "Select": {
+    "VID": 0x047D,
+    "PID": 0x4003
+  },
+  "Controls": {
+    "stick_left": {
+      "ControlName": "Stick",
+      "Paramaters": [ "r0b0-00/+FF", "r0b1-00/+FF" ]
+    },
+    "cluster_right_flank": {
+      "ControlName": "Slider",
+      "Paramaters": [ "r0b2-00+F0" ]
+    },
+    "triggers": {
+      "ControlName": "CombinedTrigger",
+      "Paramaters": [ "r0b3-15/+EB" ]
+    },
+    "cluster_left": {
+      "ControlName": "DPad",
+      "FactoryName": "stick",
+      "Paramaters": [ "r0b4-00/+FF", "r0b5-00/+FF" ]
+    },
+    "stick_right": {
+      "ControlName": "DPad",
+      "Paramaters": [ "r0b6&0F", "01", "02", "03", "04", "05", "06", "07", "08" ]
+    },
+    "cluster_right": {
+      "ControlName": "ButtonGenesis6",
+      "Paramaters": [ "r0b6a4", "r0b6a5", "r0b6a6", "r0b6a7", "r0b7a0", "r0b7a1" ]
+    },
+    "grip_left": {
+      "ControlName": "Button",
+      "Paramaters": [ "r0b7a2" ]
+    },
+    "grip_right": {
+      "ControlName": "Button",
+      "Paramaters": [ "r0b7a3" ]
+    },
+    "menu_up": {
+      "ControlName": "Button",
+      "Paramaters": [ "r0b7a4" ]
+    },
+    "strick_right_flank": {
+      "ControlName": "Button",
+      "Paramaters": [ "r0b7a5" ]
+    },
+    "menu_down": {
+      "ControlName": "Button",
+      "Paramaters": [ "r0b7a6" ]
+    }
+  }
+} // range of triggers is unusual, might need to implement a deadzone for it, though it might also just be my instance

@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExtendInput", "ExtendInput\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExtendInputControllerTester", "ExtendInputControllerTester\ExtendInputControllerTester.csproj", "{87EF694C-12BA-4395-A963-68C4CEAE516A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DatabaseBuilder", "DatabaseBuilder\DatabaseBuilder.csproj", "{A8CA7531-2774-4839-B89B-9343B075CCC8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{87EF694C-12BA-4395-A963-68C4CEAE516A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{87EF694C-12BA-4395-A963-68C4CEAE516A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{87EF694C-12BA-4395-A963-68C4CEAE516A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A8CA7531-2774-4839-B89B-9343B075CCC8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A8CA7531-2774-4839-B89B-9343B075CCC8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A8CA7531-2774-4839-B89B-9343B075CCC8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A8CA7531-2774-4839-B89B-9343B075CCC8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

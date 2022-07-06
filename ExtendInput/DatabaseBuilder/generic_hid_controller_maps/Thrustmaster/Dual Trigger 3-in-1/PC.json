@@ -1,0 +1,58 @@
+﻿{
+  "Name": "Thrustmaster Dual Trigger 3-in-1 (PC)",
+  "Tokens": [ "DEVICE_THRUSTMASTER_DUAL_TRIGGER_3IN1", "DEVICE_GAMEPAD" ],
+  "Select": {
+    "VID": 0x044F,
+    "PID": 0xB323
+  },
+  "Controls": {
+    "cluster_right": {
+      "ControlName": "ButtonQuadPressure",
+      "Paramaters": [ "r0b0a3", "r0b0a2", "r0b0a1", "r0b0a0", "r0bC-00+FF", "r0bD-00+FF", "r0bE-00+FF", "r0bF-00+FF" ]
+    },
+    "cluster_left": {
+      "ControlName": "DPadPressure",
+      "Paramaters": [ "r0b1&F0", "00", "10", "20", "30", "40", "50", "60", "70", "r0bA-00+FF", "r0b8-00+FF", "r0bB-00+FF", "r0b9-00+FF" ]
+    },
+    "bumper_left": {
+      "ControlName": "ButtonPressure",
+      "Paramaters": [ "r0b0a4", "r0b10-00+FF" ]
+    },
+    "bumper2_left": {
+      "ControlName": "ButtonPressure",
+      "Paramaters": [ "r0b0a6", "r0b12-00+FF" ]
+    },
+    "bumper_right": {
+      "ControlName": "ButtonPressure",
+      "Paramaters": [ "r0b0a5", "r0b11-00+FF" ]
+    },
+    "bumper2_right": {
+      "ControlName": "ButtonPressure",
+      "Paramaters": [ "r0b0a7", "r0b13-00+FF" ]
+    },
+    "trigger_left": {
+      "ControlName": "Trigger",
+      "Paramaters": [ "r0b5-FF+00" ]
+    },
+    "trigger_right": {
+      "ControlName": "Trigger",
+      "Paramaters": [ "r0b6-FF+00" ]
+    },
+    "menu_left": {
+      "ControlName": "Button",
+      "Paramaters": [ "r0b1a0" ]
+    },
+    "menu_right": {
+      "ControlName": "Button",
+      "Paramaters": [ "r0b1a1" ]
+    },
+    "stick_left": {
+      "ControlName": "StickWithClick",
+      "Paramaters": [ "r0b2-00/+FF", "r0b3-00/+FF", "r0b1a2" ]
+    },
+    "stick_right": {
+      "ControlName": "StickWithClick",
+      "Paramaters": [ "r0b4-00/+FF", "r0b7-00/+FF", "r0b1a3" ]
+    }
+  }
+} // rumble is a report write of r0b0-0+FF for heavy left and r0b1-0+FF for light right

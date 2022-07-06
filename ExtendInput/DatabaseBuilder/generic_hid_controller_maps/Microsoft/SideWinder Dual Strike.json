@@ -1,0 +1,34 @@
+﻿{
+  "Name": "Microsoft SideWinder Dual Strike",
+  "Tokens": [ "DEVICE_MICROSOFT_SIDEWINDER_DUAL_STRIKE_GAMEPAD", "GAMEPAD" ],
+  "Select": {
+    "VID": 0x045E,
+    "PID": 0x0028
+  },
+  "Controls": {
+    "pivot": {
+      "ControlName": "DualStrikePivot",
+      "Paramaters": [ "r0b0l2&3FFs9-(E00s9)/+1FF", "r0b1l2>2&3FFs9-1FF/+(E00s9)", "r0b2a6", "r0b2a7" ]
+    },
+    "cluster_left": {
+      "ControlName": "DPad",
+      "Paramaters": [ "r0b4&F0", "00", "10", "20", "30", "40", "50", "60", "70" ]
+    },
+    "cluster_right": {
+      "ControlName": "ButtonQuad",
+      "Paramaters": [ "r0b3a0", "r0b3a2", "r0b3a3", "r0b3a1" ]
+    },
+    "bumper_left": {
+      "ControlName": "Button",
+      "Paramaters": [ "r0b3a6" ]
+    },
+    "bumper_right": {
+      "ControlName": "Button",
+      "Paramaters": [ "r0b3a7" ]
+    },
+    "cluster_left2": {
+      "ControlName": "ButtonGenesis3",
+      "Paramaters": [ "r0b3a5", "r0b3a4", "r0b4a0" ]
+    }
+  }
+}
