@@ -62,38 +62,115 @@ namespace ExtendInput.DeviceProvider
 
 
 
-        public string DevicePath { get; private set; }
+        public string DevicePath
+        {
+            get
+            {
+                IntPtr device_handle = SDL.SDL_JoystickFromInstanceID(instance_id);
+                if (device_handle != IntPtr.Zero)
+                {
+                    try
+                    {
+                        return SDL_GameControllerPath(device_handle);
+                    }
+                    finally
+                    {
+                        SDL.SDL_JoystickClose(device_handle);
+                    }
+                }
+                return null;
+            }
+        }
         private int instance_id { get; set; }
-        private IntPtr device_handle { get; set; }
 
-        public int ProductId { get; private set; }
-        public int VendorId { get; private set; }
-        public int Revision { get; private set; }
+        public int ProductId
+        {
+            get
+            {
+                IntPtr device_handle = SDL.SDL_JoystickFromInstanceID(instance_id);
+                if (device_handle != IntPtr.Zero)
+                {
+                    try
+                    {
+                        return SDL.SDL_GameControllerGetProduct(device_handle);
+                    }
+                    finally
+                    {
+                        SDL.SDL_JoystickClose(device_handle);
+                    }
+                }
+                return -1;
+            }
+        }
+        public int VendorId
+        {
+            get
+            {
+                IntPtr device_handle = SDL.SDL_JoystickFromInstanceID(instance_id);
+                if (device_handle != IntPtr.Zero)
+                {
+                    try
+                    {
+                        return SDL.SDL_GameControllerGetVendor(device_handle);
+                    }
+                    finally
+                    {
+                        SDL.SDL_JoystickClose(device_handle);
+                    }
+                }
+                return -1;
+            }
+        }
+        public int Revision
+        {
+            get
+            {
+                IntPtr device_handle = SDL.SDL_JoystickFromInstanceID(instance_id);
+                if (device_handle != IntPtr.Zero)
+                {
+                    try
+                    {
+                        return SDL.SDL_GameControllerGetProductVersion(device_handle);
+                    }
+                    finally
+                    {
+                        SDL.SDL_JoystickClose(device_handle);
+                    }
+                }
+                return -1;
+            }
+        }
 
-        public SDL.SDL_GameControllerType ControllerType { get; private set; }
+        public SDL.SDL_GameControllerType ControllerType
+        {
+            get
+            {
+                IntPtr device_handle = SDL.SDL_JoystickFromInstanceID(instance_id);
+                if (device_handle != IntPtr.Zero)
+                {
+                    try
+                    {
+                        return SDL.SDL_GameControllerGetType(device_handle);
+                    }
+                    finally
+                    {
+                        SDL.SDL_JoystickClose(device_handle);
+                    }
+                }
+                return SDL.SDL_GameControllerType.SDL_CONTROLLER_TYPE_UNKNOWN;
+            }
+        }
 
         //public bool IsConnected { get; private set; }
 
         public Dictionary<string, dynamic> Properties { get; private set; }
 
 
-        public SdlDevice(int instance_id, IntPtr device_handle)
+        public SdlDevice(int instance_id)
         {
             Properties = new Dictionary<string, dynamic>();
             this.instance_id = instance_id;
-            this.device_handle = device_handle;
             //this.IsConnected = true;
-
-            ControllerType = SDL.SDL_GameControllerType.SDL_CONTROLLER_TYPE_UNKNOWN;
-
-            if (device_handle != IntPtr.Zero)
-            {
-                DevicePath = SDL_GameControllerPath(device_handle);
-                ProductId = SDL.SDL_GameControllerGetProduct(device_handle);
-                VendorId = SDL.SDL_GameControllerGetVendor(device_handle);
-                Revision = SDL.SDL_GameControllerGetProductVersion(device_handle);
-                ControllerType = SDL.SDL_GameControllerGetType(device_handle);
-            }
         }
 
         public void SDL_Event(SDL.SDL_Event evt)
@@ -176,7 +253,6 @@ namespace ExtendInput.DeviceProvider
 
         public void Dispose()
         {
-            //SDL.SDL_JoystickClose(device_handle);
             //if (MonitorDeviceEvents) MonitorDeviceEvents = false;
             //if (IsOpen) CloseDevice();
         }
@@ -202,8 +278,6 @@ namespace ExtendInput.DeviceProvider
                     return;
 
                 reading = true;
-
-                SDL.SDL_JoystickFromInstanceID(instance_id);
 
                 CreateSendingQueue();
             }
