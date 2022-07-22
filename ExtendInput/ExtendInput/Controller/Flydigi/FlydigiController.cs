@@ -919,16 +919,36 @@ namespace ExtendInput.Controller.Flydigi
                             }
                         }
                         break;
+                    
+                    // F0 FF
+                    // F1 FF
+                    // 23
+                    // FF F0 XX XX XX XX XX XX XX XX XX XX XX XX EC
+                    case 0xF0:
+                    case 0xF1:
+                    case 0x23:
                     case 0xFF:
                         {
-                            if (reportData.ReportBytes[1] == 0xF0)
+                            if (
+                                (reportData.ReportBytes[0] == 0xF0 && reportData.ReportBytes[1] == 0xFF)
+                             && (reportData.ReportBytes[0] == 0xF1 && reportData.ReportBytes[1] == 0xFF)
+                             && (reportData.ReportBytes[0] == 0x23)
+                             && (reportData.ReportBytes[0] == 0xFF && reportData.ReportBytes[1] == 0xF0))
                             {
-                                if (reportData.ReportBytes[14] == 0xEC)
+                                if (reportData.ReportBytes[2] == 0xAA && reportData.ReportBytes[3] == 0xAC) // Configuration Id // mIDelegateCallbackCurrentConfigId(reportData.ReportBytes[4])
+                                {
+                                    byte ConfigurationPage = reportData.ReportBytes[4];
+                                    if (ConfigurationPage > 3)
+                                        ConfigurationPage = 0;
+                                    Log($"Configuration ID: {ConfigurationPage}");
+                                }
+                                else if (reportData.ReportBytes[14] == 0xEC) // Controller State // handerDeviceInfo
                                 {
                                     int FirmwareRevision = reportData.ReportBytes[8] & 0xF;
                                     int FirmwareBuild = reportData.ReportBytes[8] >> 4;
                                     int FirmwareMinor = reportData.ReportBytes[9] & 0xF;
                                     int FirmwareMajor = reportData.ReportBytes[9] >> 4;
+                                    byte MotionSensorType = reportData.ReportBytes[13];
                                     int BatteryReading = reportData.ReportBytes[10];
                                     int BatteryRangeMin = 0x62;
                                     int BatteryRangeMax = 0x72;
@@ -942,8 +962,111 @@ namespace ExtendInput.Controller.Flydigi
                                     }
                                     // reportData.ReportBytes[10] of 0 means unknown
                                     int batteryPercent = (int)((float)(BatteryReading - BatteryRangeMin) / (float)(BatteryRangeMax - BatteryRangeMin) * 100f);
-                                    //Log("Controller firmware version: V" + FirmwareMajor + "." + FirmwareMinor + "." + FirmwareBuild + "." + FirmwareRevision);
                                     //Log("Controller Power: " + batteryPercent);
+                                    //deviceInfo.FirmwareVersionCode = FirmwareMajor * 1000 + FirmwareMinor * 100 + FirmwareBuild * 10 + FirmwareRevision;
+                                    //deviceInfo.FirmwareVersion = FirmwareMajor + "." + FirmwareMinor + "." + FirmwareBuild + "." + FirmwareRevision;
+                                    /*switch (MotionSensorType)
+                                    {
+                                        case 1:
+                                            deviceInfo.MotionSensorType = "ST";
+                                            break;
+                                        case 2:
+                                            deviceInfo.MotionSensorType = "QST";
+                                            break;
+                                    }*/
+                                    if (BatteryReading == 0)
+                                    {
+                                        batteryPercent = -1;
+                                    }
+                                    if ((reportData.ReportBytes[11] & 0xFF) > 0)
+                                    {
+                                        //deviceInfo.CpuType = "wch";
+                                    }
+                                    else
+                                    {
+                                        //deviceInfo.CpuType = "nordic";
+                                    }
+                                    /*if (FirmwareMajor >= 6 && FirmwareMinor >= 1)
+                                    {
+                                        deviceInfo.CpuType = "wch";
+                                    }
+                                    if (deviceInfo.CpuType == "wch")
+                                    {
+                                        if ((reportData.ReportBytes[12] & 0xFF) == 1)
+                                        {
+                                            deviceInfo.ConnectType = 2;
+                                            deviceInfo.CpuName = "ch573";
+                                        }
+                                        else
+                                        {
+                                            deviceInfo.ConnectType = 1;
+                                            deviceInfo.CpuName = "ch571";
+                                        }
+                                    }*/
+                                    /*
+                                    deviceInfo.DeviceId = deviceId;
+                                    switch (deviceInfo.DeviceId)
+                                    {
+                                        case 20:
+                                        case 21:
+                                        case 23:
+                                            deviceInfo.GameHadleName = "f1";
+                                            if (deviceInfo.CpuType == "wch")
+                                            {
+                                                deviceInfo.GameHadleName = "f1wch";
+                                            }
+                                            break;
+                                        case 19:
+                                            deviceInfo.GameHadleName = "apex2";
+                                            break;
+                                        case 22:
+                                            deviceInfo.GameHadleName = "f1p";
+                                            break;
+                                        case 24:
+                                            deviceInfo.GameHadleName = "k1";
+                                            break;
+                                    }
+                                    switch (deviceInfo.DeviceId)
+                                    {
+                                        case 19:
+                                            deviceInfo.FirmwareName = "apex2";
+                                            break;
+                                        case 20:
+                                        case 21:
+                                            deviceInfo.FirmwareName = "f1";
+                                            if (deviceInfo.CpuType == "wch")
+                                            {
+                                                deviceInfo.FirmwareName = "f1wch";
+                                            }
+                                            break;
+                                        case 23:
+                                            deviceInfo.FirmwareName = "f1p";
+                                            break;
+                                        case 22:
+                                            deviceInfo.FirmwareName = "f1p";
+                                            break;
+                                        case 24:
+                                            deviceInfo.FirmwareName = "k1";
+                                            break;
+                                    }
+                                    switch (deviceInfo.GameHadleName)
+                                    {
+                                        case "f1":
+                                        case "f1wch":
+                                            Constant.CURRENT_DEVICE_TYPE = 0;
+                                            break;
+                                        case "apex2":
+                                            Constant.CURRENT_DEVICE_TYPE = 1;
+                                            break;
+                                        case "f1p":
+                                            Constant.CURRENT_DEVICE_TYPE = 2;
+                                            break;
+                                        case "k1":
+                                            Constant.CURRENT_DEVICE_TYPE = 2;
+                                            break;
+                                    }
+                                    */
+
 
                                     MetadataMutationLock.Wait(); NoteMetadataMutationLock();
                                     try
@@ -981,6 +1104,30 @@ namespace ExtendInput.Controller.Flydigi
                                     IgnoreSlowPoll = true; // don't slow-poll right after this request, but on the one after
 
                                     Log($"{reportData.ReportId:X2} {BitConverter.ToString(reportData.ReportBytes)}", ConsoleColor.Blue);
+                                }
+                                else if (reportData.ReportBytes[2] == 0xA0 && reportData.ReportBytes[3] == 0x02) // Trigger information
+                                {
+                                    // see SetTriggerModeModel
+                                    Log($"Trigger Info: {reportData.ReportId:X2} {BitConverter.ToString(reportData.ReportBytes)}");
+                                }
+                                else if (reportData.ReportBytes[2] == 0xF5 && reportData.ReportBytes[3] == 0x01) // handerExtensionChipInfo
+                                {
+                                    int CpuV1 = reportData.ReportBytes[4];
+                                    int CpuV3 = (reportData.ReportBytes[5] & 0x0F);
+                                    int CpuV2 = (reportData.ReportBytes[5] >> 4);
+                                    int LcdV1 = reportData.ReportBytes[6];
+                                    int LcdV2 = (reportData.ReportBytes[7] & 0x0F);
+                                    int LcdV3 = (reportData.ReportBytes[7] >> 4);
+
+                                    Log($"Extension Chip Info: ExtCpuVerion: {CpuV1}.{CpuV2}.{CpuV3}  LcdVersion: {LcdV1}.{LcdV3}.{LcdV2}");
+                                }
+                                else if (reportData.ReportBytes[2] == 0xF2 && reportData.ReportBytes[3] == 0x03) // handerScreenInfo
+                                {
+                                    Log($"Screen Info: statusbarStatus: {reportData.ReportBytes[4]}  resourceStatus: {reportData.ReportBytes[5]}");
+                                }
+                                else if (reportData.ReportBytes[2] == 0xF2 && reportData.ReportBytes[3] == 0x04) // handerScreenInfoSleepTime
+                                {
+                                    Log($"Screen Info Sleep Time: sleepTime: {reportData.ReportBytes[4]}");
                                 }
                                 else
                                 {
