@@ -195,6 +195,12 @@ namespace ExtendInput.Controller.Flydigi
             F1_WIRED,
 
             [ControllerSubType(
+                Token: new string[] { "DEVICE_FLYDIGI_K1", "DEVICE_GAMEPAD" },
+                Name: "Flying Wisdom Octopus 3",
+                DeviceIdFromFeature: 0x17)]
+            K1,
+
+            [ControllerSubType(
                 Token: new string[] { "DEVICE_FLYDIGI_WEE1", "DEVICE_GAMEPAD" },
                 Name: "Flydigi WEE1",
                 DeviceIdFromFeature: 0x20)]
