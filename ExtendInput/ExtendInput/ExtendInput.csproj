@@ -22,6 +22,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -115,6 +116,7 @@
     <Compile Include="Controls\IGenericControl.cs" />
     <Compile Include="DeviceProvider\ReportData.cs" />
     <Compile Include="MadgwickAHRS.cs" />
+    <Compile Include="Tools.cs" />
     <Compile Include="QueueWorker.cs" />
     <Compile Include="Wrapper.cs" />
     <Compile Include="Controls\ControlButtonGrid.cs" />

@@ -71,5 +71,8 @@ namespace ExtendInput.Controls
             ButtonS = addressableValues[2].GetBoolean(report) ?? ButtonS;
             ButtonW = addressableValues[3].GetBoolean(report) ?? ButtonW;
         }
+
+        public bool IsWriteDirty => false;
+        public void CleanWriteDirty() { }
     }
 }

@@ -57,5 +57,8 @@ namespace ExtendInput.Controls
         {
             AnalogStage1 = addressableValues[0].GetFloat(report) ?? AnalogStage1;
         }
+
+        public bool IsWriteDirty => false;
+        public void CleanWriteDirty() { }
     }
 }

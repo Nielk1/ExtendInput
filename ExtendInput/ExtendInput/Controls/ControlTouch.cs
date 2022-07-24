@@ -103,5 +103,8 @@ namespace ExtendInput.Controls
             X[idx] = x;
             Y[idx] = y;
         }
+
+        public bool IsWriteDirty => false;
+        public void CleanWriteDirty() { }
     }
 }

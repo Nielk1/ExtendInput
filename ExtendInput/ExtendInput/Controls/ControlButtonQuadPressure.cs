@@ -99,5 +99,8 @@ namespace ExtendInput.Controls
             if (AButtonW == 0) AButtonW = ButtonW ? 1.0f : 0f; // if analog is off, try to supply it via digital
             if (!ButtonW) ButtonW = AButtonW > 0; // if digital is off, check analog is 0
         }
+
+        public bool IsWriteDirty => false;
+        public void CleanWriteDirty() { }
     }
 }

@@ -103,5 +103,8 @@ namespace ExtendInput.Controls
             MovableButtonS = addressableValues[8].GetBoolean(report) ?? MovableButtonS;
             MovableButtonW = addressableValues[9].GetBoolean(report) ?? MovableButtonW;
         }
+
+        public bool IsWriteDirty => false;
+        public void CleanWriteDirty() { }
     }
 }

@@ -10,5 +10,8 @@ namespace ExtendInput.Controls
     {
         T Value<T>(string key);
         Type Type(string key);
+
+        bool IsWriteDirty { get; }
+        void CleanWriteDirty();
     }
 }

@@ -66,5 +66,8 @@ namespace ExtendInput.Controls
             if (!DigitalStage1)
                 DigitalStage1 = AnalogStage1 > 0; // if digital is off, check analog is 0
         }
+
+        public bool IsWriteDirty => false;
+        public void CleanWriteDirty() { }
     }
 }

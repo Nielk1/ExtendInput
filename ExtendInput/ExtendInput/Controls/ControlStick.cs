@@ -66,5 +66,8 @@ namespace ExtendInput.Controls
             X = addressableValues[0].GetFloat(report) ?? X;
             Y = addressableValues[1].GetFloat(report) ?? Y;
         }
+
+        public bool IsWriteDirty => false;
+        public void CleanWriteDirty() { }
     }
 }

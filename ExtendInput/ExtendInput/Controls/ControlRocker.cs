@@ -42,5 +42,8 @@ namespace ExtendInput.Controls
 
             return newData;
         }
+
+        public bool IsWriteDirty => false;
+        public void CleanWriteDirty() { }
     }
 }

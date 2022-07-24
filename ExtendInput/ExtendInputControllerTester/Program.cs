@@ -68,6 +68,9 @@ namespace ExtendInputControllerTester
                 case "DeviceManager::AlternateController":
                     AlternateController(e.Item1, data["controller"].Value<string>(), data["alternate"].Value<string>());
                     break;
+                case "DeviceManager::ActivateControlMode":
+                    ActivateControlMode(e.Item1, data["controller"].Value<string>(), data["control"].Value<string>(), data["state"].Value<string>());
+                    break;
             }
         }
 
@@ -78,7 +81,7 @@ namespace ExtendInputControllerTester
             {
                 foreach(var ctrl in Controllers)
                 {
-                    websocket.SendMessage("DeviceManager:ControllerAdded", ctrl.Value);
+                    _ = websocket.SendMessage("DeviceManager:ControllerAdded", ctrl.Value);
                 }
             }
             ControllersLock.Release();
@@ -129,13 +132,13 @@ namespace ExtendInputControllerTester
                 //Controllers[md5] = controller;
                 Controllers[controller.ConnectionUniqueID] = controller;
             }
-            websocket.SendMessage("DeviceManager:ControllerAdded", controller);
+            _ = websocket.SendMessage("DeviceManager:ControllerAdded", controller);
             ControllersLock.Release();
         }
 
         private static void DeviceManager_ControllerMetadataUpdate(IController sender)
         {
-            websocket.SendMessage("DeviceManager:ControllerMetadataUpdate", sender);
+            _ = websocket.SendMessage("DeviceManager:ControllerMetadataUpdate", sender);
         }
 
         private static void DeviceManager_ControllerRemoved(object sender, string UniqueKey)
@@ -145,7 +148,7 @@ namespace ExtendInputControllerTester
                 if (Controllers.ContainsKey(UniqueKey))
                     Controllers[UniqueKey].Dispose(); // hack solution until this is added to the DeviceManager
                 Controllers.Remove(UniqueKey);
-                websocket.SendMessage("DeviceManager:ControllerRemoved", UniqueKey);
+                _ = websocket.SendMessage("DeviceManager:ControllerRemoved", UniqueKey);
 
                 if (ActiveContextsPerController.ContainsKey(UniqueKey))
                 {
@@ -156,7 +159,7 @@ namespace ExtendInputControllerTester
                     foreach (IWebSocketContext context in contextsWithController)
                     {
                         ActiveControllers[context].Remove(UniqueKey);
-                        websocket.SendMessage("DeviceManager:ActiveControllers", ActiveControllers[context], new IWebSocketContext[] { context });
+                        _ = websocket.SendMessage("DeviceManager:ActiveControllers", ActiveControllers[context], new IWebSocketContext[] { context });
                     }
                 }
             }
@@ -195,7 +198,7 @@ namespace ExtendInputControllerTester
                 .WithModule(new ActionModule("/manual_device", HttpVerbs.Post, ManualDevice))
                 //.WithModule(new ActionModule("/activate_controller", HttpVerbs.Post, ActivateController))
                 //.WithModule(new ActionModule("/alternate_controller", HttpVerbs.Post, AlternateController))
-                .WithModule(new ActionModule("/activate_control_mode", HttpVerbs.Post, ActivateControlMode))
+                //.WithModule(new ActionModule("/activate_control_mode", HttpVerbs.Post, ActivateControlMode))
                 .WithModule(new ActionModule("/", HttpVerbs.Get, ctx => ctx.SendStringAsync(File.ReadAllText("../../index.html"), "text/html", Encoding.UTF8)));
                 ////.WithStaticFolder("/images/controller/","../images/controller/",true, new FileModule(,)
             //.WithModule(new ActionModule("/", HttpVerbs.Get, DeviceList))
@@ -394,7 +397,7 @@ namespace ExtendInputControllerTester
                 if (Controllers.ContainsKey(ControllerID))
                 {
                     Controllers[ControllerID].SetActiveAlternateController(AlternateID);
-                    websocket.SendMessage("DeviceManager:ControllerMetadataUpdate", Controllers[ControllerID], new IWebSocketContext[] { context });
+                    _ = websocket.SendMessage("DeviceManager:ControllerMetadataUpdate", Controllers[ControllerID], new IWebSocketContext[] { context });
                     return;
                 }
             }
@@ -448,7 +451,7 @@ namespace ExtendInputControllerTester
                     }
                 }
 
-                websocket.SendMessage("DeviceManager:ActiveControllers", ActiveControllers[context], new IWebSocketContext[] { context });
+                _ = websocket.SendMessage("DeviceManager:ActiveControllers", ActiveControllers[context], new IWebSocketContext[] { context });
             }
             finally
             {
@@ -459,7 +462,7 @@ namespace ExtendInputControllerTester
         private static void Program_ControllerStateUpdate(IController sender, ControlCollection controls)
         {
             //State = (ControlCollection)controls.Clone();
-            //websocket.SendMessage("DeviceManager:ControllerState", controls);
+            //_ = websocket.SendMessage("DeviceManager:ControllerState", controls);
 
             ControlCollection State = (ControlCollection)controls.Clone();
 
@@ -508,7 +511,7 @@ namespace ExtendInputControllerTester
                 };
                 //await context.SendDataAsync(output);
                 //await context.SendStringAsync(output.ToString(Newtonsoft.Json.Formatting.None), "application/json", Encoding.UTF8);
-                websocket.SendMessage("DeviceManager:ControllerState", output, ActiveContextsPerController[sender.ConnectionUniqueID]);
+                _ = websocket.SendMessage("DeviceManager:ControllerState", output, ActiveContextsPerController[sender.ConnectionUniqueID]);
             }
             finally
             {
@@ -516,38 +519,27 @@ namespace ExtendInputControllerTester
             }
         }
 
-        private static async Task ActivateControlMode(IHttpContext context)
+        private static async Task ActivateControlMode(IWebSocketContext context, string ControllerID, string control, string state)
         {
-            /*await ControllersLock.WaitAsync();
+            await ControllersLock.WaitAsync();
             try
             {
-                if (activeController != null)
+                if (Controllers.ContainsKey(ControllerID))
                 {
-                    string raw = await context.GetRequestBodyAsStringAsync();
-                    var data = HttpUtility.ParseQueryString(raw);
-
-                    //bool retVal = await Task.Run(() => activeController.SetControlState(data["id"], data["state"]));
-                    //bool retVal = activeController.SetControlState(data["id"], data["state"]);
-                    bool retVal = false;
+                    IController controller = Controllers[ControllerID];
                     Thread tmp = new Thread(() =>
                     {
-                        retVal = activeController.SetControlState(data["id"], data["state"]);
+                        bool retVal = controller.SetControlState(control, state);
+                        _ = websocket.SendMessage("DeviceManager:ControllerMetadataUpdate", Controllers[ControllerID], new IWebSocketContext[] { context });
                     });
                     tmp.Start();
-                    while (tmp.IsAlive)
-                        await Task.Delay(100);
-
-                    await context.SendDataAsync(retVal);
-                }
-                else
-                {
-                    await context.SendDataAsync(false);
+                    return;
                 }
             }
             finally
             {
                 ControllersLock.Release();
-            }*/
+            }
         }
     }
 

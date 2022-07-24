@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 
 namespace ExtendInput.Controller.Sony
@@ -14,6 +15,7 @@ namespace ExtendInput.Controller.Sony
         public const int VendorId = 0x054C;
         public static int ProductId = 0x0CE6;
 
+        private const byte _REPORT_STATE_USB = 0x02;
         private const byte _REPORT_STATE_1 = 0x31;
         private const byte _REPORT_STATE_2 = 0x32;
         private const byte _REPORT_STATE_3 = 0x33;
@@ -23,6 +25,134 @@ namespace ExtendInput.Controller.Sony
         private const byte _REPORT_STATE_7 = 0x37;
         private const byte _REPORT_STATE_8 = 0x38;
         private const byte _REPORT_STATE_9 = 0x39;
+
+        enum MuteLight : byte
+        {
+            Off = 0,
+            On,
+            Breathing,
+        };
+        enum LightBrightness : byte
+        {
+            Bright = 0,
+            Mid,
+            Dim,
+        };
+        enum LightFadeAnimation : byte
+        {
+            Nothing = 0,
+            FadeIn, // from black to blue
+            FadeOut // from blue to black
+        };
+
+        bool OutputThreadActive = false;
+        Thread OutputThread;
+        private void StartOutputThread()
+        {
+            outBuffer = new SetStateData();
+            OutputThreadActive = true;
+            OutputThread.Start();
+        }
+        private void StopOutputThread()
+        {
+            OutputThreadActive = false;
+        }
+        SetStateData outBuffer;// = new SetStateData();
+        [StructLayout(LayoutKind.Sequential, Pack = 0)]
+        unsafe struct SetStateData
+        {
+            public byte Flags1;
+            public byte Flags2;
+            public bool EnableRumbleEmulation { get { return (Flags1 & 0x01) != 0; } set { Flags1 = (byte)(value ? (Flags1 | 0x01) : (Flags1 & ~0x01)); } }
+            public bool UseRumbleNotHaptics   { get { return (Flags1 & 0x02) != 0; } set { Flags1 = (byte)(value ? (Flags1 | 0x02) : (Flags1 & ~0x02)); } }
+
+            public bool AllowRightTriggerFFB { get { return (Flags1 & 0x04) != 0; } set { Flags1 = (byte)(value ? (Flags1 | 0x04) : (Flags1 & ~0x04)); } }
+            public bool AllowLeftTriggerFFB  { get { return (Flags1 & 0x08) != 0; } set { Flags1 = (byte)(value ? (Flags1 | 0x08) : (Flags1 & ~0x08)); } }
+
+            public bool AllowHeadphoneVolume { get { return (Flags1 & 0x10) != 0; } set { Flags1 = (byte)(value ? (Flags1 | 0x10) : (Flags1 & ~0x10)); } }
+            public bool AllowSpeakerVolume   { get { return (Flags1 & 0x20) != 0; } set { Flags1 = (byte)(value ? (Flags1 | 0x20) : (Flags1 & ~0x20)); } }
+            public bool AllowMicVolume       { get { return (Flags1 & 0x40) != 0; } set { Flags1 = (byte)(value ? (Flags1 | 0x40) : (Flags1 & ~0x40)); } }
+
+            public bool AllowAudioControl { get { return (Flags1 & 0x80) != 0; } set { Flags1 = (byte)(value ? (Flags1 | 0x80) : (Flags1 & ~0x80)); } }
+            public bool AllowMuteLight    { get { return (Flags2 & 0x01) != 0; } set { Flags2 = (byte)(value ? (Flags2 | 0x01) : (Flags2 & ~0x01)); } }
+            public bool AllowAudioMute    { get { return (Flags2 & 0x02) != 0; } set { Flags2 = (byte)(value ? (Flags2 | 0x02) : (Flags2 & ~0x02)); } }
+
+            public bool AllowLedColor { get { return (Flags2 & 0x04) != 0; } set { Flags2 = (byte)(value ? (Flags2 | 0x04) : (Flags2 & ~0x04)); } }
+
+            public bool ResetLights { get { return (Flags2 & 0x08) != 0; } set { Flags2 = (byte)(value ? (Flags2 | 0x08) : (Flags2 & ~0x08)); } }
+
+            public bool AllowPlayerIndicators    { get { return (Flags2 & 0x10) != 0; } set { Flags2 = (byte)(value ? (Flags2 | 0x10) : (Flags2 & ~0x10)); } }
+            public bool AllowHapticLowPassFilter { get { return (Flags2 & 0x20) != 0; } set { Flags2 = (byte)(value ? (Flags2 | 0x20) : (Flags2 & ~0x20)); } }
+            public bool AllowMotorPowerLevel     { get { return (Flags2 & 0x40) != 0; } set { Flags2 = (byte)(value ? (Flags2 | 0x40) : (Flags2 & ~0x40)); } }
+            public bool AllowAudioControl2       { get { return (Flags2 & 0x80) != 0; } set { Flags2 = (byte)(value ? (Flags2 | 0x80) : (Flags2 & ~0x80)); } }
+
+            public byte RumbleEmulationRight;
+            public byte RumbleEmulationLeft;
+
+            public byte VolumeHeadphones;
+            public byte VolumeSpeaker;
+            public byte VolumeMic;
+
+            public byte AudioControl;
+            public byte MicSelect { get { return (byte)(AudioControl & 0x03); } set { AudioControl = (byte)((AudioControl & 0xFC) | (value & 0x04)); } }
+
+            public bool EchoCancelEnable  { get { return (AudioControl & 0x04) != 0; } set { AudioControl = (byte)(value ? (AudioControl | 0x04) : (AudioControl & ~0x04)); } }
+            public bool NoiseCancelEnable { get { return (AudioControl & 0x08) != 0; } set { AudioControl = (byte)(value ? (AudioControl | 0x08) : (AudioControl & ~0x08)); } }
+            public byte OutputPathSelect { get { return (byte)(AudioControl & 0x30); } set { AudioControl = (byte)((AudioControl & 0xCF) | (value & 0x30 >> 4)); } }
+            public byte InputPathSelect  { get { return (byte)(AudioControl & 0xC0); } set { AudioControl = (byte)((AudioControl & 0x3F) | (value & 0xC0 >> 6)); } }
+
+            public MuteLight MuteLightMode;
+
+            public byte MuteControl;
+            public bool TouchPowerSave  { get { return (MuteControl & 0x01) != 0; } set { MuteControl = (byte)(value ? (MuteControl | 0x01) : (MuteControl & ~0x01)); } }
+            public bool MotionPowerSave { get { return (MuteControl & 0x02) != 0; } set { MuteControl = (byte)(value ? (MuteControl | 0x02) : (MuteControl & ~0x02)); } }
+            public bool HapticPowerSave { get { return (MuteControl & 0x04) != 0; } set { MuteControl = (byte)(value ? (MuteControl | 0x04) : (MuteControl & ~0x04)); } }
+            public bool AudioPowerSave  { get { return (MuteControl & 0x08) != 0; } set { MuteControl = (byte)(value ? (MuteControl | 0x08) : (MuteControl & ~0x08)); } }
+            public bool MicMute         { get { return (MuteControl & 0x10) != 0; } set { MuteControl = (byte)(value ? (MuteControl | 0x10) : (MuteControl & ~0x10)); } }
+            public bool SpeakerMute     { get { return (MuteControl & 0x20) != 0; } set { MuteControl = (byte)(value ? (MuteControl | 0x20) : (MuteControl & ~0x20)); } }
+            public bool HeadphoneMute   { get { return (MuteControl & 0x40) != 0; } set { MuteControl = (byte)(value ? (MuteControl | 0x40) : (MuteControl & ~0x40)); } }
+            public bool HapticMute      { get { return (MuteControl & 0x80) != 0; } set { MuteControl = (byte)(value ? (MuteControl | 0x80) : (MuteControl & ~0x80)); } }
+
+            public fixed byte RightTriggerFFB[11];
+            public fixed byte LeftTriggerFFB[11];
+            public UInt32 HostTimestamp;
+
+            public byte MotorPowerLevel;
+            //public byte TriggerMotorPowerReduction : 4;
+            //public byte RumbleMotorPowerReduction : 4;
+
+            public byte AudioControl2;
+            //public byte SpeakerCompPreGain: 3;
+            //public byte BeamformingEnable: 1;
+            //public byte UnkAudioControl2: 4;
+
+            public byte LightAnimationFlags;
+            //public byte AllowLightBrightnessChange: 1;
+            //public byte AllowColorLightFadeAnimation: 1;
+            //public byte UNKBITC: 6;
+
+            public byte HapticFlags;
+            //public byte HapticLowPassFilter: 1;
+            //public byte UNKBIT: 7;
+
+            public byte UNKBYTE;
+
+            public LightFadeAnimation LightFadeAnimation;
+            public LightBrightness LightBrightness;
+
+            public byte PlayerLight;
+            //byte PlayerLight1 : 1;
+            //byte PlayerLight2 : 1;
+            //byte PlayerLight3 : 1;
+            //byte PlayerLight4 : 1;
+            //byte PlayerLight5 : 1;
+            //byte PlayerLightFade: 1;
+            //byte PlayerLightUNK : 2;
+
+            public byte LedRed;
+            public byte LedGreen;
+            public byte LedBlue;
+        };
 
         #region String Definitions
         private const string ATOM_CONNECTION_WIRE = "CONNECTION_WIRE";
@@ -44,6 +174,8 @@ namespace ExtendInput.Controller.Sony
         private byte last_touch_timestamp;
         private bool touch_last_frame;
         //private DateTime tmp = DateTime.Now;
+
+        bool WriteStateDirtyPossible = false; // TODO consider a thread control mechanism instead
 
         public event ControllerNameUpdateEvent ControllerMetadataUpdate;
         public event ControllerStateUpdateEvent ControllerStateUpdate;
@@ -247,6 +379,37 @@ namespace ExtendInput.Controller.Sony
                 bool success = _device.WriteReport(outDataFinal.Skip(1).ToArray());
             }
         }*/
+        private void SendReport()
+        {
+            {
+                if (ConnectionType == EConnectionType.Bluetooth)
+                {
+                    byte[] outDataFinal = new byte[79];
+                    outDataFinal[0] = 0xa2;
+                    outDataFinal[1] = _REPORT_STATE_1;
+                    outDataFinal[2] = 0x02;
+                    Tools.ConvertToBytes<SetStateData>(outBuffer, ref outDataFinal, 3);
+
+                    Crc32 crcE = new Crc32();
+                    byte[] crc = crcE.ComputeHash(outDataFinal, 0, outDataFinal.Length - 4);
+
+                    outDataFinal[outDataFinal.Length - 1] = crc[0];
+                    outDataFinal[outDataFinal.Length - 2] = crc[1];
+                    outDataFinal[outDataFinal.Length - 3] = crc[2];
+                    outDataFinal[outDataFinal.Length - 4] = crc[3];
+
+                    bool success = _device.WriteReport(outDataFinal.Skip(1).ToArray());
+                }
+                else
+                {
+                    byte[] outDataFinal = new byte[48];
+                    outDataFinal[0] = _REPORT_STATE_USB;
+                    Tools.ConvertToBytes<SetStateData>(outBuffer, ref outDataFinal, 1);
+
+                    bool success = _device.WriteReport(outDataFinal);
+                }
+            }
+        }
 
         public DualSenseController(HidDevice device, AccessMode AccessMode, EConnectionType ConnectionType = EConnectionType.Unknown)
         {
@@ -299,6 +462,36 @@ namespace ExtendInput.Controller.Sony
 
             _device.DeviceReport += OnReport;
             State.ControllerStateUpdate += State_ControllerStateUpdate;
+
+            OutputThread = new Thread(() =>
+            {
+                for(; ;)
+                {
+                    if (!OutputThreadActive) break;
+                    Thread.Sleep(1);
+                    if (!OutputThreadActive) break;
+                    if(WriteStateDirtyPossible)
+                    {
+                        outBuffer = new SetStateData();
+
+                        IControlButtonWithStateLight ctrl = (State.Controls["mute"] as IControlButtonWithStateLight);
+                        for (int i = 0; i < ctrl.States.Length; i++)
+                        {
+                            if (ctrl.States[i] == ctrl.State)
+                            {
+                                outBuffer.AllowMuteLight = true;
+                                outBuffer.MuteLightMode = (MuteLight)i;
+                                break;
+                            }
+                        }
+
+                        SendReport();
+
+                        WriteStateDirtyPossible = false;
+                    }
+                    if (!OutputThreadActive) break;
+                }
+            });
         }
         public void Dispose()
         {
@@ -325,6 +518,7 @@ namespace ExtendInput.Controller.Sony
 
             PollingState = EPollingState.Active;
             _device.StartReading();
+            StartOutputThread();
         }
 
         public void DeInitalize()
@@ -341,8 +535,8 @@ namespace ExtendInput.Controller.Sony
             else
             {
                 _device.StopReading();
-
                 PollingState = EPollingState.Inactive;
+                StopOutputThread();
                 _device.CloseDevice();
             }
         }
@@ -615,6 +809,7 @@ namespace ExtendInput.Controller.Sony
                     try
                     {
                         (State.Controls["mute"] as IControlButtonWithStateLight).State = state;
+                        WriteStateDirtyPossible = true;
                     }
                     finally
                     {

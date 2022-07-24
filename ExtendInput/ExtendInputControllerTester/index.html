@@ -150,6 +150,7 @@
                 var wrapper = $('<div class="control_state"/>');
                 wrapper.attr('id', 'state_' + controller_id + '__' + control_id);
                 wrapper.attr('data-id', controller_id + '__' + control_id);
+                wrapper.attr('data-control-id', control_id);
                 wrapper.attr('data-controller-id', controller_id);
                 wrapper.attr('data-controller', ConnectionUniqueID);
                 wrapper.append('<div class="card"><div class="pb-3"><h5 class="card-title text-center">' + control_id.replace('-', ':') + '</h5><div class="control_type card-title text-center small" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + controlType + '</div><div class="card-text control-value" style="white-space:pre;"></div></div></div>');
@@ -1550,12 +1551,13 @@
 
             $('#state_data').on('click', '.control_state_list a.list-group-item', function (evt) {
                 evt.preventDefault();
-                $.post("/activate_control_mode", { "id": $(evt.target).parents('.control_state').data('id'), "state": $(evt.target).data('id') }, function (data) {
+                socket.send(JSON.stringify({ function: 'DeviceManager::ActivateControlMode', data: { "controller": $(evt.target).parents('.control_state').data('controller'), "control": $(evt.target).parents('.control_state').data('control-id'), "state": $(evt.target).data('id') } }));
+                /*$.post("/activate_control_mode", { "id": $(evt.target).parents('.control_state').data('id'), "state": $(evt.target).data('id') }, function (data) {
                     if (data) {
                     } else {
                         //$('#controller_state').remove();
                     }
-                });
+                });*/
 
                 return true;
             });

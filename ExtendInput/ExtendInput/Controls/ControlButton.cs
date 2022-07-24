@@ -57,5 +57,8 @@ namespace ExtendInput.Controls
         {
             DigitalStage1 = addressableValues[0].GetBoolean(report) ?? DigitalStage1;
         }
+
+        public bool IsWriteDirty => false;
+        public void CleanWriteDirty() { }
     }
 }

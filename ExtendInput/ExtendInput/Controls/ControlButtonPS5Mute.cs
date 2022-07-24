@@ -29,8 +29,11 @@ namespace ExtendInput.Controls
             get => _state;
             set
             {
-                if (AccessMode == AccessMode.FullControl && States.Contains(value))
+                if (AccessMode == AccessMode.FullControl && States.Contains(value) && _state != value)
+                {
                     _state = value;
+                    IsWriteDirty = true;
+                }
             }
         }
 
@@ -72,5 +75,8 @@ namespace ExtendInput.Controls
 
             return newData;
         }
+
+        public bool IsWriteDirty { get; private set; }
+        public void CleanWriteDirty() { IsWriteDirty = false; }
     }
 }

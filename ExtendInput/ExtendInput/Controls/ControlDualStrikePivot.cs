@@ -126,5 +126,8 @@ namespace ExtendInput.Controls
                 YMin = false;
             }
         }
+
+        public bool IsWriteDirty => false;
+        public void CleanWriteDirty() { }
     }
 }
