@@ -235,7 +235,7 @@ namespace ExtendInput.Controller.Valve
         public string Serial { get; private set; }
 #endif
 
-        public IDevice DeviceHackRef => _device;
+        //public IDevice DeviceHackRef => _device;
 
 
         ControllerState State = new ControllerState();

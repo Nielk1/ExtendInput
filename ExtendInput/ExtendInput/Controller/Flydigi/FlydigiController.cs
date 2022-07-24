@@ -407,7 +407,7 @@ namespace ExtendInput.Controller.Flydigi
         }
 
         public Dictionary<string, dynamic> DeviceProperties => _device.Properties;
-        public IDevice DeviceHackRef => _device;
+        //public IDevice DeviceHackRef => _device;
 
         private List<HidDevice> OtherDevices = new List<HidDevice>();
 

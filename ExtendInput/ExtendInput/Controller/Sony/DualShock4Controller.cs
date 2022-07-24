@@ -622,7 +622,7 @@ namespace ExtendInput.Controller.Sony
 
 
         public Dictionary<string, dynamic> DeviceProperties => _device.Properties;
-        public IDevice DeviceHackRef => _device;
+        //public IDevice DeviceHackRef => _device;
 
         ControllerState State = new ControllerState();
 

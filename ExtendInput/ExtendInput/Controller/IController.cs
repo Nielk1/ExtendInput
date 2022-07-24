@@ -89,7 +89,7 @@ namespace ExtendInput.Controller
         /// </summary>
         string DeviceUniqueID { get; }
 
-        IDevice DeviceHackRef { get; }
+        //IDevice DeviceHackRef { get; }
         bool HasMotion { get; }
 
         /// <summary>

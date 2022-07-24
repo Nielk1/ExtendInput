@@ -75,7 +75,7 @@ namespace ExtendInput.Controller.Microsoft
         public Dictionary<string, string> Alternates => null;
 
         public Dictionary<string, dynamic> DeviceProperties => _device.Properties;
-        public IDevice DeviceHackRef => _device;
+        //public IDevice DeviceHackRef => _device;
         private XInputDevice _device;
         int reportUsageLock = 0;
 

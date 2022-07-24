@@ -40,7 +40,7 @@ namespace ExtendInput.Controller.Betop
         }
         public bool HasSelectableAlternatives => false;
         public Dictionary<string, string> Alternates => null;
-        public IDevice DeviceHackRef => devices.First();
+        //public IDevice DeviceHackRef => devices.First();
         private HashSet<HidDevice> devices;
         int reportUsageLock = 0;
 

@@ -25,7 +25,7 @@ namespace ExtendInput.Controller.SixtyBeat
         }
         public bool HasSelectableAlternatives => false;
         public Dictionary<string, string> Alternates => null;
-        public IDevice DeviceHackRef => _device;
+        //public IDevice DeviceHackRef => _device;
         private SixtyBeatAudioDevice _device;
         int reportUsageLock = 0;
 

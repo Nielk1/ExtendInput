@@ -30,7 +30,7 @@ namespace ExtendInput.Controller.GenericHid
 
         public string DeviceUniqueID => null;
 
-        public IDevice DeviceHackRef => null;
+        //public IDevice DeviceHackRef => null;
 
         public bool HasMotion => false;
 
