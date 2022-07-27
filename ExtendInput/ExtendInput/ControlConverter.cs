@@ -31,6 +31,7 @@ namespace ExtendInput
         {
             ConvertersFromTo = new Dictionary<Type, Dictionary<Type, IControlConverter>>();
             ConvertersToFrom = new Dictionary<Type, Dictionary<Type, IControlConverter>>();
+
             foreach (Type controlType in typeof(IControl).GetTypeInfo().Assembly.GetTypes()) // find all Control classes via the fact they implement IControl
             {
                 // This code might work better by scanning implicit or explicit cast implementation
@@ -55,7 +56,35 @@ namespace ExtendInput
                 }
                 // scan for adapaters that register to convert an IControl implementer to an interface it's not normally compatiable with
                 // the only reason for this is so that plugins in the future can add converters without needing to implement implicit or explicit casts into the control classes
+                if (controlType.IsClass && controlType.GetInterfaces().Contains(typeof(IControlConverter)))
+                {
+                    ControlConverterAttribute attr = controlType.GetCustomAttribute<ControlConverterAttribute>();
+                    if(attr != null)
+                    {
+                        Console.WriteLine($"{attr.Base} can convert to {attr.Dest} via {controlType}");
+                        if (!ConvertersFromTo.ContainsKey(attr.Base))
+                            ConvertersFromTo[attr.Base] = new Dictionary<Type, IControlConverter>();
+                        if (!ConvertersToFrom.ContainsKey(attr.Dest))
+                            ConvertersToFrom[attr.Dest] = new Dictionary<Type, IControlConverter>();
+
+                        IControlConverter plugin = (IControlConverter)Activator.CreateInstance(controlType);
+                        ConvertersFromTo[attr.Base][attr.Dest] = plugin;
+                        ConvertersToFrom[attr.Dest][attr.Base] = plugin;
+                    }
+                }
             }
+        }
+
+        public List<Type> GetConvertList<Base>() where Base : IControl
+        {
+            if (!ConvertersFromTo.ContainsKey(typeof(Base))) return null;
+            return ConvertersFromTo[typeof(Base)].Keys.ToList();
+        }
+
+        public List<Type> GetConvertList(Type ControlType)
+        {
+            if (!ConvertersFromTo.ContainsKey(ControlType)) return null;
+            return ConvertersFromTo[ControlType].Keys.ToList();
         }
 
         public bool? CanConvert<Base, Dest>() where Base : IControl
@@ -77,7 +106,8 @@ namespace ExtendInput
         {
             if (!ConvertersFromTo.ContainsKey(typeof(Base))) return default(Dest);
             if (!ConvertersFromTo[typeof(Base)].ContainsKey(typeof(Dest))) return default(Dest);
-            return (Dest)System.Convert.ChangeType(ConvertersFromTo[typeof(Base)][typeof(Dest)].Convert(Source), typeof(Dest));
+            //return (Dest)System.Convert.ChangeType(ConvertersFromTo[typeof(Base)][typeof(Dest)].Convert(Source), typeof(Dest));
+            return (Dest)ConvertersFromTo[typeof(Base)][typeof(Dest)].Convert(Source);
         }
     }
 
@@ -94,7 +124,18 @@ namespace ExtendInput
         public bool CanConvert(IControl Control) => true;
         public IControl Convert(IControl Control)
         {
-            return (Dest)System.Convert.ChangeType(Control, typeof(Dest));
+            //return (Dest)System.Convert.ChangeType(Control, typeof(Dest));
+            return Control;
+        }
+    }
+    public class ControlConverterAttribute : Attribute
+    {
+        public Type Base;
+        public Type Dest;
+        public ControlConverterAttribute(Type Base, Type Dest)
+        {
+            this.Base = Base;
+            this.Dest = Dest;
         }
     }
 }

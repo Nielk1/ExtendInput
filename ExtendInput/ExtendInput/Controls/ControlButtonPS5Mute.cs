@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 
 namespace ExtendInput.Controls
 {
+    // TODO if we ever allow locations other than controllers to write to the state data we need a way to thread-lock the control, because what if I set the light here to ON, but the system has already locked the object and has freshly cloned it?  In that case we need to inroduce locks to these individual parts and find a way to prevent deadlocks
+
     public class ControlButtonPS5Mute : IControlButtonWithStateLight, IControlButton
     {
         public bool DigitalStage1 { get; set; }
@@ -72,6 +74,7 @@ namespace ExtendInput.Controls
 
             newData.DigitalStage1 = this.DigitalStage1;
             newData.State = this.State;
+            newData.IsWriteDirty = this.IsWriteDirty; // need to preserve this stuff
 
             return newData;
         }

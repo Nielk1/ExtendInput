@@ -819,7 +819,7 @@ namespace ExtendInput.Controller.Betop
 
         public void SetActiveAlternateController(string ControllerID) { }
 
-        public bool SetControlState(string control, string state)
+        public bool SetControlState(string control, string state, params object[] args)
         {
             return false;
         }

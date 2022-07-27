@@ -51,6 +51,41 @@ namespace ExtendInput.Controller.Sony
         {
             outBuffer = new SetStateData();
             OutputThreadActive = true;
+            OutputThread = new Thread(() =>
+            {
+                for (; ; )
+                {
+                    if (!OutputThreadActive) break;
+                    Thread.Sleep(1);
+                    if (!OutputThreadActive) break;
+                    //if(WriteStateDirtyPossible)
+                    {
+                        bool DataToWrite = false;
+                        IControlButtonWithStateLight ctrl = (State.Controls["mute"] as IControlButtonWithStateLight);
+                        if (ctrl.IsWriteDirty)
+                        {
+                            outBuffer = new SetStateData();
+
+                            for (int i = 0; i < ctrl.States.Length; i++)
+                            {
+                                if (ctrl.States[i] == ctrl.State)
+                                {
+                                    outBuffer.AllowMuteLight = true;
+                                    outBuffer.MuteLightMode = (MuteLight)i;
+                                    DataToWrite = true;
+                                    ctrl.CleanWriteDirty();
+                                    break;
+                                }
+                            }
+                        }
+                        if (DataToWrite)
+                            SendReport();
+
+                        //WriteStateDirtyPossible = false;
+                    }
+                    if (!OutputThreadActive) break;
+                }
+            });
             OutputThread.Start();
         }
         private void StopOutputThread()
@@ -317,8 +352,10 @@ namespace ExtendInput.Controller.Sony
             State.Controls["bumper_left"] = new ControlButton();
             State.Controls["bumper_right"] = new ControlButton();
             //State.Controls["bumpers2"] = new ControlButtonPair();
-            State.Controls["trigger_left"] = new ControlTrigger();
-            State.Controls["trigger_right"] = new ControlTrigger();
+            //State.Controls["trigger_left"] = new ControlTrigger();
+            //State.Controls["trigger_right"] = new ControlTrigger();
+            State.Controls["trigger_left"] = new ControlTriggerPS5(AccessMode);
+            State.Controls["trigger_right"] = new ControlTriggerPS5(AccessMode);
             State.Controls["menu_left"] = new ControlButton();
             State.Controls["menu_right"] = new ControlButton();
             State.Controls["home"] = new ControlButton();
@@ -358,42 +395,6 @@ namespace ExtendInput.Controller.Sony
 
             _device.DeviceReport += OnReport;
             State.ControllerStateUpdate += State_ControllerStateUpdate;
-
-            OutputThread = new Thread(() =>
-            {
-                for(; ;)
-                {
-                    if (!OutputThreadActive) break;
-                    Thread.Sleep(1);
-                    if (!OutputThreadActive) break;
-                    //if(WriteStateDirtyPossible)
-                    {
-                        bool DataToWrite = false;
-                        IControlButtonWithStateLight ctrl = (State.Controls["mute"] as IControlButtonWithStateLight);
-                        if (ctrl.IsWriteDirty)
-                        {
-                            outBuffer = new SetStateData();
-
-                            for (int i = 0; i < ctrl.States.Length; i++)
-                            {
-                                if (ctrl.States[i] == ctrl.State)
-                                {
-                                    outBuffer.AllowMuteLight = true;
-                                    outBuffer.MuteLightMode = (MuteLight)i;
-                                    DataToWrite = true;
-                                    ctrl.CleanWriteDirty();
-                                    break;
-                                }
-                            }
-                        }
-                        if (DataToWrite)
-                            SendReport();
-
-                        //WriteStateDirtyPossible = false;
-                    }
-                    if (!OutputThreadActive) break;
-                }
-            });
         }
         public void Dispose()
         {
@@ -702,7 +703,7 @@ namespace ExtendInput.Controller.Sony
 
         public void SetActiveAlternateController(string ControllerID) { }
 
-        public bool SetControlState(string control, string state)
+        public bool SetControlState(string control, string state, params object[] args)
         {
             switch (control)
             {

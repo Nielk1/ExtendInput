@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ExtendInput.Controls
 {
-    interface IControlButtonWithStateLight : IControl
+    public interface IControlButtonWithStateLight : IControl
     {
         bool DigitalStage1 { get; set; }
         string[] States { get; }

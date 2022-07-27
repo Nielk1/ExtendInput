@@ -495,13 +495,42 @@ namespace ExtendInputControllerTester
                 JObject controlsJ = new JObject();
                 foreach (string key in State.Keys)
                 {
-                    JObject obj = new JObject();
-                    string TypeCodeString = State[key]?.GetType()?.ToString();
-                    if (!string.IsNullOrWhiteSpace(TypeCodeString))
-                        TypeCodeString = Regex.Replace(TypeCodeString, @"`[^\[\]]+\[", "[");
-                    obj["Type"] = TypeCodeString;
-                    obj["Data"] = State[key] != null ? JObject.FromObject(State[key], serializer) : null;
-                    controlsJ[key] = obj;
+                    {
+                        JObject obj = new JObject();
+                        string TypeCodeString = State[key]?.GetType()?.ToString();
+                        if (!string.IsNullOrWhiteSpace(TypeCodeString))
+                            TypeCodeString = Regex.Replace(TypeCodeString, @"`[^\[\]]+\[", "[");
+                        obj["Type"] = TypeCodeString;
+                        obj["Data"] = State[key] != null ? JObject.FromObject(State[key], serializer) : null;
+                        controlsJ[key] = obj;
+                    }
+
+                    var ConverterList = ControlConverter.Instance.GetConvertList(State[key]?.GetType());
+                    if (ConverterList != null)
+                    {
+                        foreach(var ConvertedType in ConverterList)
+                        {
+                            if (!ConvertedType.IsAssignableFrom(State[key]?.GetType()))
+                            {
+                                JObject obj = new JObject();
+
+                                var mi = typeof(ControlConverter).GetMethod("Convert");
+                                var fooRef = mi.MakeGenericMethod(State[key].GetType(), ConvertedType);
+                                dynamic Converted = fooRef.Invoke(ControlConverter.Instance, new object[] { State[key] });
+                                if (Converted != null)
+                                {
+                                    string TypeCodeString = ConvertedType.ToString();
+                                    if (!string.IsNullOrWhiteSpace(TypeCodeString))
+                                        TypeCodeString = Regex.Replace(TypeCodeString, @"`[^\[\]]+\[", "[");
+                                    obj["Type"] = TypeCodeString;
+                                    obj["Data"] = JObject.FromObject(Converted, serializer);
+                                    while (TypeCodeString.Contains('.'))
+                                        TypeCodeString = TypeCodeString.Replace('.', '-');
+                                    controlsJ[key + "-" + TypeCodeString] = obj;
+                                }
+                            }
+                        }
+                    }
                 }
                 JObject output = new JObject()
                 {

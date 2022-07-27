@@ -1774,7 +1774,7 @@ namespace ExtendInput.Controller.Flydigi
             _NoteMetadataMutationLock = lineNumber;
         }
 
-        public bool SetControlState(string control, string state)
+        public bool SetControlState(string control, string state, params object[] args)
         {
             return false;
         }

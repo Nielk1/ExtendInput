@@ -122,7 +122,7 @@ namespace ExtendInput.Controller
         /// </summary>
         /// <param name="control"></param>
         /// <param name="state"></param>
-        bool SetControlState(string control, string state);
+        bool SetControlState(string control, string state, params object[] args);
     }
 
     public static class ControllerMathTools

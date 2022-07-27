@@ -203,7 +203,7 @@ namespace ExtendInput.Controller.GenericHid
             
         }
 
-        public bool SetControlState(string control, string state)
+        public bool SetControlState(string control, string state, params object[] args)
         {
             return false;
         }

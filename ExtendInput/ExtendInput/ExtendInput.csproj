@@ -106,6 +106,8 @@
     <Compile Include="Controls\ControlButtonWithStateLight.cs" />
     <Compile Include="Controls\ControlDPadPressure.cs" />
     <Compile Include="Controls\ControlCombinedTrigger.cs" />
+    <Compile Include="Controls\ControlTriggerForceFeedback.cs" />
+    <Compile Include="Controls\ControlTriggerPS5.cs" />
     <Compile Include="Controls\ControlSlider.cs" />
     <Compile Include="Controls\ControlDualStrikePivot.cs" />
     <Compile Include="Controls\ControlTrigger2Stage.cs" />
