@@ -117,8 +117,11 @@ namespace ExtendInput.Controller
         void Identify();
         void SetActiveAlternateController(string ControllerID);
 
+
+        void LockState();
+        void UnlockState(bool Notify);
         /// <summary>
-        /// Possible temp function, not sure yet
+        /// Apply modifications to the control state via the controller, to use this you probably want to call <see cref="LockState"/> and <see cref="UnlockState(bool)"/> to prevent the state reader from modifying this in flight.
         /// </summary>
         /// <param name="control"></param>
         /// <param name="state"></param>

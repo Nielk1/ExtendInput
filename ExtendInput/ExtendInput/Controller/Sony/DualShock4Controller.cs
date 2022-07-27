@@ -1234,7 +1234,7 @@ namespace ExtendInput.Controller.Sony
                         }
                         finally
                         {
-                            State.EndStateChange();
+                            State.EndStateChange(true);
                         }
 
                         if (PollingState == EPollingState.RunOnce)
@@ -1472,6 +1472,14 @@ namespace ExtendInput.Controller.Sony
             ControllerMetadataUpdate?.Invoke(this);
         }
 
+        public void LockState()
+        {
+            State.StartStateChange();
+        }
+        public void UnlockState(bool Notify)
+        {
+            State.EndStateChange(Notify);
+        }
         public bool SetControlState(string control, string state, params object[] args)
         {
             return false;

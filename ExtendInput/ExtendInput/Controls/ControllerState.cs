@@ -24,9 +24,10 @@ namespace ExtendInput.Controls
         {
             StateLock.Wait();
         }
-        public void EndStateChange()
+        public void EndStateChange(bool Notify)
         {
-            ControllerStateUpdate?.Invoke(Controls);
+            if (Notify)
+                ControllerStateUpdate?.Invoke(Controls);
             StateLock.Release();
         }
 

@@ -130,7 +130,7 @@ namespace ExtendInput.Controller.GenericHid
                     }
                     finally
                     {
-                        State.EndStateChange();
+                        State.EndStateChange(true);
                     }
                 }
                 finally
@@ -168,7 +168,7 @@ namespace ExtendInput.Controller.GenericHid
             new Thread(() =>
             {
                 State.StartStateChange();
-                State.EndStateChange();
+                State.EndStateChange(true);
             }).Start(); // fire this off in a thread so we don't get stuck as what called us to Initalize is probably locking in a way that will block their event handler
             _device.StartReading();
         }
@@ -203,6 +203,14 @@ namespace ExtendInput.Controller.GenericHid
             
         }
 
+        public void LockState()
+        {
+            State.StartStateChange();
+        }
+        public void UnlockState(bool Notify)
+        {
+            State.EndStateChange(Notify);
+        }
         public bool SetControlState(string control, string state, params object[] args)
         {
             return false;

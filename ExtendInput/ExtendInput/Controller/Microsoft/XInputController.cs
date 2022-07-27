@@ -269,7 +269,7 @@ namespace ExtendInput.Controller.Microsoft
                     }
                     finally
                     {
-                        State.EndStateChange();
+                        State.EndStateChange(true);
                     }
                 }
                 finally
@@ -319,6 +319,14 @@ namespace ExtendInput.Controller.Microsoft
 
         public void SetActiveAlternateController(string ControllerID) { }
 
+        public void LockState()
+        {
+            State.StartStateChange();
+        }
+        public void UnlockState(bool Notify)
+        {
+            State.EndStateChange(Notify);
+        }
         public bool SetControlState(string control, string state, params object[] args)
         {
             return false;

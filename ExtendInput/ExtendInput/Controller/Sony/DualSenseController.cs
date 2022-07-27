@@ -221,10 +221,6 @@ namespace ExtendInput.Controller.Sony
         public bool IsPresent => true;
         public bool IsVirtual => false;
 
-        public ControllerState GetState()
-        {
-            return State;
-        }
 
         public AccessMode AccessMode { get; private set; }
         public EConnectionType ConnectionType { get; private set; }
@@ -559,7 +555,7 @@ namespace ExtendInput.Controller.Sony
                         }
                         finally
                         {
-                            State.EndStateChange();
+                            State.EndStateChange(true);
                         }
                     }
                     else
@@ -661,7 +657,7 @@ namespace ExtendInput.Controller.Sony
                             }
                             finally
                             {
-                                State.EndStateChange();
+                                State.EndStateChange(true);
                             }
                         }
                     }
@@ -703,12 +699,20 @@ namespace ExtendInput.Controller.Sony
 
         public void SetActiveAlternateController(string ControllerID) { }
 
+        public void LockState()
+        {
+            State.StartStateChange();
+        }
+        public void UnlockState(bool Notify)
+        {
+            State.EndStateChange(Notify);
+        }
         public bool SetControlState(string control, string state, params object[] args)
         {
             switch (control)
             {
                 case "mute":
-                    State.StartStateChange();
+                    //State.StartStateChange();
                     try
                     {
                         (State.Controls["mute"] as IControlButtonWithStateLight).State = state;
@@ -716,7 +720,7 @@ namespace ExtendInput.Controller.Sony
                     }
                     finally
                     {
-                        State.EndStateChange();
+                        //State.EndStateChange(true);
                     }
                     return true;
             }

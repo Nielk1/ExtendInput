@@ -558,7 +558,15 @@ namespace ExtendInputControllerTester
                     IController controller = Controllers[ControllerID];
                     Thread tmp = new Thread(() =>
                     {
-                        bool retVal = controller.SetControlState(control, state);
+                        controller.LockState();
+                        try
+                        {
+                            bool retVal = controller.SetControlState(control, state);
+                        }
+                        finally
+                        {
+                            controller.UnlockState(true);
+                        }
                         _ = websocket.SendMessage("DeviceManager:ControllerMetadataUpdate", Controllers[ControllerID], new IWebSocketContext[] { context });
                     });
                     tmp.Start();

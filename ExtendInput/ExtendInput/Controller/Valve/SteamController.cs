@@ -987,7 +987,7 @@ namespace ExtendInput.Controller.Valve
                                                 }
                                                 finally
                                                 {
-                                                    State.EndStateChange();
+                                                    State.EndStateChange(true);
                                                 }
 
 
@@ -1127,7 +1127,7 @@ namespace ExtendInput.Controller.Valve
                                             }
                                             finally
                                             {
-                                                State.EndStateChange();
+                                                State.EndStateChange(true);
                                             }
 
                                             if (PollingState == EPollingState.RunOnce)
@@ -1356,6 +1356,14 @@ namespace ExtendInput.Controller.Valve
 
         public void SetActiveAlternateController(string ControllerID) { }
 
+        public void LockState()
+        {
+            State.StartStateChange();
+        }
+        public void UnlockState(bool Notify)
+        {
+            State.EndStateChange(Notify);
+        }
         public bool SetControlState(string control, string state, params object[] args)
         {
             return false;

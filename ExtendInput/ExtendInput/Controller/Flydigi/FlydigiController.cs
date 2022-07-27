@@ -885,7 +885,7 @@ namespace ExtendInput.Controller.Flydigi
                                     }
                                     finally
                                     {
-                                        State.EndStateChange();
+                                        State.EndStateChange(true);
                                     }
 
                                     if (PollingState == EPollingState.RunUntilReady || PollingState == EPollingState.RunOnce)
@@ -1774,6 +1774,14 @@ namespace ExtendInput.Controller.Flydigi
             _NoteMetadataMutationLock = lineNumber;
         }
 
+        public void LockState()
+        {
+            State.StartStateChange();
+        }
+        public void UnlockState(bool Notify)
+        {
+            State.EndStateChange(Notify);
+        }
         public bool SetControlState(string control, string state, params object[] args)
         {
             return false;

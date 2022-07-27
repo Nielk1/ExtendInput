@@ -571,7 +571,7 @@ namespace ExtendInput.Controller.Betop
                                         }
                                         finally
                                         {
-                                            State.EndStateChange();
+                                            State.EndStateChange(true);
                                         }
                                     }
                                     break;
@@ -696,7 +696,7 @@ namespace ExtendInput.Controller.Betop
                                                 }
                                                 finally
                                                 {
-                                                    State.EndStateChange();
+                                                    State.EndStateChange(true);
                                                 }
                                             }
                                             break;
@@ -819,6 +819,14 @@ namespace ExtendInput.Controller.Betop
 
         public void SetActiveAlternateController(string ControllerID) { }
 
+        public void LockState()
+        {
+            State.StartStateChange();
+        }
+        public void UnlockState(bool Notify)
+        {
+            State.EndStateChange(Notify);
+        }
         public bool SetControlState(string control, string state, params object[] args)
         {
             return false;
