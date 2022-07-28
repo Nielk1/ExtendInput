@@ -553,8 +553,8 @@
                                 '<path transform="translate(-64,0)" class="btn_x_border"      d="M 70 6 l 64 0 a 64 64 90 0 1 -64 64 z" stroke="#000" fill="transparent"></path>' +
                                 '<text class="btn_text chord_text" x="38" y="82" text-anchor="middle">0.000%</text>' +
                                 '</g>' +
-                                '</svg>' +
-                                '<div class="text-left control-raw" />');
+                                '</svg>');
+                                //'<div class="text-left control-raw" />');
                             var inputsWrapperElement = $('<div class="form-group" id="control_property_list_' + controller_id + '__' + control_id + '"/>');
                             var listElement = $('<div class="list-group p-1 control_property_list"/>');
                             listElement.append('<a href="#" class="list-group-item list-group-item-action control_property_item" data-property="Effect" data-value="STATE_PS5_TRIGGER_NONE">STATE_PS5_TRIGGER_NONE</a>');
@@ -598,7 +598,7 @@
                         //listElement.find('input[type="range"][data-property][data-property="Amplitude"]' ).val(controlData.Amplitude);
                         //listElement.find('input[type="range"][data-property][data-property="Frequency"]' ).val(controlData.Frequency);
 
-                        renderElement.find('.control-raw').addClass('text-monospace small').text(JSON.stringify(controlData, null, 2));
+                        //renderElement.find('.control-raw').addClass('text-monospace small').text(JSON.stringify(controlData, null, 2));
                     }
                     break;
 
