@@ -609,6 +609,9 @@ namespace ExtendInput.Controller.Sony
                                 (State.Controls["trigger_left"] as IControlTrigger).AnalogStage1 = (float)reportData.ReportBytes[baseOffset + 4] / byte.MaxValue;
                                 (State.Controls["trigger_right"] as IControlTrigger).AnalogStage1 = (float)reportData.ReportBytes[baseOffset + 5] / byte.MaxValue;
 
+                                (State.Controls["trigger_left"] as IControlTriggerPS5).StatusFlag = reportData.ReportBytes[baseOffset + 42];
+                                (State.Controls["trigger_right"] as IControlTriggerPS5).StatusFlag = reportData.ReportBytes[baseOffset + 41];
+
                                 (State.Controls["motion"] as ControlMotion).AngularVelocityX = BitConverter.ToInt16(reportData.ReportBytes, baseOffset + 15);
                                 (State.Controls["motion"] as ControlMotion).AngularVelocityZ = BitConverter.ToInt16(reportData.ReportBytes, baseOffset + 17);
                                 (State.Controls["motion"] as ControlMotion).AngularVelocityY = BitConverter.ToInt16(reportData.ReportBytes, baseOffset + 19);
@@ -712,16 +715,13 @@ namespace ExtendInput.Controller.Sony
             switch (control)
             {
                 case "mute":
-                    //State.StartStateChange();
-                    try
-                    {
-                        (State.Controls["mute"] as IControlButtonWithStateLight).State = state;
-                        //WriteStateDirtyPossible = true;
-                    }
-                    finally
-                    {
-                        //State.EndStateChange(true);
-                    }
+                    (State.Controls["mute"] as IControlButtonWithStateLight).State = state;
+                    return true;
+                case "trigger_right":
+                    (State.Controls["trigger_right"] as IControlTriggerPS5).State = state;
+                    return true;
+                case "trigger_left":
+                    (State.Controls["trigger_left"] as IControlTriggerPS5).State = state;
                     return true;
             }
             return false;

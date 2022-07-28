@@ -446,8 +446,126 @@
                         }
                     }
                     break;
+
+                case 'ExtendInput.Controls.ControlTriggerPS5':
+                    {
+                        var TriggerEffectInputEnables = {
+                            STATE_PS5_TRIGGER_NONE:      "00000",
+                            STATE_PS5_TRIGGER_FEEDBACK:  "10100",
+                            STATE_PS5_TRIGGER_WEAPON:    "11100",
+                            STATE_PS5_TRIGGER_VIBRATION: "10011"
+                        }
+
+                        var renderElement = wrapper.find('.control-value');
+                        renderElement.addClass('text-center');
+                        if (NewSubtype || renderElement.children('svg').length == 0) {
+                            renderElement.empty().append(
+                                '<svg id="control_render_' + controller_id + '__' + control_id + '" width="76" height="86" xmlns="http://www.w3.org/2000/svg">' +
+                                '<defs><clipPath id="guagePath"><path d="M 70 6 l 64 0 a 64 64 90 0 1 -64 64 z" /></clipPath></defs>' +
+                                '<g>' +
+                                '<path transform="translate(-64,0)" class="btn_x"      d="M 70 6 l 64 0 a 64 64 90 0 1 -64 64 z" stroke="" fill="#fff"></path>' +
+                                '<g transform="translate(-64,0)" clip-path="url(#guagePath)">' +
+                                ////'<circle class="btn_x_data3" r="64" cx="70" cy="6" fill="transparent" stroke="#ccc" stroke-width="128" stroke-dasharray="21 calc(3.14 * 128)" transform="rotate(80 70 6)"></circle>' +
+                                //'<circle class="btn_x_data3" r="64" cx="70" cy="6" fill="transparent" stroke="#ccc" stroke-width="128" stroke-dasharray="9 calc(3.14 * 128)" transform="rotate(86 70 6)"></circle>' +
+                                ////'<circle class="btn_x_data2" r="64" cx="70" cy="6" fill="transparent" stroke="#aaa" stroke-width="128" stroke-dasharray="15 calc(3.14 * 128)" transform="rotate(83 70 6)"></circle>' +
+                                //'<circle class="btn_x_data2" r="64" cx="70" cy="6" fill="transparent" stroke="#aaa" stroke-width="128" stroke-dasharray="9 calc(3.14 * 128)" transform="rotate(86 70 6)"></circle>' +
+                                '<circle class="btn_x_data" r="64" cx="70" cy="6" fill="transparent" stroke="#333" stroke-width="128" stroke-dasharray="9 calc(3.14 * 128)" transform="rotate(86 70 6)"></circle>' +
+                                '</g>' +
+                                '<path transform="translate(-64,0)" class="btn_x_border"      d="M 70 6 l 64 0 a 64 64 90 0 1 -64 64 z" stroke="#000" fill="transparent"></path>' +
+                                '<text class="btn_text chord_text" x="38" y="82" text-anchor="middle">0.000%</text>' +
+                                '</g>' +
+                                '</svg>' +
+                                '<div class="text-left control-raw" />');
+                            var inputsWrapperElement = $('<div class="form-group"/>');
+                            var listElement = $('<div class="list-group p-1 control_state_list" id="control_state_list_' + controller_id + '__' + control_id + '"/>');
+                            inputsWrapperElement.append(listElement);
+                            inputsWrapperElement.append('<input style="display:block;" type="range" class="form-control-range btn_x_data_start" value="' + controlData.Start + '" min="0" max="9"\>');
+                            inputsWrapperElement.append('<input style="display:block;" type="range" class="form-control-range btn_x_data_end" value="' + controlData.Start + '" min="0" max="9"\>');
+                            inputsWrapperElement.append('<input style="display:block;" type="range" class="form-control-range btn_x_data_resistance" value="' + controlData.Resistance + '" min="0" max="8"\>');
+                            inputsWrapperElement.append('<input style="display:block;" type="range" class="form-control-range btn_x_data_amplitude" value="' + controlData.Amplitude + '" min="0" max="8"\>');
+                            inputsWrapperElement.append('<input style="display:block;" type="range" class="form-control-range btn_x_data_frequency" value="' + controlData.Frequency + '" min="0" max="255"\>');
+                            renderElement.append(inputsWrapperElement);
+                        }
+                        var ctrl = renderElement.find('#control_render_' + controller_id + '__' + control_id);
+                        ctrl.find('.btn_text').text(controlData.AnalogStage1.toFixed(3).padStart(6, ' ') + '%');
+                        if (Math.abs(controlData.AnalogStage1) < 0.01) {
+                            //ctrl.find('.btn_x_data3').attr('transform', 'rotate(80 70 6)');
+                            ctrl.find('.btn_x_data3').attr('transform', 'rotate(86 70 6)');
+                            //ctrl.find('.btn_x_data2').attr('transform', 'rotate(83 70 6)');
+                            ctrl.find('.btn_x_data2').attr('transform', 'rotate(86 70 6)');
+                            ctrl.find('.btn_x_data').attr('transform', 'rotate(86 70 6)');
+                        } else {
+                            //ctrl.find('.btn_x_data3').show().attr('transform', 'rotate(' + (80 + controlData.AnalogStage1 * -84) + ' 70 6)');
+                            ctrl.find('.btn_x_data3').show().attr('transform', 'rotate(' + (86 + controlData.AnalogStage1 * -80) + ' 70 6)');
+                            //ctrl.find('.btn_x_data2').show().attr('transform', 'rotate(' + (83 + controlData.AnalogStage1 * -87) + ' 70 6)');
+                            ctrl.find('.btn_x_data2').show().attr('transform', 'rotate(' + (86 + controlData.AnalogStage1 * -85) + ' 70 6)');
+                            ctrl.find('.btn_x_data').show().attr('transform', 'rotate(' + (86 + controlData.AnalogStage1 * -90) + ' 70 6)');
+                        }
+
+                        var listElement = $('#control_state_list_' + controller_id + '__' + control_id);
+                        if (controlData.States.length != listElement.children().length) {
+                            listElement.empty();
+                        } else {
+                            for (var idx in controlData.States) {
+                                if (listElement.find('a[data-id="' + controlData.States[idx] + '"]').length == 0) {
+                                    listElement.empty();
+                                    break;
+                                }
+                            }
+                        }
+                        if (controlData.States.length != listElement.children().length) {
+                            for (var idx in controlData.States) {
+                                listElement.append('<a href="#" class="list-group-item list-group-item-action' + (controlData.States[idx] == controlData.State ? ' active' : '') + '" data-id="' + controlData.States[idx] + '">' + controlData.States[idx] + '</a>');
+                            }
+                        } else {
+                            listElement.find('[data-id="' + controlData.State + '"]').addClass('active');
+                            listElement.find('.active[data-id][data-id!="' + controlData.State + '"]').removeClass('active');
+                        }
+
+                        renderElement.find('.control-raw').addClass('text-monospace small').text(JSON.stringify(controlData, null, 2));
+                    }
+                    break;
+
                 case 'ExtendInput.Controls.ControlTrigger':
                 case 'ExtendInput.Controls.IControlTrigger':
+                    {
+                        var renderElement = wrapper.find('.control-value');
+                        renderElement.addClass('text-center');
+                        if (NewSubtype || renderElement.children('svg').length == 0) {
+                            renderElement.empty().append(
+                                '<svg id="control_render_' + controller_id + '__' + control_id + '" width="76" height="86" xmlns="http://www.w3.org/2000/svg">' +
+                                '<defs><clipPath id="guagePath"><path d="M 70 6 l 64 0 a 64 64 90 0 1 -64 64 z" /></clipPath></defs>' +
+                                '<g>' +
+                                '<path transform="translate(-64,0)" class="btn_x"      d="M 70 6 l 64 0 a 64 64 90 0 1 -64 64 z" stroke="" fill="#fff"></path>' +
+                                '<g transform="translate(-64,0)" clip-path="url(#guagePath)">' +
+                                ////'<circle class="btn_x_data3" r="64" cx="70" cy="6" fill="transparent" stroke="#ccc" stroke-width="128" stroke-dasharray="21 calc(3.14 * 128)" transform="rotate(80 70 6)"></circle>' +
+                                //'<circle class="btn_x_data3" r="64" cx="70" cy="6" fill="transparent" stroke="#ccc" stroke-width="128" stroke-dasharray="9 calc(3.14 * 128)" transform="rotate(86 70 6)"></circle>' +
+                                ////'<circle class="btn_x_data2" r="64" cx="70" cy="6" fill="transparent" stroke="#aaa" stroke-width="128" stroke-dasharray="15 calc(3.14 * 128)" transform="rotate(83 70 6)"></circle>' +
+                                //'<circle class="btn_x_data2" r="64" cx="70" cy="6" fill="transparent" stroke="#aaa" stroke-width="128" stroke-dasharray="9 calc(3.14 * 128)" transform="rotate(86 70 6)"></circle>' +
+                                '<circle class="btn_x_data" r="64" cx="70" cy="6" fill="transparent" stroke="#333" stroke-width="128" stroke-dasharray="9 calc(3.14 * 128)" transform="rotate(86 70 6)"></circle>' +
+                                '</g>' +
+                                '<path transform="translate(-64,0)" class="btn_x_border"      d="M 70 6 l 64 0 a 64 64 90 0 1 -64 64 z" stroke="#000" fill="transparent"></path>' +
+                                '<text class="btn_text chord_text" x="38" y="82" text-anchor="middle">0.000%</text>' +
+                                '</g>' +
+                                '</svg>');
+                        }
+                        var ctrl = renderElement.find('#control_render_' + controller_id + '__' + control_id);
+                        ctrl.find('.btn_text').text(controlData.AnalogStage1.toFixed(3).padStart(6, ' ') + '%');
+                        if (Math.abs(controlData.AnalogStage1) < 0.01) {
+                            //ctrl.find('.btn_x_data3').attr('transform', 'rotate(80 70 6)');
+                            ctrl.find('.btn_x_data3').attr('transform', 'rotate(86 70 6)');
+                            //ctrl.find('.btn_x_data2').attr('transform', 'rotate(83 70 6)');
+                            ctrl.find('.btn_x_data2').attr('transform', 'rotate(86 70 6)');
+                            ctrl.find('.btn_x_data').attr('transform', 'rotate(86 70 6)');
+                        } else {
+                            //ctrl.find('.btn_x_data3').show().attr('transform', 'rotate(' + (80 + controlData.AnalogStage1 * -84) + ' 70 6)');
+                            ctrl.find('.btn_x_data3').show().attr('transform', 'rotate(' + (86 + controlData.AnalogStage1 * -80) + ' 70 6)');
+                            //ctrl.find('.btn_x_data2').show().attr('transform', 'rotate(' + (83 + controlData.AnalogStage1 * -87) + ' 70 6)');
+                            ctrl.find('.btn_x_data2').show().attr('transform', 'rotate(' + (86 + controlData.AnalogStage1 * -85) + ' 70 6)');
+                            ctrl.find('.btn_x_data').show().attr('transform', 'rotate(' + (86 + controlData.AnalogStage1 * -90) + ' 70 6)');
+                        }
+                    }
+                    break;
                 case 'ExtendInput.Controls.ControlButtonPressure':
                 case 'ExtendInput.Controls.IControlButtonPressure':
                     {
@@ -1344,199 +1462,199 @@
 
 
             function PollOtherFunc() {/*
-                        $.get("/poll_other", function (data) {
-                            var knownChildren = {};
-                            $controllers.children().each((i, elem) => knownChildren[elem.id] = true);
-                            for (const controller_id in data.Controllers) {
-                                var controller = data.Controllers[controller_id];
+                                            $.get("/poll_other", function (data) {
+                                                var knownChildren = {};
+                                                $controllers.children().each((i, elem) => knownChildren[elem.id] = true);
+                                                for (const controller_id in data.Controllers) {
+                                                    var controller = data.Controllers[controller_id];
 
-                                var ConnectionIcon = null;
-                                for (var idx in controller.ConnectionTypeCode) {
-                                    var code = controller.ConnectionTypeCode[idx];
-                                    if (data.IconImages[code] != null) {
-                                        ConnectionIcon = data.IconImages[code];
-                                        break;
-                                    }
-                                }
+                                                    var ConnectionIcon = null;
+                                                    for (var idx in controller.ConnectionTypeCode) {
+                                                        var code = controller.ConnectionTypeCode[idx];
+                                                        if (data.IconImages[code] != null) {
+                                                            ConnectionIcon = data.IconImages[code];
+                                                            break;
+                                                        }
+                                                    }
 
-                                var ControllerIcon = null;
-                                var ControllerImage = null;
-                                for (var idx in controller.ControllerTypeCode) {
-                                    var code = controller.ControllerTypeCode[idx];
-                                    if (ControllerIcon == null && data.IconImages[code] != null) {
-                                        ControllerIcon = data.IconImages[code];
-                                    }
-                                    if (ControllerImage == null && data.ControllerImages[code] != null) {
-                                        ControllerImage = data.ControllerImages[code];
-                                    }
-                                    if (ControllerIcon != null && ControllerImage != null)
-                                        break;
-                                }
+                                                    var ControllerIcon = null;
+                                                    var ControllerImage = null;
+                                                    for (var idx in controller.ControllerTypeCode) {
+                                                        var code = controller.ControllerTypeCode[idx];
+                                                        if (ControllerIcon == null && data.IconImages[code] != null) {
+                                                            ControllerIcon = data.IconImages[code];
+                                                        }
+                                                        if (ControllerImage == null && data.ControllerImages[code] != null) {
+                                                            ControllerImage = data.ControllerImages[code];
+                                                        }
+                                                        if (ControllerIcon != null && ControllerImage != null)
+                                                            break;
+                                                    }
 
-                                var existing = $controllers.children('#controller_' + controller_id);
-                                if (existing.length == 0) {
-                                    //var wrapper = $('<div class="controller col-md-6 col-lg-4 pb-4"/>');
-                                    var wrapper = $('<div class="controller col-12 pb-4"/>');
-                                    wrapper.attr('id', 'controller_' + controller_id);
-                                    var cardWrapper = $('<div class="card" />');
-                                    if (ControllerImage != null) {
-                                        var cardImage = $('<img class="controller_image" />');
-                                        cardImage.attr("src", "/images/controller/" + ControllerImage);
-                                        cardImage.attr("alt", controller.Name);
-                                        cardWrapper.append(cardImage);
-                                    } else {
-                                        var cardImage = $('<img class="controller_image" />');
-                                        cardImage.attr("src", "/images/controller/placeholder.png");
-                                        cardImage.attr("alt", controller.Name);
-                                        cardWrapper.append(cardImage);
-                                    }
+                                                    var existing = $controllers.children('#controller_' + controller_id);
+                                                    if (existing.length == 0) {
+                                                        //var wrapper = $('<div class="controller col-md-6 col-lg-4 pb-4"/>');
+                                                        var wrapper = $('<div class="controller col-12 pb-4"/>');
+                                                        wrapper.attr('id', 'controller_' + controller_id);
+                                                        var cardWrapper = $('<div class="card" />');
+                                                        if (ControllerImage != null) {
+                                                            var cardImage = $('<img class="controller_image" />');
+                                                            cardImage.attr("src", "/images/controller/" + ControllerImage);
+                                                            cardImage.attr("alt", controller.Name);
+                                                            cardWrapper.append(cardImage);
+                                                        } else {
+                                                            var cardImage = $('<img class="controller_image" />');
+                                                            cardImage.attr("src", "/images/controller/placeholder.png");
+                                                            cardImage.attr("alt", controller.Name);
+                                                            cardWrapper.append(cardImage);
+                                                        }
 
-                                    cardWrapper.append('<div class="card-body"><h5 class="card-title"><img class="connection_icon" /><img class="controller_icon" /><span class="controller_name"></span></h5><p class="card-text controller_name_details" style="white-space:pre;"></p><p class="card-text controller_connection_unique_id"></p><p class="card-text controller_device_unique_id"></p></div>');
+                                                        cardWrapper.append('<div class="card-body"><h5 class="card-title"><img class="connection_icon" /><img class="controller_icon" /><span class="controller_name"></span></h5><p class="card-text controller_name_details" style="white-space:pre;"></p><p class="card-text controller_connection_unique_id"></p><p class="card-text controller_device_unique_id"></p></div>');
 
-                                    if (ControllerIcon != null) {
-                                        var cardImage = cardWrapper.find('.controller_icon');
-                                        cardImage.attr("src", "/images/icon/" + ControllerIcon);
-                                        cardImage.attr("alt", controller.Name);
-                                    } else {
-                                        var cardImage = cardWrapper.find('.controller_icon');
-                                        cardImage.attr("src", "/images/icon/DEVICE_UNKNOWN.png");
-                                        cardImage.attr("alt", controller.Name);
-                                    }
-                                    if (ConnectionIcon != null) {
-                                        var cardImage = cardWrapper.find('.connection_icon');
-                                        cardImage.attr("src", "/images/icon/" + ConnectionIcon);
-                                        cardImage.attr("alt", controller.Name);
-                                    } else {
-                                        var cardImage = cardWrapper.find('.connection_icon');
-                                        cardImage.attr("src", "/images/icon/DEVICE_UNKNOWN.png");
-                                        cardImage.attr("alt", controller.Name);
-                                    }
+                                                        if (ControllerIcon != null) {
+                                                            var cardImage = cardWrapper.find('.controller_icon');
+                                                            cardImage.attr("src", "/images/icon/" + ControllerIcon);
+                                                            cardImage.attr("alt", controller.Name);
+                                                        } else {
+                                                            var cardImage = cardWrapper.find('.controller_icon');
+                                                            cardImage.attr("src", "/images/icon/DEVICE_UNKNOWN.png");
+                                                            cardImage.attr("alt", controller.Name);
+                                                        }
+                                                        if (ConnectionIcon != null) {
+                                                            var cardImage = cardWrapper.find('.connection_icon');
+                                                            cardImage.attr("src", "/images/icon/" + ConnectionIcon);
+                                                            cardImage.attr("alt", controller.Name);
+                                                        } else {
+                                                            var cardImage = cardWrapper.find('.connection_icon');
+                                                            cardImage.attr("src", "/images/icon/DEVICE_UNKNOWN.png");
+                                                            cardImage.attr("alt", controller.Name);
+                                                        }
 
-                                    var menu = $('<div class="list-group small alternate_controller_list" />');
-                                    menu.append('<h6 class="list-group-item">Alternate Controllers</h6>');
+                                                        var menu = $('<div class="list-group small alternate_controller_list" />');
+                                                        menu.append('<h6 class="list-group-item">Alternate Controllers</h6>');
 
-                                    //if (controller.HasSelectableAlternatives) {
-                                    {
-                                        for (var alternate in controller.Alternates) {
-                                            var alternate_item = $('<a class="alternate_controller list-group-item list-group-item-action" href="#" />');
-                                            alternate_item.attr('data-id', alternate);
-                                            alternate_item.text(controller.Alternates[alternate]);
-                                            menu.append(alternate_item);
-                                        }
-                                        var alternateBody = $('<div class="card-body" />');
-                                        alternateBody.append(menu);
-                                        cardWrapper.append(alternateBody);
+                                                        //if (controller.HasSelectableAlternatives) {
+                                                        {
+                                                            for (var alternate in controller.Alternates) {
+                                                                var alternate_item = $('<a class="alternate_controller list-group-item list-group-item-action" href="#" />');
+                                                                alternate_item.attr('data-id', alternate);
+                                                                alternate_item.text(controller.Alternates[alternate]);
+                                                                menu.append(alternate_item);
+                                                            }
+                                                            var alternateBody = $('<div class="card-body" />');
+                                                            alternateBody.append(menu);
+                                                            cardWrapper.append(alternateBody);
 
-                                        if (controller.HasSelectableAlternatives) {
-                                            alternateBody.show();
-                                        } else {
-                                            alternateBody.hide();
-                                        }
-                                    }
+                                                            if (controller.HasSelectableAlternatives) {
+                                                                alternateBody.show();
+                                                            } else {
+                                                                alternateBody.hide();
+                                                            }
+                                                        }
 
-                                    cardWrapper.append('<a href="#" class="btn btn-primary btn-lg btn-block activate_controller" role="button" data-id="' + controller_id + '"></a>');
-                                    wrapper.append(cardWrapper);
-                                } else {
-                                    wrapper = existing;
-                                    delete knownChildren['controller_' + controller_id];
+                                                        cardWrapper.append('<a href="#" class="btn btn-primary btn-lg btn-block activate_controller" role="button" data-id="' + controller_id + '"></a>');
+                                                        wrapper.append(cardWrapper);
+                                                    } else {
+                                                        wrapper = existing;
+                                                        delete knownChildren['controller_' + controller_id];
 
-                                    var menu = wrapper.find('.alternate_controller_list');
-                                    if (controller.HasSelectableAlternatives) {
-                                        menu.parent().show();
-                                    } else {
-                                        menu.parent().hide();
-                                    }
-                                    for (var alternate in controller.Alternates) {
-                                        if (menu.children('.alternate_controller[data-id="' + alternate + '"]').length == 0) {
-                                            var alternate_item = $('<a class="alternate_controller list-group-item list-group-item-action" href="#" />');
-                                            alternate_item.attr('data-id', alternate);
-                                            alternate_item.text(controller.Alternates[alternate]);
-                                            menu.append(alternate_item);
-                                        }
-                                    }
+                                                        var menu = wrapper.find('.alternate_controller_list');
+                                                        if (controller.HasSelectableAlternatives) {
+                                                            menu.parent().show();
+                                                        } else {
+                                                            menu.parent().hide();
+                                                        }
+                                                        for (var alternate in controller.Alternates) {
+                                                            if (menu.children('.alternate_controller[data-id="' + alternate + '"]').length == 0) {
+                                                                var alternate_item = $('<a class="alternate_controller list-group-item list-group-item-action" href="#" />');
+                                                                alternate_item.attr('data-id', alternate);
+                                                                alternate_item.text(controller.Alternates[alternate]);
+                                                                menu.append(alternate_item);
+                                                            }
+                                                        }
 
-                                    if (ControllerImage != null) {
-                                        var cardImage = wrapper.find('.controller_image');
-                                        cardImage.attr("src", "/images/controller/" + ControllerImage);
-                                        cardImage.attr("alt", controller.Name);
-                                    } else {
-                                        var cardImage = wrapper.find('.controller_image');
-                                        cardImage.attr("src", "/images/controller/placeholder.png");
-                                        cardImage.attr("alt", controller.Name);
-                                    }
+                                                        if (ControllerImage != null) {
+                                                            var cardImage = wrapper.find('.controller_image');
+                                                            cardImage.attr("src", "/images/controller/" + ControllerImage);
+                                                            cardImage.attr("alt", controller.Name);
+                                                        } else {
+                                                            var cardImage = wrapper.find('.controller_image');
+                                                            cardImage.attr("src", "/images/controller/placeholder.png");
+                                                            cardImage.attr("alt", controller.Name);
+                                                        }
 
-                                    if (ControllerIcon != null) {
-                                        var cardImage = wrapper.find('.controller_icon');
-                                        cardImage.attr("src", "/images/icon/" + ControllerIcon);
-                                        cardImage.attr("alt", controller.Name);
-                                    } else {
-                                        var cardImage = wrapper.find('.controller_icon');
-                                        cardImage.attr("src", "/images/icon/DEVICE_UNKNOWN.png");
-                                        cardImage.attr("alt", controller.Name);
-                                    }
-                                    if (ConnectionIcon != null) {
-                                        var cardImage = wrapper.find('.connection_icon');
-                                        cardImage.attr("src", "/images/icon/" + ConnectionIcon);
-                                        cardImage.attr("alt", controller.Name);
-                                    } else {
-                                        var cardImage = wrapper.find('.connection_icon');
-                                        cardImage.attr("src", "/images/icon/DEVICE_UNKNOWN.png");
-                                        cardImage.attr("alt", controller.Name);
-                                    }
-                                }
+                                                        if (ControllerIcon != null) {
+                                                            var cardImage = wrapper.find('.controller_icon');
+                                                            cardImage.attr("src", "/images/icon/" + ControllerIcon);
+                                                            cardImage.attr("alt", controller.Name);
+                                                        } else {
+                                                            var cardImage = wrapper.find('.controller_icon');
+                                                            cardImage.attr("src", "/images/icon/DEVICE_UNKNOWN.png");
+                                                            cardImage.attr("alt", controller.Name);
+                                                        }
+                                                        if (ConnectionIcon != null) {
+                                                            var cardImage = wrapper.find('.connection_icon');
+                                                            cardImage.attr("src", "/images/icon/" + ConnectionIcon);
+                                                            cardImage.attr("alt", controller.Name);
+                                                        } else {
+                                                            var cardImage = wrapper.find('.connection_icon');
+                                                            cardImage.attr("src", "/images/icon/DEVICE_UNKNOWN.png");
+                                                            cardImage.attr("alt", controller.Name);
+                                                        }
+                                                    }
 
-                                var knownAlternates = {};
-                                var alternate_controller_list_dom = wrapper.find('.alternate_controller_list');
-                                alternate_controller_list_dom.children('.alternate_controller').each((i, elem) => knownAlternates[$(elem).data('id')] = true);
-                                for (const alternate in knownAlternates) {
-                                    if (!controller.Alternates[alternate])
-                                        alternate_controller_list_dom.children('.alternate_controller[data-id="' + alternate + '"]').remove();
-                                }
+                                                    var knownAlternates = {};
+                                                    var alternate_controller_list_dom = wrapper.find('.alternate_controller_list');
+                                                    alternate_controller_list_dom.children('.alternate_controller').each((i, elem) => knownAlternates[$(elem).data('id')] = true);
+                                                    for (const alternate in knownAlternates) {
+                                                        if (!controller.Alternates[alternate])
+                                                            alternate_controller_list_dom.children('.alternate_controller[data-id="' + alternate + '"]').remove();
+                                                    }
 
 
-                                wrapper.find('.controller_name').text(controller.Name);
-                                if (controller.NameDetails != null) {
-                                    wrapper.find('.controller_name_details').text(controller.NameDetails.join('\r\n'));
-                                } else {
-                                    wrapper.find('.controller_name_details').text('');
-                                }
-                                if (controller.ConnectionUniqueID != null) {
-                                    wrapper.find('.controller_connection_unique_id').text("Connection:\r\n" + controller.ConnectionUniqueID);
-                                } else {
-                                    wrapper.find('.controller_connection_unique_id').text('');
-                                }
-                                if (controller.DeviceUniqueID != null) {
-                                    wrapper.find('.controller_device_unique_id').text("Device:\r\n" + controller.DeviceUniqueID);
-                                } else {
-                                    wrapper.find('.controller_device_unique_id').text('');
-                                }
+                                                    wrapper.find('.controller_name').text(controller.Name);
+                                                    if (controller.NameDetails != null) {
+                                                        wrapper.find('.controller_name_details').text(controller.NameDetails.join('\r\n'));
+                                                    } else {
+                                                        wrapper.find('.controller_name_details').text('');
+                                                    }
+                                                    if (controller.ConnectionUniqueID != null) {
+                                                        wrapper.find('.controller_connection_unique_id').text("Connection:\r\n" + controller.ConnectionUniqueID);
+                                                    } else {
+                                                        wrapper.find('.controller_connection_unique_id').text('');
+                                                    }
+                                                    if (controller.DeviceUniqueID != null) {
+                                                        wrapper.find('.controller_device_unique_id').text("Device:\r\n" + controller.DeviceUniqueID);
+                                                    } else {
+                                                        wrapper.find('.controller_device_unique_id').text('');
+                                                    }
 
-                                if (existing.length == 0) {
-                                    $controllers.append(wrapper);
-                                }
-                            }
-                            for (const controller_id in knownChildren) {
-                                //if (controller_id == "controller_state") continue;
-                                $controllers.children('#' + controller_id).remove();
-                            }
-                            var existing_manual = {};
-                            $('#manual').children().each(function (idx, elem) { existing_manual[$(elem).data('id')] = elem; });
-                            for (const device_id in data.ManualDevices) {
-                                var manualDevice = data.ManualDevices[device_id];
-                                if (existing_manual["60BA"] != null) {
-                                    delete existing_manual["60BA"];
-                                } else {
-                                    var elem = $('<a href="#" class="list-group-item list-group-item-action" />');
-                                    elem.attr('data-id', device_id);
-                                    elem.text(manualDevice);
-                                    $('#manual').append(elem);
-                                }
-                            }
-                            for (var manual_elem_key in existing_manual) {
-                                $(existing_manual[manual_elem_key]).remove();
-                            }
-                        }).done(setTimeout(function () { PollOtherFunc() }, 1000));
-                    */}
+                                                    if (existing.length == 0) {
+                                                        $controllers.append(wrapper);
+                                                    }
+                                                }
+                                                for (const controller_id in knownChildren) {
+                                                    //if (controller_id == "controller_state") continue;
+                                                    $controllers.children('#' + controller_id).remove();
+                                                }
+                                                var existing_manual = {};
+                                                $('#manual').children().each(function (idx, elem) { existing_manual[$(elem).data('id')] = elem; });
+                                                for (const device_id in data.ManualDevices) {
+                                                    var manualDevice = data.ManualDevices[device_id];
+                                                    if (existing_manual["60BA"] != null) {
+                                                        delete existing_manual["60BA"];
+                                                    } else {
+                                                        var elem = $('<a href="#" class="list-group-item list-group-item-action" />');
+                                                        elem.attr('data-id', device_id);
+                                                        elem.text(manualDevice);
+                                                        $('#manual').append(elem);
+                                                    }
+                                                }
+                                                for (var manual_elem_key in existing_manual) {
+                                                    $(existing_manual[manual_elem_key]).remove();
+                                                }
+                                            }).done(setTimeout(function () { PollOtherFunc() }, 1000));
+                                        */}
             $('#manual').on('click', function (evt) {
                 evt.preventDefault();
 
