@@ -68,8 +68,8 @@ namespace ExtendInputControllerTester
                 case "DeviceManager::AlternateController":
                     AlternateController(e.Item1, data["controller"].Value<string>(), data["alternate"].Value<string>());
                     break;
-                case "DeviceManager::ActivateControlMode":
-                    ActivateControlMode(e.Item1, data["controller"].Value<string>(), data["control"].Value<string>(), data["state"].Value<string>());
+                case "DeviceManager::SetControlProperty":
+                    SetControlProperty(e.Item1, data["controller"].Value<string>(), data["control"].Value<string>(), data["property"].Value<string>(), data["value"].Value<string>(), ((JObject)data).ContainsKey("params") ? data["params"].Select(dr => (string)dr).ToArray<string>() : new string[0]);
                     break;
             }
         }
@@ -548,7 +548,7 @@ namespace ExtendInputControllerTester
             }
         }
 
-        private static async Task ActivateControlMode(IWebSocketContext context, string ControllerID, string control, string state)
+        private static async Task SetControlProperty(IWebSocketContext context, string ControllerID, string control, string property, string value, string[] paramaters)
         {
             await ControllersLock.WaitAsync();
             try
@@ -561,7 +561,8 @@ namespace ExtendInputControllerTester
                         controller.LockState();
                         try
                         {
-                            bool retVal = controller.SetControlState(control, state);
+                            IControl ctrl = controller.GetControl(control);
+                            bool retVal = ctrl.SetProperty(property, value, paramaters);
                         }
                         finally
                         {

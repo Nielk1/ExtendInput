@@ -1,5 +1,6 @@
 ﻿using Brod.Common.Utilities;
 using ExtendInput.Controls;
+using ExtendInput.DataTools.DualSense;
 using ExtendInput.DeviceProvider;
 using System;
 using System.Collections.Generic;
@@ -47,7 +48,7 @@ namespace ExtendInput.Controller.Sony
 
         bool OutputThreadActive = false;
         Thread OutputThread;
-        private void StartOutputThread()
+        unsafe private void StartOutputThread()
         {
             outBuffer = new SetStateData();
             OutputThreadActive = true;
@@ -61,21 +62,60 @@ namespace ExtendInput.Controller.Sony
                     //if(WriteStateDirtyPossible)
                     {
                         bool DataToWrite = false;
-                        IControlButtonWithStateLight ctrl = (State.Controls["mute"] as IControlButtonWithStateLight);
-                        if (ctrl.IsWriteDirty)
                         {
-                            outBuffer = new SetStateData();
-
-                            for (int i = 0; i < ctrl.States.Length; i++)
+                            IControlButtonWithStateLight ctrl = (State.Controls["mute"] as IControlButtonWithStateLight);
+                            if (ctrl != null && ctrl.IsWriteDirty)
                             {
-                                if (ctrl.States[i] == ctrl.State)
+                                for (int i = 0; i < ctrl.States.Length; i++)
                                 {
-                                    outBuffer.AllowMuteLight = true;
-                                    outBuffer.MuteLightMode = (MuteLight)i;
-                                    DataToWrite = true;
-                                    ctrl.CleanWriteDirty();
-                                    break;
+                                    if (ctrl.States[i] == ctrl.State)
+                                    {
+                                        if (!DataToWrite) outBuffer = new SetStateData();
+                                        outBuffer.AllowMuteLight = true;
+                                        outBuffer.MuteLightMode = (MuteLight)i;
+                                        DataToWrite = true;
+                                        ctrl.CleanWriteDirty();
+                                        break;
+                                    }
                                 }
+                            }
+                        }
+                        {
+                            IControlTriggerPS5 ctrl = (State.Controls["trigger_right"] as IControlTriggerPS5);
+                            if (ctrl != null && ctrl.IsWriteDirty)
+                            {
+                                if (!DataToWrite) outBuffer = new SetStateData();
+                                outBuffer.AllowRightTriggerFFB = true;
+                                fixed (byte* FFBData = outBuffer.RightTriggerFFB)
+                                {
+                                    switch (ctrl.Effect)
+                                    {
+                                        case EEffectTriggerForceFeedbackPS5.STATE_PS5_TRIGGER_NONE: TriggerEffectGenerator.Off(FFBData, 0); break;
+                                        case EEffectTriggerForceFeedbackPS5.STATE_PS5_TRIGGER_FEEDBACK: TriggerEffectGenerator.Feedback(FFBData, 0, ctrl.Start, ctrl.Resistance); break;
+                                        case EEffectTriggerForceFeedbackPS5.STATE_PS5_TRIGGER_WEAPON: TriggerEffectGenerator.Weapon(FFBData, 0, ctrl.Start, ctrl.End, ctrl.Resistance); break;
+                                        case EEffectTriggerForceFeedbackPS5.STATE_PS5_TRIGGER_VIBRATION: TriggerEffectGenerator.Vibration(FFBData, 0, ctrl.Start, ctrl.Amplitude, ctrl.Frequency); break;
+                                    }
+                                }
+                                DataToWrite = true;
+                            }
+                        }
+                        {
+                            IControlTriggerPS5 ctrl = (State.Controls["trigger_left"] as IControlTriggerPS5);
+                            if (ctrl != null && ctrl.IsWriteDirty)
+                            {
+                                if (!DataToWrite) outBuffer = new SetStateData();
+                                outBuffer.AllowLeftTriggerFFB = true;
+                                fixed (byte* FFBData = outBuffer.LeftTriggerFFB)
+                                {
+                                    switch (ctrl.Effect)
+                                    {
+                                        case EEffectTriggerForceFeedbackPS5.STATE_PS5_TRIGGER_NONE: TriggerEffectGenerator.Off(FFBData, 0); break;
+                                        case EEffectTriggerForceFeedbackPS5.STATE_PS5_TRIGGER_FEEDBACK: TriggerEffectGenerator.Feedback(FFBData, 0, ctrl.Start, ctrl.Resistance); break;
+                                        case EEffectTriggerForceFeedbackPS5.STATE_PS5_TRIGGER_WEAPON: TriggerEffectGenerator.Weapon(FFBData, 0, ctrl.Start, ctrl.End, ctrl.Resistance); break;
+                                        case EEffectTriggerForceFeedbackPS5.STATE_PS5_TRIGGER_VIBRATION: TriggerEffectGenerator.Vibration(FFBData, 0, ctrl.Start, ctrl.Amplitude, ctrl.Frequency); break;
+                                    }
+                                }
+                                DataToWrite = true;
                             }
                         }
                         if (DataToWrite)
@@ -149,7 +189,11 @@ namespace ExtendInput.Controller.Sony
             public bool HapticMute      { get { return (MuteControl & 0x80) != 0; } set { MuteControl = (byte)(value ? (MuteControl | 0x80) : (MuteControl & ~0x80)); } }
 
             public fixed byte RightTriggerFFB[11];
+            //[MarshalAs(UnmanagedType.ByValArray, SizeConst = 11)]
+            //public byte[] RightTriggerFFB;
             public fixed byte LeftTriggerFFB[11];
+            //[MarshalAs(UnmanagedType.ByValArray, SizeConst = 11)]
+            //public byte[] LeftTriggerFFB;
             public UInt32 HostTimestamp;
 
             public byte MotorPowerLevel;
@@ -609,8 +653,10 @@ namespace ExtendInput.Controller.Sony
                                 (State.Controls["trigger_left"] as IControlTrigger).AnalogStage1 = (float)reportData.ReportBytes[baseOffset + 4] / byte.MaxValue;
                                 (State.Controls["trigger_right"] as IControlTrigger).AnalogStage1 = (float)reportData.ReportBytes[baseOffset + 5] / byte.MaxValue;
 
-                                (State.Controls["trigger_left"] as IControlTriggerPS5).StatusFlag = reportData.ReportBytes[baseOffset + 42];
-                                (State.Controls["trigger_right"] as IControlTriggerPS5).StatusFlag = reportData.ReportBytes[baseOffset + 41];
+                                (State.Controls["trigger_left" ] as IControlTriggerPS5).TriggerStop   = (byte)(reportData.ReportBytes[baseOffset + 42] & 0x0f);
+                                (State.Controls["trigger_left" ] as IControlTriggerPS5).TriggerStatus = (byte)((reportData.ReportBytes[baseOffset + 42] & 0xf0) >> 4);
+                                (State.Controls["trigger_right"] as IControlTriggerPS5).TriggerStop   = (byte)(reportData.ReportBytes[baseOffset + 41] & 0x0f);
+                                (State.Controls["trigger_right"] as IControlTriggerPS5).TriggerStatus = (byte)((reportData.ReportBytes[baseOffset + 41] & 0xf0) >> 4);
 
                                 (State.Controls["motion"] as ControlMotion).AngularVelocityX = BitConverter.ToInt16(reportData.ReportBytes, baseOffset + 15);
                                 (State.Controls["motion"] as ControlMotion).AngularVelocityZ = BitConverter.ToInt16(reportData.ReportBytes, baseOffset + 17);
@@ -710,21 +756,9 @@ namespace ExtendInput.Controller.Sony
         {
             State.EndStateChange(Notify);
         }
-        public bool SetControlState(string control, string state, params object[] args)
+        public IControl GetControl(string control)
         {
-            switch (control)
-            {
-                case "mute":
-                    (State.Controls["mute"] as IControlButtonWithStateLight).State = state;
-                    return true;
-                case "trigger_right":
-                    (State.Controls["trigger_right"] as IControlTriggerPS5).State = state;
-                    return true;
-                case "trigger_left":
-                    (State.Controls["trigger_left"] as IControlTriggerPS5).State = state;
-                    return true;
-            }
-            return false;
+            return State.Controls[control];
         }
     }
 }

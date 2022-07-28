@@ -89,6 +89,7 @@
     <Compile Include="Controller\Betop\BetopControllerFactory.cs" />
     <Compile Include="Controller\GenericHid\GenericHidController.cs" />
     <Compile Include="Controller\GenericHid\GenericHidControllerFactory.cs" />
+    <Compile Include="Controller\Sony\TriggerEffectGenerator.cs" />
     <Compile Include="Controller\Sony\DualSenseController.cs" />
     <Compile Include="Controller\Sony\DualSenseControllerFactory.cs" />
     <Compile Include="Controller\Flydigi\FlydigiController.cs" />

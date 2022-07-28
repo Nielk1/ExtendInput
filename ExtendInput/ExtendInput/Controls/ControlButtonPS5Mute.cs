@@ -81,5 +81,17 @@ namespace ExtendInput.Controls
 
         public bool IsWriteDirty { get; private set; }
         public void CleanWriteDirty() { IsWriteDirty = false; }
+
+        public bool SetProperty(string property, string value, params string[] paramaters)
+        {
+            switch (property)
+            {
+                case "State":
+                    State = value;
+                    IsWriteDirty = true;
+                    return true;
+            }
+            return false;
+        }
     }
 }

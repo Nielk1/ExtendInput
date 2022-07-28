@@ -155,5 +155,10 @@ namespace ExtendInput.Controls
 
         public bool IsWriteDirty => false;
         public void CleanWriteDirty() { }
+
+        public bool SetProperty(string property, string value, params string[] paramaters)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

@@ -211,6 +211,10 @@ namespace ExtendInput.Controller.GenericHid
         {
             State.EndStateChange(Notify);
         }
+        public IControl GetControl(string control)
+        {
+            return State.Controls[control];
+        }
         public bool SetControlState(string control, string state, params object[] args)
         {
             return false;

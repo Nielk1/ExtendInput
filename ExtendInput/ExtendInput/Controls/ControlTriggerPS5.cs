@@ -6,60 +6,68 @@ using System.Threading.Tasks;
 
 namespace ExtendInput.Controls
 {
+    public enum EEffectTriggerForceFeedbackPS5
+    {
+        STATE_PS5_TRIGGER_NONE,
+        STATE_PS5_TRIGGER_FEEDBACK,  // start,      resistance
+        STATE_PS5_TRIGGER_WEAPON,    // start, end, resistance
+        STATE_PS5_TRIGGER_VIBRATION, // start,      resistance, amplitude, frequency // PS5 doesn't have resistance here
+    }
     public interface IControlTriggerPS5 : IControl
     {
-        string[] States { get; }
-        string State { get; set; }
+        //string[] States { get; }
+        //string State { get; set; }
 
-        //EEffectTriggerForceFeedback Effect { get; set; }
+        EEffectTriggerForceFeedbackPS5 Effect { get; set; }
         // Fdb // Wep // Vibr  // Note
         byte Start      { get; set; } // 0-9 // 2-7 // 0-9   // 0-9
         byte End        { get; set; } // X   // 3-8 // X     // technicly 0-9, but 9 puts the break point too late
         byte Resistance { get; set; } // 0-8 // 0-8 // X     // 0-8
         byte Amplitude  { get; set; } // X   // X   // 0-8   // 0-8
         byte Frequency  { get; set; } // X   // X   // 0-255 // 0-255
-        byte StatusFlag { get; set; }
+        byte TriggerStop { get; set; }
+        byte TriggerStatus { get; set; }
     }
 
     public class ControlTriggerPS5 : ControlTrigger, IControlTriggerPS5, IControlTrigger
     {
-        private static string[] _states = new string[] { "STATE_PS5_TRIGGER_NONE", "STATE_PS5_TRIGGER_FEEDBACK", "STATE_PS5_TRIGGER_WEAPON", "STATE_PS5_TRIGGER_VIBRATION" };
-        private static string[] _statesEmpty = new string[0];
-        public string[] States
-        {
-            get
-            {
-                if (AccessMode == AccessMode.FullControl)
-                    return _states;
-                return _statesEmpty;
-            }
-        }
+        //private static string[] _states = new string[] { "STATE_PS5_TRIGGER_NONE", "STATE_PS5_TRIGGER_FEEDBACK", "STATE_PS5_TRIGGER_WEAPON", "STATE_PS5_TRIGGER_VIBRATION" };
+        //private static string[] _statesEmpty = new string[0];
+        //public string[] States
+        //{
+        //    get
+        //    {
+        //        if (AccessMode == AccessMode.FullControl)
+        //            return _states;
+        //        return _statesEmpty;
+        //    }
+        //}
 
-        private string _state;
+        //private string _state;
 
-        public string State // State is null if not settable, only apply mode if valid and able to
-        {
-            get => _state;
-            set
-            {
-                if (AccessMode == AccessMode.FullControl && States.Contains(value) && _state != value)
-                {
-                    _state = value;
-                    IsWriteDirty = true;
-                }
-            }
-        }
+        //public string State // State is null if not settable, only apply mode if valid and able to
+        //{
+        //    get => _state;
+        //    set
+        //    {
+        //        if (AccessMode == AccessMode.FullControl && States.Contains(value) && _state != value)
+        //        {
+        //            _state = value;
+        //            IsWriteDirty = true;
+        //        }
+        //    }
+        //}
         public new bool IsWriteDirty { get; private set; }
 
-
-        //public EEffectTriggerForceFeedback Effect { get; set; }
+        public EEffectTriggerForceFeedbackPS5 Effect { get; set; }
         // Fdb // Wep // Vibr  // Note
-        public byte Start      { get; set; } // 0-9 // 2-7 // 0-9   // 0-9
-        public byte End        { get; set; } // X   // 3-8 // X     // technicly 0-9, but 9 puts the break point too late
+        public byte Start { get; set; } // 0-9 // 2-7 // 0-9   // 0-9
+        public byte End { get; set; } // X   // 3-8 // X     // technicly 0-9, but 9 puts the break point too late
         public byte Resistance { get; set; } // 0-8 // 0-8 // X     // 0-8
-        public byte Amplitude  { get; set; } // X   // X   // 0-8   // 0-8
-        public byte Frequency  { get; set; } // X   // X   // 0-255 // 0-255
-        public byte StatusFlag { get; set; }
+        public byte Amplitude { get; set; } // X   // X   // 0-8   // 0-8
+        public byte Frequency { get; set; } // X   // X   // 0-255 // 0-255
+        public byte TriggerStop { get; set; }
+        public byte TriggerStatus { get; set; }
 
 
         private AccessMode AccessMode;
@@ -68,11 +76,9 @@ namespace ExtendInput.Controls
             this.AccessMode = AccessMode;
             if (AccessMode == AccessMode.FullControl)
             {
-                _state = States[0];
             }
             else
             {
-                _state = null;
             }
         }
 
@@ -142,16 +148,91 @@ namespace ExtendInput.Controls
             ControlTriggerPS5 newData = new ControlTriggerPS5(AccessMode);
 
             newData.AnalogStage1 = this.AnalogStage1;
-            newData.State = State;
+            newData.Effect = Effect;
             newData.Start = Start;
             newData.End = End;
             newData.Resistance = Resistance;
             newData.Amplitude = Amplitude;
             newData.Frequency = Frequency;
-            newData.StatusFlag = StatusFlag;
+            newData.TriggerStop = TriggerStop;
+            newData.TriggerStatus = TriggerStatus;
             newData.IsWriteDirty = this.IsWriteDirty; // need to preserve this stuff
 
             return newData;
+        }
+
+        public new bool SetProperty(string property, string value, params string[] paramaters)
+        {
+            switch (property)
+            {
+                case "Effect":
+                    {
+                        EEffectTriggerForceFeedbackPS5 parsed;
+                        if (Enum.TryParse<EEffectTriggerForceFeedbackPS5>(value, out parsed))
+                        {
+                            Effect = parsed;
+                            IsWriteDirty = true;
+                            return true;
+                        }
+                    }
+                    return false;
+                case "Start":
+                    {
+                        byte parsed;
+                        if(byte.TryParse(value, out parsed))
+                        {
+                            Start = parsed;
+                            IsWriteDirty = true;
+                            return true;
+                        }
+                    }
+                    return false;
+                case "End":
+                    {
+                        byte parsed;
+                        if (byte.TryParse(value, out parsed))
+                        {
+                            End = parsed;
+                            IsWriteDirty = true;
+                            return true;
+                        }
+                    }
+                    return false;
+                case "Resistance":
+                    {
+                        byte parsed;
+                        if (byte.TryParse(value, out parsed))
+                        {
+                            Resistance = parsed;
+                            IsWriteDirty = true;
+                            return true;
+                        }
+                    }
+                    return false;
+                case "Amplitude":
+                    {
+                        byte parsed;
+                        if (byte.TryParse(value, out parsed))
+                        {
+                            Amplitude = parsed;
+                            IsWriteDirty = true;
+                            return true;
+                        }
+                    }
+                    return false;
+                case "Frequency":
+                    {
+                        byte parsed;
+                        if (byte.TryParse(value, out parsed))
+                        {
+                            Frequency = parsed;
+                            IsWriteDirty = true;
+                            return true;
+                        }
+                    }
+                    return false;
+            }
+            return false;
         }
     }
 

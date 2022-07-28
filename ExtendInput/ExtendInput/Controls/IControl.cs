@@ -13,5 +13,6 @@ namespace ExtendInput.Controls
 
         bool IsWriteDirty { get; }
         void CleanWriteDirty();
+        bool SetProperty(string property, string value, params string[] paramaters);
     }
 }
