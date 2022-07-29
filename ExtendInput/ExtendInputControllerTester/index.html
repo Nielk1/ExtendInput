@@ -447,85 +447,6 @@
                     }
                     break;
 
-                //case 'ExtendInput.Controls.ControlTriggerPS5':
-                //    {
-                //        var TriggerEffectInputEnables = {
-                //            STATE_PS5_TRIGGER_NONE:      "00000",
-                //            STATE_PS5_TRIGGER_FEEDBACK:  "10100",
-                //            STATE_PS5_TRIGGER_WEAPON:    "11100",
-                //            STATE_PS5_TRIGGER_VIBRATION: "10011"
-                //        }
-
-                //        var renderElement = wrapper.find('.control-value');
-                //        renderElement.addClass('text-center');
-                //        if (NewSubtype || renderElement.children('svg').length == 0) {
-                //            renderElement.empty().append(
-                //                '<svg id="control_render_' + controller_id + '__' + control_id + '" width="76" height="86" xmlns="http://www.w3.org/2000/svg">' +
-                //                '<defs><clipPath id="guagePath"><path d="M 70 6 l 64 0 a 64 64 90 0 1 -64 64 z" /></clipPath></defs>' +
-                //                '<g>' +
-                //                '<path transform="translate(-64,0)" class="btn_x"      d="M 70 6 l 64 0 a 64 64 90 0 1 -64 64 z" stroke="" fill="#fff"></path>' +
-                //                '<g transform="translate(-64,0)" clip-path="url(#guagePath)">' +
-                //                ////'<circle class="btn_x_data3" r="64" cx="70" cy="6" fill="transparent" stroke="#ccc" stroke-width="128" stroke-dasharray="21 calc(3.14 * 128)" transform="rotate(80 70 6)"></circle>' +
-                //                //'<circle class="btn_x_data3" r="64" cx="70" cy="6" fill="transparent" stroke="#ccc" stroke-width="128" stroke-dasharray="9 calc(3.14 * 128)" transform="rotate(86 70 6)"></circle>' +
-                //                ////'<circle class="btn_x_data2" r="64" cx="70" cy="6" fill="transparent" stroke="#aaa" stroke-width="128" stroke-dasharray="15 calc(3.14 * 128)" transform="rotate(83 70 6)"></circle>' +
-                //                //'<circle class="btn_x_data2" r="64" cx="70" cy="6" fill="transparent" stroke="#aaa" stroke-width="128" stroke-dasharray="9 calc(3.14 * 128)" transform="rotate(86 70 6)"></circle>' +
-                //                '<circle class="btn_x_data" r="64" cx="70" cy="6" fill="transparent" stroke="#333" stroke-width="128" stroke-dasharray="9 calc(3.14 * 128)" transform="rotate(86 70 6)"></circle>' +
-                //                '</g>' +
-                //                '<path transform="translate(-64,0)" class="btn_x_border"      d="M 70 6 l 64 0 a 64 64 90 0 1 -64 64 z" stroke="#000" fill="transparent"></path>' +
-                //                '<text class="btn_text chord_text" x="38" y="82" text-anchor="middle">0.000%</text>' +
-                //                '</g>' +
-                //                '</svg>' +
-                //                '<div class="text-left control-raw" />');
-                //            var inputsWrapperElement = $('<div class="form-group"/>');
-                //            var listElement = $('<div class="list-group p-1 control_state_list" id="control_state_list_' + controller_id + '__' + control_id + '"/>');
-                //            inputsWrapperElement.append(listElement);
-                //            inputsWrapperElement.append('<input style="display:block;" type="range" class="form-control-range btn_x_data_start" value="' + controlData.Start + '" min="0" max="9"\>');
-                //            inputsWrapperElement.append('<input style="display:block;" type="range" class="form-control-range btn_x_data_end" value="' + controlData.Start + '" min="0" max="9"\>');
-                //            inputsWrapperElement.append('<input style="display:block;" type="range" class="form-control-range btn_x_data_resistance" value="' + controlData.Resistance + '" min="0" max="8"\>');
-                //            inputsWrapperElement.append('<input style="display:block;" type="range" class="form-control-range btn_x_data_amplitude" value="' + controlData.Amplitude + '" min="0" max="8"\>');
-                //            inputsWrapperElement.append('<input style="display:block;" type="range" class="form-control-range btn_x_data_frequency" value="' + controlData.Frequency + '" min="0" max="255"\>');
-                //            renderElement.append(inputsWrapperElement);
-                //        }
-                //        var ctrl = renderElement.find('#control_render_' + controller_id + '__' + control_id);
-                //        ctrl.find('.btn_text').text(controlData.AnalogStage1.toFixed(3).padStart(6, ' ') + '%');
-                //        if (Math.abs(controlData.AnalogStage1) < 0.01) {
-                //            //ctrl.find('.btn_x_data3').attr('transform', 'rotate(80 70 6)');
-                //            ctrl.find('.btn_x_data3').attr('transform', 'rotate(86 70 6)');
-                //            //ctrl.find('.btn_x_data2').attr('transform', 'rotate(83 70 6)');
-                //            ctrl.find('.btn_x_data2').attr('transform', 'rotate(86 70 6)');
-                //            ctrl.find('.btn_x_data').attr('transform', 'rotate(86 70 6)');
-                //        } else {
-                //            //ctrl.find('.btn_x_data3').show().attr('transform', 'rotate(' + (80 + controlData.AnalogStage1 * -84) + ' 70 6)');
-                //            ctrl.find('.btn_x_data3').show().attr('transform', 'rotate(' + (86 + controlData.AnalogStage1 * -80) + ' 70 6)');
-                //            //ctrl.find('.btn_x_data2').show().attr('transform', 'rotate(' + (83 + controlData.AnalogStage1 * -87) + ' 70 6)');
-                //            ctrl.find('.btn_x_data2').show().attr('transform', 'rotate(' + (86 + controlData.AnalogStage1 * -85) + ' 70 6)');
-                //            ctrl.find('.btn_x_data').show().attr('transform', 'rotate(' + (86 + controlData.AnalogStage1 * -90) + ' 70 6)');
-                //        }
-
-                //        var listElement = $('#control_state_list_' + controller_id + '__' + control_id);
-                //        if (controlData.States.length != listElement.children().length) {
-                //            listElement.empty();
-                //        } else {
-                //            for (var idx in controlData.States) {
-                //                if (listElement.find('a[data-id="' + controlData.States[idx] + '"]').length == 0) {
-                //                    listElement.empty();
-                //                    break;
-                //                }
-                //            }
-                //        }
-                //        if (controlData.States.length != listElement.children().length) {
-                //            for (var idx in controlData.States) {
-                //                listElement.append('<a href="#" class="list-group-item list-group-item-action' + (controlData.States[idx] == controlData.State ? ' active' : '') + '" data-id="' + controlData.States[idx] + '">' + controlData.States[idx] + '</a>');
-                //            }
-                //        } else {
-                //            listElement.find('[data-id="' + controlData.State + '"]').addClass('active');
-                //            listElement.find('.active[data-id][data-id!="' + controlData.State + '"]').removeClass('active');
-                //        }
-
-                //        renderElement.find('.control-raw').addClass('text-monospace small').text(JSON.stringify(controlData, null, 2));
-                //    }
-                //    break;
-
                 case 'ExtendInput.Controls.ControlTriggerPS5':
                     {
                         var TriggerEffectInputEnables = {
@@ -544,9 +465,6 @@
                                 '<g>' +
                                 '<path transform="translate(-64,0)" class="btn_x"      d="M 70 6 l 64 0 a 64 64 90 0 1 -64 64 z" stroke="" fill="#fff"></path>' +
                                 '<g transform="translate(-64,0)" clip-path="url(#guagePath)">' +
-                                ////'<circle class="btn_x_data3" r="64" cx="70" cy="6" fill="transparent" stroke="#ccc" stroke-width="128" stroke-dasharray="21 calc(3.14 * 128)" transform="rotate(80 70 6)"></circle>' +
-                                //'<circle class="btn_x_data3" r="64" cx="70" cy="6" fill="transparent" stroke="#ccc" stroke-width="128" stroke-dasharray="9 calc(3.14 * 128)" transform="rotate(86 70 6)"></circle>' +
-                                ////'<circle class="btn_x_data2" r="64" cx="70" cy="6" fill="transparent" stroke="#aaa" stroke-width="128" stroke-dasharray="15 calc(3.14 * 128)" transform="rotate(83 70 6)"></circle>' +
                                 '<circle class="btn_x_data2" r="64" cx="70" cy="6" fill="transparent" stroke="#aaa" stroke-width="128" stroke-dasharray="calc(3.14 * 64) calc(3.14 * 128)" transform="rotate(86 70 6)"></circle>' +
                                 '<circle class="btn_x_data" r="64" cx="70" cy="6" fill="transparent" stroke="#333" stroke-width="128" stroke-dasharray="9 calc(3.14 * 128)" transform="rotate(86 70 6)"></circle>' +
                                 '</g>' +
@@ -554,7 +472,6 @@
                                 '<text class="btn_text chord_text" x="38" y="82" text-anchor="middle">0.000%</text>' +
                                 '</g>' +
                                 '</svg>');
-                                //'<div class="text-left control-raw" />');
                             var inputsWrapperElement = $('<div class="form-group" id="control_property_list_' + controller_id + '__' + control_id + '"/>');
                             var listElement = $('<div class="list-group p-1 control_property_list"/>');
                             listElement.append('<a href="#" class="list-group-item list-group-item-action control_property_item" data-property="Effect" data-value="STATE_PS5_TRIGGER_NONE">STATE_PS5_TRIGGER_NONE</a>');
@@ -591,14 +508,63 @@
                         var listElement = $('#control_property_list_' + controller_id + '__' + control_id);
                         listElement.find('[data-value="' + controlData.Effect + '"]').addClass('active');
                         listElement.find('.active[data-value][data-value!="' + controlData.Effect + '"]').removeClass('active');
+                    }
+                    break;
 
-                        //listElement.find('input[type="range"][data-property][data-property="Start"]'     ).val(controlData.Start);
-                        //listElement.find('input[type="range"][data-property][data-property="End"]'       ).val(controlData.Start);
-                        //listElement.find('input[type="range"][data-property][data-property="Resistance"]').val(controlData.Resistance);
-                        //listElement.find('input[type="range"][data-property][data-property="Amplitude"]' ).val(controlData.Amplitude);
-                        //listElement.find('input[type="range"][data-property][data-property="Frequency"]' ).val(controlData.Frequency);
+                case 'ExtendInput.Controls.ControlTriggerFlydigi':
+                    {
+                        var renderElement = wrapper.find('.control-value');
+                        renderElement.addClass('text-center');
+                        if (NewSubtype || renderElement.children('svg').length == 0) {
+                            renderElement.empty().append(
+                                '<svg id="control_render_' + controller_id + '__' + control_id + '" width="76" height="86" xmlns="http://www.w3.org/2000/svg">' +
+                                '<defs><clipPath id="guagePath"><path d="M 70 6 l 64 0 a 64 64 90 0 1 -64 64 z" /></clipPath></defs>' +
+                                '<g>' +
+                                '<path transform="translate(-64,0)" class="btn_x"      d="M 70 6 l 64 0 a 64 64 90 0 1 -64 64 z" stroke="" fill="#fff"></path>' +
+                                '<g transform="translate(-64,0)" clip-path="url(#guagePath)">' +
+                                //'<circle class="btn_x_data2" r="64" cx="70" cy="6" fill="transparent" stroke="#aaa" stroke-width="128" stroke-dasharray="calc(3.14 * 64) calc(3.14 * 128)" transform="rotate(86 70 6)"></circle>' +
+                                '<circle class="btn_x_data" r="64" cx="70" cy="6" fill="transparent" stroke="#333" stroke-width="128" stroke-dasharray="9 calc(3.14 * 128)" transform="rotate(86 70 6)"></circle>' +
+                                '</g>' +
+                                '<path transform="translate(-64,0)" class="btn_x_border"      d="M 70 6 l 64 0 a 64 64 90 0 1 -64 64 z" stroke="#000" fill="transparent"></path>' +
+                                '<text class="btn_text chord_text" x="38" y="82" text-anchor="middle">0.000%</text>' +
+                                '</g>' +
+                                '</svg>');
+                            var inputsWrapperElement = $('<div class="form-group" id="control_property_list_' + controller_id + '__' + control_id + '"/>');
+                            var listElement = $('<div class="list-group p-1 control_property_list"/>');
+                            listElement.append('<a href="#" class="list-group-item list-group-item-action control_property_item" data-property="Effect" data-value="STATE_FLYDIGI_TRIGGER_NONE">STATE_FLYDIGI_TRIGGER_NONE</a>');
+                            listElement.append('<a href="#" class="list-group-item list-group-item-action control_property_item" data-property="Effect" data-value="STATE_FLYDIGI_TRIGGER_FEEDBACK">STATE_FLYDIGI_TRIGGER_FEEDBACK</a>');
+                            listElement.append('<a href="#" class="list-group-item list-group-item-action control_property_item" data-property="Effect" data-value="STATE_FLYDIGI_TRIGGER_WEAPON">STATE_FLYDIGI_TRIGGER_WEAPON</a>');
+                            listElement.append('<a href="#" class="list-group-item list-group-item-action control_property_item" data-property="Effect" data-value="STATE_FLYDIGI_TRIGGER_VIBRATION">STATE_FLYDIGI_TRIGGER_VIBRATION</a>');
+                            inputsWrapperElement.append(listElement);
+                            inputsWrapperElement.append('<label class="small mb-0">Start</label\>');
+                            inputsWrapperElement.append('<input type="range" data-property="Start"      class="control_property_item form-control-range" value="' + controlData.Start + '" min="0" max="9"\>');
+                            inputsWrapperElement.append('<label class="small mb-0">End</label\>');
+                            inputsWrapperElement.append('<input type="range" data-property="End"        class="control_property_item form-control-range" value="' + controlData.Start + '" min="0" max="9"\>');
+                            inputsWrapperElement.append('<label class="small mb-0">Resistance</label\>');
+                            inputsWrapperElement.append('<input type="range" data-property="Resistance" class="control_property_item form-control-range" value="' + controlData.Resistance + '" min="0" max="8"\>');
+                            inputsWrapperElement.append('<label class="small mb-0">Amplitude</label\>');
+                            inputsWrapperElement.append('<input type="range" data-property="Amplitude"  class="control_property_item form-control-range" value="' + controlData.Amplitude + '" min="0" max="8"\>');
+                            inputsWrapperElement.append('<label class="small mb-0">Frequency</label\>');
+                            inputsWrapperElement.append('<input type="range" data-property="Frequency"  class="control_property_item form-control-range" value="' + controlData.Frequency + '" min="0" max="255"\>');
+                            renderElement.append(inputsWrapperElement);
+                        }
+                        var ctrl = renderElement.find('#control_render_' + controller_id + '__' + control_id);
+                        ctrl.find('.btn_text').text(controlData.AnalogStage1.toFixed(3).padStart(6, ' ') + '%');
+                        if (Math.abs(controlData.AnalogStage1) < 0.01) {
+                            ctrl.find('.btn_x_data').attr('transform', 'rotate(86 70 6)');
+                        } else {
+                            ctrl.find('.btn_x_data').show().attr('transform', 'rotate(' + (86 + controlData.AnalogStage1 * -90) + ' 70 6)');
+                        }
+                        //ctrl.find('.btn_x_data2').attr('transform', 'rotate(' + (86 + controlData.TriggerStop / 9.0 * -90 + -180) + ' 70 6)');
+                        //switch (controlData.TriggerStatus) {
+                        //    case 0: ctrl.find('.btn_x_data').attr('stroke', '#333'); break;
+                        //    case 1: ctrl.find('.btn_x_data').attr('stroke', 'orange'); break;
+                        //    case 2: ctrl.find('.btn_x_data').attr('stroke', 'red'); break;
+                        //}
 
-                        //renderElement.find('.control-raw').addClass('text-monospace small').text(JSON.stringify(controlData, null, 2));
+                        var listElement = $('#control_property_list_' + controller_id + '__' + control_id);
+                        listElement.find('[data-value="' + controlData.Effect + '"]').addClass('active');
+                        listElement.find('.active[data-value][data-value!="' + controlData.Effect + '"]').removeClass('active');
                     }
                     break;
 

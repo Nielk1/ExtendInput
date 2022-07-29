@@ -96,6 +96,7 @@ namespace ExtendInput.Controller.Sony
                                         case EEffectTriggerForceFeedbackPS5.STATE_PS5_TRIGGER_VIBRATION: TriggerEffectGenerator.Vibration(FFBData, 0, ctrl.Start, ctrl.Amplitude, ctrl.Frequency); break;
                                     }
                                 }
+                                ctrl.CleanWriteDirty();
                                 DataToWrite = true;
                             }
                         }
@@ -115,6 +116,7 @@ namespace ExtendInput.Controller.Sony
                                         case EEffectTriggerForceFeedbackPS5.STATE_PS5_TRIGGER_VIBRATION: TriggerEffectGenerator.Vibration(FFBData, 0, ctrl.Start, ctrl.Amplitude, ctrl.Frequency); break;
                                     }
                                 }
+                                ctrl.CleanWriteDirty();
                                 DataToWrite = true;
                             }
                         }

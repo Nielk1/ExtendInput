@@ -6,30 +6,30 @@ using System.Threading.Tasks;
 
 namespace ExtendInput.Controls
 {
-    public enum EEffectTriggerForceFeedbackPS5
+    public enum EEffectTriggerForceFeedbackFlydigi
     {
-        STATE_PS5_TRIGGER_NONE,
-        STATE_PS5_TRIGGER_FEEDBACK,  // start,      resistance
-        STATE_PS5_TRIGGER_WEAPON,    // start, end, resistance
-        STATE_PS5_TRIGGER_VIBRATION, // start,                  amplitude, frequency
+        STATE_FLYDIGI_TRIGGER_NONE,
+        STATE_FLYDIGI_TRIGGER_FEEDBACK,  // start,      resistance
+        STATE_FLYDIGI_TRIGGER_WEAPON,    // start, end, resistance
+        STATE_FLYDIGI_TRIGGER_VIBRATION, // start,      resistance, amplitude, frequency // PS5 doesn't have resistance here
     }
-    public interface IControlTriggerPS5 : IControl
+    public interface IControlTriggerFlydigi : IControl
     {
         //string[] States { get; }
         //string State { get; set; }
 
-        EEffectTriggerForceFeedbackPS5 Effect { get; set; }
+        EEffectTriggerForceFeedbackFlydigi Effect { get; set; }
         // Fdb // Wep // Vibr  // Note
-        byte Start      { get; set; } // 0-9 // 2-7 // 0-9   // 0-9
-        byte End        { get; set; } // X   // 3-8 // X     // technicly 0-9, but 9 puts the break point too late
-        byte Resistance { get; set; } // 0-8 // 0-8 // X     // 0-8
-        byte Amplitude  { get; set; } // X   // X   // 0-8   // 0-8
-        byte Frequency  { get; set; } // X   // X   // 0-255 // 0-255
-        byte TriggerStop { get; set; }
-        byte TriggerStatus { get; set; }
+        byte Start      { get; set; }
+        byte End        { get; set; }
+        byte Resistance { get; set; }
+        byte Amplitude  { get; set; }
+        byte Frequency  { get; set; }
+        //byte TriggerStop { get; set; }
+        //byte TriggerStatus { get; set; }
     }
 
-    public class ControlTriggerPS5 : ControlTrigger, IControlTriggerPS5, IControlTrigger
+    public class ControlTriggerFlydigi : ControlTrigger, IControlTriggerFlydigi, IControlTrigger
     {
         //private static string[] _states = new string[] { "STATE_PS5_TRIGGER_NONE", "STATE_PS5_TRIGGER_FEEDBACK", "STATE_PS5_TRIGGER_WEAPON", "STATE_PS5_TRIGGER_VIBRATION" };
         //private static string[] _statesEmpty = new string[0];
@@ -59,19 +59,18 @@ namespace ExtendInput.Controls
         //}
         public new bool IsWriteDirty { get; private set; }
 
-        public EEffectTriggerForceFeedbackPS5 Effect { get; set; }
-        // Fdb // Wep // Vibr  // Note
-        public byte Start { get; set; } // 0-9 // 2-7 // 0-9   // 0-9
-        public byte End { get; set; } // X   // 3-8 // X     // technicly 0-9, but 9 puts the break point too late
-        public byte Resistance { get; set; } // 0-8 // 0-8 // X     // 0-8
-        public byte Amplitude { get; set; } // X   // X   // 0-8   // 0-8
-        public byte Frequency { get; set; } // X   // X   // 0-255 // 0-255
-        public byte TriggerStop { get; set; }
-        public byte TriggerStatus { get; set; }
+        public EEffectTriggerForceFeedbackFlydigi Effect { get; set; }
+        public byte Start { get; set; }
+        public byte End { get; set; }
+        public byte Resistance { get; set; }
+        public byte Amplitude { get; set; }
+        public byte Frequency { get; set; }
+        //public byte TriggerStop { get; set; }
+        //public byte TriggerStatus { get; set; }
 
 
         private AccessMode AccessMode;
-        public ControlTriggerPS5(AccessMode AccessMode)
+        public ControlTriggerFlydigi(AccessMode AccessMode)
         {
             this.AccessMode = AccessMode;
             if (AccessMode == AccessMode.FullControl)
@@ -145,7 +144,7 @@ namespace ExtendInput.Controls
 
         public override object Clone()
         {
-            ControlTriggerPS5 newData = new ControlTriggerPS5(AccessMode);
+            ControlTriggerFlydigi newData = new ControlTriggerFlydigi(AccessMode);
 
             newData.AnalogStage1 = this.AnalogStage1;
             newData.Effect = Effect;
@@ -154,8 +153,8 @@ namespace ExtendInput.Controls
             newData.Resistance = Resistance;
             newData.Amplitude = Amplitude;
             newData.Frequency = Frequency;
-            newData.TriggerStop = TriggerStop;
-            newData.TriggerStatus = TriggerStatus;
+            //newData.TriggerStop = TriggerStop;
+            //newData.TriggerStatus = TriggerStatus;
             newData.IsWriteDirty = this.IsWriteDirty; // need to preserve this stuff
 
             return newData;
@@ -167,8 +166,8 @@ namespace ExtendInput.Controls
             {
                 case "Effect":
                     {
-                        EEffectTriggerForceFeedbackPS5 parsed;
-                        if (Enum.TryParse<EEffectTriggerForceFeedbackPS5>(value, out parsed))
+                        EEffectTriggerForceFeedbackFlydigi parsed;
+                        if (Enum.TryParse<EEffectTriggerForceFeedbackFlydigi>(value, out parsed))
                         {
                             Effect = parsed;
                             IsWriteDirty = true;
@@ -236,7 +235,7 @@ namespace ExtendInput.Controls
         }
     }
 
-    [ControlConverter(typeof(ControlTriggerPS5), typeof(IControlTrigger2Stage))]
+    /*[ControlConverter(typeof(ControlTriggerPS5), typeof(IControlTrigger2Stage))]
     public class ControlTriggerPS5_to_IControlTrigger2Stage_ControlConverter : IControlConverter
     {
         public bool CanAlwaysConvert => false;
@@ -257,7 +256,7 @@ namespace ExtendInput.Controls
         {
             return null;
         }
-    }
+    }*/
 
     //[ControlConverter(typeof(ControlTriggerPS5), typeof(IControlTriggerForceFeedback))]
     //public class ControlTriggerPS5_to_ControlTriggerForceFeedback_ControlConverter : IControlConverter

@@ -31,6 +31,7 @@ namespace ExtendInput.Controller.Flydigi
         public bool HasMRockers { get; private set; }
         public bool HasWheel { get; private set; }
         public bool HasAirMouse { get; private set; }
+        public bool HasFFBTriggers { get; private set; }
 
         public ControllerSubTypeAttribute(
             string[] Token,
@@ -51,7 +52,8 @@ namespace ExtendInput.Controller.Flydigi
             bool HasMButtons = false,
             bool HasMRockers = false,
             bool HasWheel = false,
-            bool HasAirMouse = false)
+            bool HasAirMouse = false,
+            bool HasFFBTriggers = false)
         {
             this.Tokens = Token;
             this.Name = Name;
@@ -75,6 +77,7 @@ namespace ExtendInput.Controller.Flydigi
             this.HasMRockers = HasMRockers;
             this.HasWheel = HasWheel;
             this.HasAirMouse = HasAirMouse;
+            this.HasFFBTriggers = HasFFBTriggers;
         }
     }
 
@@ -197,7 +200,8 @@ namespace ExtendInput.Controller.Flydigi
             [ControllerSubType(
                 Token: new string[] { "DEVICE_FLYDIGI_K1", "DEVICE_GAMEPAD" },
                 Name: "Flying Wisdom Octopus 3",
-                DeviceIdFromFeature: 0x17)]
+                DeviceIdFromFeature: 0x17,
+                HasFFBTriggers: true)]
             K1,
 
             [ControllerSubType(
@@ -423,6 +427,93 @@ namespace ExtendInput.Controller.Flydigi
         //bool EarlyDeviceRecheck = false;
         Thread CheckControllerStatusThread;
         Thread CheckControllerDongleAliveThread;
+
+
+
+
+
+
+
+
+
+
+        bool OutputThreadActive = false;
+        Thread OutputThread;
+        unsafe private void StartOutputThread()
+        {
+            //outBuffer = new SetStateData();
+            OutputThreadActive = true;
+            OutputThread = new Thread(() =>
+            {
+                for (; ; )
+                {
+                    if (!OutputThreadActive) break;
+                    Thread.Sleep(1);
+                    if (!OutputThreadActive) break;
+                    //if(WriteStateDirtyPossible)
+                    {
+                        {
+                            IControlTriggerFlydigi ctrl = (State.Controls["trigger_right"] as IControlTriggerFlydigi);
+                            if (ctrl != null && ctrl.IsWriteDirty)
+                            {
+                                switch (ctrl.Effect)
+                                {
+                                    case EEffectTriggerForceFeedbackFlydigi.STATE_FLYDIGI_TRIGGER_NONE: SendTriggerReport(2, 0, 0); break;
+                                    case EEffectTriggerForceFeedbackFlydigi.STATE_FLYDIGI_TRIGGER_FEEDBACK: SendTriggerReport(2, 1, ctrl.Start, ctrl.Resistance); break;
+                                    case EEffectTriggerForceFeedbackFlydigi.STATE_FLYDIGI_TRIGGER_WEAPON: SendTriggerReport(2, 2, ctrl.Start, ctrl.End, ctrl.Resistance); break;
+                                    case EEffectTriggerForceFeedbackFlydigi.STATE_FLYDIGI_TRIGGER_VIBRATION: SendTriggerReport(2, 3, ctrl.Start, ctrl.Resistance, ctrl.Amplitude, ctrl.Frequency); break;
+                                }
+                                ctrl.CleanWriteDirty();
+                            }
+                        }
+                        {
+                            IControlTriggerFlydigi ctrl = (State.Controls["trigger_left"] as IControlTriggerFlydigi);
+                            if (ctrl != null && ctrl.IsWriteDirty)
+                            {
+                                switch (ctrl.Effect)
+                                {
+                                    case EEffectTriggerForceFeedbackFlydigi.STATE_FLYDIGI_TRIGGER_NONE: SendTriggerReport(1, 0, 0); break;
+                                    case EEffectTriggerForceFeedbackFlydigi.STATE_FLYDIGI_TRIGGER_FEEDBACK: SendTriggerReport(1, 1, ctrl.Start, ctrl.Resistance); break;
+                                    case EEffectTriggerForceFeedbackFlydigi.STATE_FLYDIGI_TRIGGER_WEAPON: SendTriggerReport(1, 2, ctrl.Start, ctrl.End, ctrl.Resistance); break;
+                                    case EEffectTriggerForceFeedbackFlydigi.STATE_FLYDIGI_TRIGGER_VIBRATION: SendTriggerReport(1, 3, ctrl.Start, ctrl.Resistance, ctrl.Amplitude, ctrl.Frequency); break;
+                                }
+                                ctrl.CleanWriteDirty();
+                            }
+                        }
+                    }
+                    if (!OutputThreadActive) break;
+                }
+            });
+            OutputThread.Start();
+        }
+        private void StopOutputThread()
+        {
+            OutputThreadActive = false;
+        }
+        private void SendTriggerReport(byte Side, byte Effect, params byte[] Param)
+        {
+            byte[] outData = new byte[11];
+            outData[0] = 0x05;
+            outData[1] = 0xA0;
+            outData[2] = 0x01;
+            outData[3] = 0x01;
+            outData[4] = Side;
+            outData[5] = Effect;
+            outData[6] = (byte)(Param.Length > 0 ? Param[0] : 0x00);
+            outData[7] = (byte)(Param.Length > 1 ? Param[1] : 0x00);
+            outData[8] = (byte)(Param.Length > 2 ? Param[2] : 0x00);
+            outData[9] = (byte)(Param.Length > 3 ? Param[3] : 0x00);
+            outData[10] = 0x00;
+            for (int i = 0; i < 10; i++)
+                unchecked { outData[10] += outData[i]; }
+            _device.WriteReport(outData);
+        }
+
+
+
+
+
+
         public FlydigiController(HidDevice device, EConnectionType ConnectionType = EConnectionType.Unknown, AccessMode AccessMode = AccessMode.ReadOnly)
         {
             //LastData = DateTime.UtcNow;
@@ -573,6 +664,7 @@ namespace ExtendInput.Controller.Flydigi
             PollingState = EPollingState.Active;
             Log($"Polling state set to Active", ConsoleColor.Yellow);
             _device.StartReading();
+            StartOutputThread();
         }
 
         public void DeInitalize()
@@ -595,6 +687,7 @@ namespace ExtendInput.Controller.Flydigi
 
                 PollingState = EPollingState.Inactive;
                 Log($"Polling state set to Inactive", ConsoleColor.Yellow);
+                StopOutputThread();
                 _device.CloseDevice();
             }
         }
@@ -717,7 +810,7 @@ namespace ExtendInput.Controller.Flydigi
                                                 (State.Controls["menu_right"] as IControlButton).DigitalStage1 = buttonStart;
                                             }
 
-                                            if (ControllerAttributeInFlight.HasAnalogTrigger)
+                                            if (ControllerAttributeInFlight.HasAnalogTrigger || ControllerAttributeInFlight.HasFFBTriggers)
                                             {
                                                 if (State.Controls["trigger_left"] is IControlTrigger) (State.Controls["trigger_left"] as IControlTrigger).AnalogStage1 = TriggerLeft > 0 ? TriggerLeft / 255f : buttonL2 ? 255 : 0;
                                                 if (State.Controls["trigger_right"] is IControlTrigger) (State.Controls["trigger_right"] as IControlTrigger).AnalogStage1 = TriggerRight > 0 ? TriggerRight / 255f : buttonR2 ? 255 : 0;
@@ -1611,7 +1704,13 @@ namespace ExtendInput.Controller.Flydigi
                         ControlsCreated = true;
                     }
 
-                    if (ControllerAttribute.HasAnalogTrigger)
+                    if (ControllerAttribute.HasFFBTriggers)
+                    {
+                        State.Controls["trigger_left"] = new ControlTriggerFlydigi(AccessMode);
+                        State.Controls["trigger_right"] = new ControlTriggerFlydigi(AccessMode);
+                        Log("Trigger set to FFB");
+                    }
+                    else if (ControllerAttribute.HasAnalogTrigger)
                     {
                         State.Controls["trigger_left"] = new ControlTrigger();
                         State.Controls["trigger_right"] = new ControlTrigger();
