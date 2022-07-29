@@ -54,6 +54,7 @@
     <None Include="App.config" />
     <None Include="generic_hid_controller_maps\Microsoft\SideWinder Dual Strike.json" />
     <None Include="generic_hid_controller_maps\Hyperkin\Hyperkin Trooper V2.json" />
+    <None Include="generic_hid_controller_maps\Retro Fighters\Defender.json" />
     <None Include="generic_hid_controller_maps\Suncom\SFX Gamepad USB.json" />
     <None Include="generic_hid_controller_maps\Gravis\Xterminator Digital.json" />
     <None Include="generic_hid_controller_maps\Thrustmaster\Dual Trigger 3-in-1\PS3.json" />
