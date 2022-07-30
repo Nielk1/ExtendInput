@@ -203,6 +203,9 @@ namespace ExtendInput.Controller.Flydigi
                 Token: new string[] { "DEVICE_FLYDIGI_K1", "DEVICE_GAMEPAD" },
                 Name: "Flying Wisdom Octopus 3",
                 DeviceIdFromFeature: 0x18,
+                ReportFESubType: 0x66,
+                //FixedValueFromByte28: 0x18,
+                //FixedValueFromByte31: 0x00,
                 HasFFBTriggers: true)]
             K1,
 
@@ -964,9 +967,9 @@ namespace ExtendInput.Controller.Flydigi
                                             byte? OldFixedValueFromByte31 = FixedValueFromByte31;
                                             FixedValueFromByte31 = reportData.ReportBytes[30];
 
-                                            Log($"ReportFESubType set to {ReportFESubType:X2}", ConsoleColor.DarkYellow);
-                                            Log($"FixedValueFromByte28 set to {FixedValueFromByte28:X2}", ConsoleColor.DarkYellow);
-                                            Log($"FixedValueFromByte31 set to {FixedValueFromByte31:X2}", ConsoleColor.DarkYellow);
+                                            //Log($"ReportFESubType set to {ReportFESubType:X2}", ConsoleColor.DarkYellow);
+                                            //Log($"FixedValueFromByte28 set to {FixedValueFromByte28:X2}", ConsoleColor.DarkYellow);
+                                            //Log($"FixedValueFromByte31 set to {FixedValueFromByte31:X2}", ConsoleColor.DarkYellow);
 
                                             if (OldReportFESubType != ReportFESubType
                                              || OldFixedValueFromByte28 != FixedValueFromByte28)
