@@ -182,6 +182,7 @@ namespace ExtendInput.Controller.Flydigi
                 Token: new string[] { "DEVICE_FLYDIGI_F1", "DEVICE_GAMEPAD" },
                 Name: "Flydigi F1",
                 DeviceIdFromFeature: 0x14,
+                HasAnalogTrigger: true,
                 ReportFESubType: 0x66,
                 HasBottomMenu: true,
                 HasMButtons: true,
@@ -192,6 +193,7 @@ namespace ExtendInput.Controller.Flydigi
                 Token: new string[] { "DEVICE_FLYDIGI_F1", "DEVICE_GAMEPAD" },
                 Name: "Flydigi F1 WIRED",
                 DeviceIdFromFeature: 0x15,
+                HasAnalogTrigger: true,
                 HasBottomMenu: true,
                 HasMButtons: true,
                 HasCZBottom: true)]
@@ -962,6 +964,10 @@ namespace ExtendInput.Controller.Flydigi
                                             byte? OldFixedValueFromByte31 = FixedValueFromByte31;
                                             FixedValueFromByte31 = reportData.ReportBytes[30];
 
+                                            Log($"ReportFESubType set to {ReportFESubType:X2}", ConsoleColor.DarkYellow);
+                                            Log($"FixedValueFromByte28 set to {FixedValueFromByte28:X2}", ConsoleColor.DarkYellow);
+                                            Log($"FixedValueFromByte31 set to {FixedValueFromByte31:X2}", ConsoleColor.DarkYellow);
+
                                             if (OldReportFESubType != ReportFESubType
                                              || OldFixedValueFromByte28 != FixedValueFromByte28)
                                                 ////|| OldVersionFromByte30 != VersionFromByte30
@@ -1349,6 +1355,8 @@ namespace ExtendInput.Controller.Flydigi
 
         private FlyDigiSubType GetControllerInitialTypeCode(UInt16 VID, UInt16 PID, UInt16 REV)
         {
+            Log("GetControllerInitialTypeCode Start", ConsoleColor.Magenta, Indent: true);
+
             const int EXPECTS_NO_ID = 0x100000;
             /*const int ID_MATCH = 0x100000;
             const int HAS_NO_ID = 0x080000;
@@ -1386,6 +1394,8 @@ namespace ExtendInput.Controller.Flydigi
                     {
                         if (attr.DeviceIdFromFeature.HasValue && attr.DeviceIdFromFeature.Value == DetectedDeviceId.Value)
                         {
+                            Log($"GetControllerInitialTypeCode assuming {subType} due to DeviceId match {attr.DeviceIdFromFeature.Value} == {DetectedDeviceId.Value}", ConsoleColor.Magenta);
+                            Log("GetControllerInitialTypeCode End", ConsoleColor.Magenta, Indent: false);
                             return subType;
                         }
                     }
@@ -1476,10 +1486,12 @@ namespace ExtendInput.Controller.Flydigi
                     {
                         Rank += TYPE_AUTH - (int)subType;
                         Candidates.Add(new Tuple<int, FlyDigiSubType>(Rank, subType));
+                        Log($"GetControllerInitialTypeCode candidate {subType} with rank {Rank}", ConsoleColor.Magenta);
                     }
                 }
             }
 
+            Log("GetControllerInitialTypeCode End", ConsoleColor.Magenta, Indent: false);
             return Candidates.OrderByDescending(dr => dr.Item1).FirstOrDefault()?.Item2 ?? FlyDigiSubType.Unknown;
         }
         public void SetActiveAlternateController(string ControllerID)
