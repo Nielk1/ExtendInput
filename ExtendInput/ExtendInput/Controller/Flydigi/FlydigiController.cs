@@ -200,7 +200,7 @@ namespace ExtendInput.Controller.Flydigi
             [ControllerSubType(
                 Token: new string[] { "DEVICE_FLYDIGI_K1", "DEVICE_GAMEPAD" },
                 Name: "Flying Wisdom Octopus 3",
-                DeviceIdFromFeature: 0x17,
+                DeviceIdFromFeature: 0x18,
                 HasFFBTriggers: true)]
             K1,
 
