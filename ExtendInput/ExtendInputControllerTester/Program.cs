@@ -36,6 +36,7 @@ namespace ExtendInputControllerTester
 
         static void Main(string[] args)
         {
+            Console.WriteLine(System.IO.Directory.GetCurrentDirectory());
             websocket = new WebSocketControllerModule("/socket/");
             string urlX = "http://localhost:9697/";
             //string urlX = "http://192.168.0.201:9697/";
