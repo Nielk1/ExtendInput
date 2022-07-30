@@ -254,16 +254,18 @@ namespace ExtendInputControllerTester
                 return;
 
             Dictionary<string, string> ControllerImages = new Dictionary<string, string>();
-            foreach (string pattern in new string[] { "*.png", "*.jpg", "*.jpeg" })
-                foreach (string ControllerImage in Directory.EnumerateFiles(@"..\..\images\controller", pattern, SearchOption.TopDirectoryOnly))
-                    if (!ControllerImages.ContainsKey(Path.GetFileNameWithoutExtension(ControllerImage)))
-                        ControllerImages[Path.GetFileNameWithoutExtension(ControllerImage)] = Path.GetFileName(ControllerImage);
+            if (Directory.Exists(@"..\..\images\controller"))
+                foreach (string pattern in new string[] { "*.png", "*.jpg", "*.jpeg" })
+                    foreach (string ControllerImage in Directory.EnumerateFiles(@"..\..\images\controller", pattern, SearchOption.TopDirectoryOnly))
+                        if (!ControllerImages.ContainsKey(Path.GetFileNameWithoutExtension(ControllerImage)))
+                            ControllerImages[Path.GetFileNameWithoutExtension(ControllerImage)] = Path.GetFileName(ControllerImage);
 
             Dictionary<string, string> IconImages = new Dictionary<string, string>();
-            foreach (string pattern in new string[] { "*.png", "*.jpg", "*.jpeg" })
-                foreach (string IconImage in Directory.EnumerateFiles(@"..\..\images\icon", pattern, SearchOption.TopDirectoryOnly))
-                    if (!IconImages.ContainsKey(Path.GetFileNameWithoutExtension(IconImage)))
-                        IconImages[Path.GetFileNameWithoutExtension(IconImage)] = Path.GetFileName(IconImage);
+            if (Directory.Exists(@"..\..\images\icon"))
+                foreach (string pattern in new string[] { "*.png", "*.jpg", "*.jpeg" })
+                    foreach (string IconImage in Directory.EnumerateFiles(@"..\..\images\icon", pattern, SearchOption.TopDirectoryOnly))
+                        if (!IconImages.ContainsKey(Path.GetFileNameWithoutExtension(IconImage)))
+                            IconImages[Path.GetFileNameWithoutExtension(IconImage)] = Path.GetFileName(IconImage);
 
             Dictionary<string, string> ManualDevices = new Dictionary<string, string>();
             foreach (IDeviceProvider provider in DeviceManager.GetManualDeviceProviders())
