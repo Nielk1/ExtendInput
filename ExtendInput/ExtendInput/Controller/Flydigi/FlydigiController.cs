@@ -93,6 +93,7 @@ namespace ExtendInput.Controller.Flydigi
         public const int REVISION_FLYDIGI_DONGLE_3A = 0x0309;
         public const int REVISION_FLYDIGI_DONGLE_3B = 0x0401;
         public const int REVISION_FLYDIGI_USB = 0x0303;
+        public const int REVISION_FLYDIGI_APEX3_USB = 0x0500;
 
         #region String Definitions
         private const string ATOM_CONNECTION_WIRE = "CONNECTION_WIRE";
@@ -561,7 +562,8 @@ namespace ExtendInput.Controller.Flydigi
                     });
                     CheckControllerDongleAliveThread.Start();
                 }
-                else if ((_device.ProductId == PRODUCT_FLYDIGI_USB && _device.RevisionNumber == REVISION_FLYDIGI_USB))
+                //else if ((_device.ProductId == PRODUCT_FLYDIGI_USB && _device.RevisionNumber == REVISION_FLYDIGI_USB))
+                else if ((_device.ProductId == PRODUCT_FLYDIGI_USB))
                 {
                     this.ConnectionType = EConnectionType.USB;
                 }
@@ -569,7 +571,9 @@ namespace ExtendInput.Controller.Flydigi
                 if ((_device.ProductId == PRODUCT_FLYDIGI_DONGLE_2 && _device.RevisionNumber == REVISION_FLYDIGI_DONGLE_2) // 2 dot dongle
                  || (_device.ProductId == PRODUCT_FLYDIGI_DONGLE_3 && _device.RevisionNumber == REVISION_FLYDIGI_DONGLE_3A) // 3 dot dongle
                  || (_device.ProductId == PRODUCT_FLYDIGI_DONGLE_3 && _device.RevisionNumber == REVISION_FLYDIGI_DONGLE_3B) // 3 dot dongle
-                 || (_device.ProductId == PRODUCT_FLYDIGI_USB && _device.RevisionNumber == REVISION_FLYDIGI_USB)) // controller that supports USB
+                 //|| (_device.ProductId == PRODUCT_FLYDIGI_USB && _device.RevisionNumber == REVISION_FLYDIGI_USB) // controller that supports USB
+                 //|| (_device.ProductId == PRODUCT_FLYDIGI_USB && _device.RevisionNumber == REVISION_FLYDIGI_APEX3_USB))
+                 || (_device.ProductId == PRODUCT_FLYDIGI_USB))
                 {
                     this.PollingState = EPollingState.RunUntilReady; // we need to read until we get device info
                     Log($"Polling state set to RunUntilReady", ConsoleColor.Yellow);
