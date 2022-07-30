@@ -83,6 +83,7 @@ namespace ExtendInput
 
         public List<Type> GetConvertList(Type ControlType)
         {
+            if (ControlType == null) return null;
             if (!ConvertersFromTo.ContainsKey(ControlType)) return null;
             return ConvertersFromTo[ControlType].Keys.ToList();
         }
