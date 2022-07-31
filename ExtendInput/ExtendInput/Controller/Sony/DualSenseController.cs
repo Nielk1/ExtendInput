@@ -91,8 +91,8 @@ namespace ExtendInput.Controller.Sony
                                     switch (ctrl.Effect)
                                     {
                                         case EEffectTriggerForceFeedbackPS5.STATE_PS5_TRIGGER_NONE: TriggerEffectGenerator.Off(FFBData, 0); break;
-                                        case EEffectTriggerForceFeedbackPS5.STATE_PS5_TRIGGER_FEEDBACK: TriggerEffectGenerator.Feedback(FFBData, 0, ctrl.Start, ctrl.Resistance); break;
-                                        case EEffectTriggerForceFeedbackPS5.STATE_PS5_TRIGGER_WEAPON: TriggerEffectGenerator.Weapon(FFBData, 0, ctrl.Start, ctrl.End, ctrl.Resistance); break;
+                                        case EEffectTriggerForceFeedbackPS5.STATE_PS5_TRIGGER_FEEDBACK: TriggerEffectGenerator.Feedback(FFBData, 0, ctrl.Start, ctrl.Strength); break;
+                                        case EEffectTriggerForceFeedbackPS5.STATE_PS5_TRIGGER_WEAPON: TriggerEffectGenerator.Weapon(FFBData, 0, ctrl.Start, ctrl.End, ctrl.Strength); break;
                                         case EEffectTriggerForceFeedbackPS5.STATE_PS5_TRIGGER_VIBRATION: TriggerEffectGenerator.Vibration(FFBData, 0, ctrl.Start, ctrl.Amplitude, ctrl.Frequency); break;
                                     }
                                 }
@@ -111,8 +111,8 @@ namespace ExtendInput.Controller.Sony
                                     switch (ctrl.Effect)
                                     {
                                         case EEffectTriggerForceFeedbackPS5.STATE_PS5_TRIGGER_NONE: TriggerEffectGenerator.Off(FFBData, 0); break;
-                                        case EEffectTriggerForceFeedbackPS5.STATE_PS5_TRIGGER_FEEDBACK: TriggerEffectGenerator.Feedback(FFBData, 0, ctrl.Start, ctrl.Resistance); break;
-                                        case EEffectTriggerForceFeedbackPS5.STATE_PS5_TRIGGER_WEAPON: TriggerEffectGenerator.Weapon(FFBData, 0, ctrl.Start, ctrl.End, ctrl.Resistance); break;
+                                        case EEffectTriggerForceFeedbackPS5.STATE_PS5_TRIGGER_FEEDBACK: TriggerEffectGenerator.Feedback(FFBData, 0, ctrl.Start, ctrl.Strength); break;
+                                        case EEffectTriggerForceFeedbackPS5.STATE_PS5_TRIGGER_WEAPON: TriggerEffectGenerator.Weapon(FFBData, 0, ctrl.Start, ctrl.End, ctrl.Strength); break;
                                         case EEffectTriggerForceFeedbackPS5.STATE_PS5_TRIGGER_VIBRATION: TriggerEffectGenerator.Vibration(FFBData, 0, ctrl.Start, ctrl.Amplitude, ctrl.Frequency); break;
                                     }
                                 }

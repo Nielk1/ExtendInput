@@ -18,7 +18,7 @@ namespace ExtendInput.Controls
         EEffectTriggerForceFeedback Effect { get; }
         float Start { get; }
         float End { get; }
-        float Resistance { get; }
+        float Strength { get; }
         float Amplitude { get; }
         float Frequency { get; }
     }

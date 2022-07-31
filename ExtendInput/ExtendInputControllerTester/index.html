@@ -483,8 +483,8 @@
                             inputsWrapperElement.append('<input type="range" data-property="Start"      class="control_property_item form-control-range" value="' + controlData.Start + '" min="0" max="9"\>');
                             inputsWrapperElement.append('<label class="small mb-0">End</label\>');
                             inputsWrapperElement.append('<input type="range" data-property="End"        class="control_property_item form-control-range" value="' + controlData.Start + '" min="0" max="9"\>');
-                            inputsWrapperElement.append('<label class="small mb-0">Resistance</label\>');
-                            inputsWrapperElement.append('<input type="range" data-property="Resistance" class="control_property_item form-control-range" value="' + controlData.Resistance + '" min="0" max="8"\>');
+                            inputsWrapperElement.append('<label class="small mb-0">Strength</label\>');
+                            inputsWrapperElement.append('<input type="range" data-property="Strength"   class="control_property_item form-control-range" value="' + controlData.Strength + '" min="0" max="8"\>');
                             inputsWrapperElement.append('<label class="small mb-0">Amplitude</label\>');
                             inputsWrapperElement.append('<input type="range" data-property="Amplitude"  class="control_property_item form-control-range" value="' + controlData.Amplitude + '" min="0" max="8"\>');
                             inputsWrapperElement.append('<label class="small mb-0">Frequency</label\>');
@@ -537,15 +537,15 @@
                             listElement.append('<a href="#" class="list-group-item list-group-item-action control_property_item" data-property="Effect" data-value="STATE_FLYDIGI_TRIGGER_VIBRATION">STATE_FLYDIGI_TRIGGER_VIBRATION</a>');
                             inputsWrapperElement.append(listElement);
                             inputsWrapperElement.append('<label class="small mb-0">Start</label\>');
-                            inputsWrapperElement.append('<input type="range" data-property="Start"      class="control_property_item form-control-range" value="' + controlData.Start + '" min="0" max="255"\>');
+                            inputsWrapperElement.append('<input type="range" data-property="Start"     class="control_property_item form-control-range" value="' + controlData.Start + '" min="0" max="255"\>');
                             inputsWrapperElement.append('<label class="small mb-0">End</label\>');
-                            inputsWrapperElement.append('<input type="range" data-property="End"        class="control_property_item form-control-range" value="' + controlData.Start + '" min="0" max="255"\>');
-                            inputsWrapperElement.append('<label class="small mb-0">Resistance</label\>');
-                            inputsWrapperElement.append('<input type="range" data-property="Resistance" class="control_property_item form-control-range" value="' + controlData.Resistance + '" min="0" max="255"\>');
+                            inputsWrapperElement.append('<input type="range" data-property="End"       class="control_property_item form-control-range" value="' + controlData.Start + '" min="0" max="255"\>');
+                            inputsWrapperElement.append('<label class="small mb-0">Strength</label\>');
+                            inputsWrapperElement.append('<input type="range" data-property="Strength"  class="control_property_item form-control-range" value="' + controlData.Strength + '" min="0" max="255"\>');
                             inputsWrapperElement.append('<label class="small mb-0">Amplitude</label\>');
-                            inputsWrapperElement.append('<input type="range" data-property="Amplitude"  class="control_property_item form-control-range" value="' + controlData.Amplitude + '" min="0" max="255"\>');
+                            inputsWrapperElement.append('<input type="range" data-property="Amplitude" class="control_property_item form-control-range" value="' + controlData.Amplitude + '" min="0" max="255"\>');
                             inputsWrapperElement.append('<label class="small mb-0">Frequency</label\>');
-                            inputsWrapperElement.append('<input type="range" data-property="Frequency"  class="control_property_item form-control-range" value="' + controlData.Frequency + '" min="0" max="255"\>');
+                            inputsWrapperElement.append('<input type="range" data-property="Frequency" class="control_property_item form-control-range" value="' + controlData.Frequency + '" min="0" max="255"\>');
                             renderElement.append(inputsWrapperElement);
                         }
                         var ctrl = renderElement.find('#control_render_' + controller_id + '__' + control_id);

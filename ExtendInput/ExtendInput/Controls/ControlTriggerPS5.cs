@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ExtendInput.Controls
 {
@@ -22,7 +18,7 @@ namespace ExtendInput.Controls
         // Fdb // Wep // Vibr  // Note
         byte Start      { get; set; } // 0-9 // 2-7 // 0-9   // 0-9
         byte End        { get; set; } // X   // 3-8 // X     // technicly 0-9, but 9 puts the break point too late
-        byte Resistance { get; set; } // 0-8 // 0-8 // X     // 0-8
+        byte Strength   { get; set; } // 0-8 // 0-8 // X     // 0-8
         byte Amplitude  { get; set; } // X   // X   // 0-8   // 0-8
         byte Frequency  { get; set; } // X   // X   // 0-255 // 0-255
         byte TriggerStop { get; set; }
@@ -63,7 +59,7 @@ namespace ExtendInput.Controls
         // Fdb // Wep // Vibr  // Note
         public byte Start { get; set; } // 0-9 // 2-7 // 0-9   // 0-9
         public byte End { get; set; } // X   // 3-8 // X     // technicly 0-9, but 9 puts the break point too late
-        public byte Resistance { get; set; } // 0-8 // 0-8 // X     // 0-8
+        public byte Strength { get; set; } // 0-8 // 0-8 // X     // 0-8
         public byte Amplitude { get; set; } // X   // X   // 0-8   // 0-8
         public byte Frequency { get; set; } // X   // X   // 0-255 // 0-255
         public byte TriggerStop { get; set; }
@@ -151,7 +147,7 @@ namespace ExtendInput.Controls
             newData.Effect = Effect;
             newData.Start = Start;
             newData.End = End;
-            newData.Resistance = Resistance;
+            newData.Strength = Strength;
             newData.Amplitude = Amplitude;
             newData.Frequency = Frequency;
             newData.TriggerStop = TriggerStop;
@@ -203,7 +199,7 @@ namespace ExtendInput.Controls
                         byte parsed;
                         if (byte.TryParse(value, out parsed))
                         {
-                            Resistance = parsed;
+                            Strength = parsed;
                             IsWriteDirty = true;
                             return true;
                         }

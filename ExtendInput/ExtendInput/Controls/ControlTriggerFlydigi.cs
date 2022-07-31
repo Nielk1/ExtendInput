@@ -22,7 +22,7 @@ namespace ExtendInput.Controls
         // Fdb // Wep // Vibr  // Note
         byte Start      { get; set; }
         byte End        { get; set; }
-        byte Resistance { get; set; }
+        byte Strength   { get; set; }
         byte Amplitude  { get; set; }
         byte Frequency  { get; set; }
         //byte TriggerStop { get; set; }
@@ -62,7 +62,7 @@ namespace ExtendInput.Controls
         public EEffectTriggerForceFeedbackFlydigi Effect { get; set; }
         public byte Start { get; set; }
         public byte End { get; set; }
-        public byte Resistance { get; set; }
+        public byte Strength { get; set; }
         public byte Amplitude { get; set; }
         public byte Frequency { get; set; }
         //public byte TriggerStop { get; set; }
@@ -150,7 +150,7 @@ namespace ExtendInput.Controls
             newData.Effect = Effect;
             newData.Start = Start;
             newData.End = End;
-            newData.Resistance = Resistance;
+            newData.Strength = Strength;
             newData.Amplitude = Amplitude;
             newData.Frequency = Frequency;
             //newData.TriggerStop = TriggerStop;
@@ -202,7 +202,7 @@ namespace ExtendInput.Controls
                         byte parsed;
                         if (byte.TryParse(value, out parsed))
                         {
-                            Resistance = parsed;
+                            Strength = parsed;
                             IsWriteDirty = true;
                             return true;
                         }

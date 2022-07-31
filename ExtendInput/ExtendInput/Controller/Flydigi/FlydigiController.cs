@@ -465,9 +465,9 @@ namespace ExtendInput.Controller.Flydigi
                                 switch (ctrl.Effect)
                                 {
                                     case EEffectTriggerForceFeedbackFlydigi.STATE_FLYDIGI_TRIGGER_NONE: SendTriggerReport(2, 0, 0); break;
-                                    case EEffectTriggerForceFeedbackFlydigi.STATE_FLYDIGI_TRIGGER_FEEDBACK: SendTriggerReport(2, 1, ctrl.Start, ctrl.Resistance); break;
-                                    case EEffectTriggerForceFeedbackFlydigi.STATE_FLYDIGI_TRIGGER_WEAPON: SendTriggerReport(2, 2, ctrl.Start, ctrl.End, ctrl.Resistance); break;
-                                    case EEffectTriggerForceFeedbackFlydigi.STATE_FLYDIGI_TRIGGER_VIBRATION: SendTriggerReport(2, 3, ctrl.Start, ctrl.Resistance, ctrl.Amplitude, ctrl.Frequency); break;
+                                    case EEffectTriggerForceFeedbackFlydigi.STATE_FLYDIGI_TRIGGER_FEEDBACK: SendTriggerReport(2, 1, ctrl.Start, ctrl.Strength); break;
+                                    case EEffectTriggerForceFeedbackFlydigi.STATE_FLYDIGI_TRIGGER_WEAPON: SendTriggerReport(2, 2, ctrl.Start, ctrl.End, ctrl.Strength); break;
+                                    case EEffectTriggerForceFeedbackFlydigi.STATE_FLYDIGI_TRIGGER_VIBRATION: SendTriggerReport(2, 3, ctrl.Start, ctrl.Strength, ctrl.Amplitude, ctrl.Frequency); break;
                                 }
                                 ctrl.CleanWriteDirty();
                             }
@@ -479,9 +479,9 @@ namespace ExtendInput.Controller.Flydigi
                                 switch (ctrl.Effect)
                                 {
                                     case EEffectTriggerForceFeedbackFlydigi.STATE_FLYDIGI_TRIGGER_NONE: SendTriggerReport(1, 0, 0); break;
-                                    case EEffectTriggerForceFeedbackFlydigi.STATE_FLYDIGI_TRIGGER_FEEDBACK: SendTriggerReport(1, 1, ctrl.Start, ctrl.Resistance); break;
-                                    case EEffectTriggerForceFeedbackFlydigi.STATE_FLYDIGI_TRIGGER_WEAPON: SendTriggerReport(1, 2, ctrl.Start, ctrl.End, ctrl.Resistance); break;
-                                    case EEffectTriggerForceFeedbackFlydigi.STATE_FLYDIGI_TRIGGER_VIBRATION: SendTriggerReport(1, 3, ctrl.Start, ctrl.Resistance, ctrl.Amplitude, ctrl.Frequency); break;
+                                    case EEffectTriggerForceFeedbackFlydigi.STATE_FLYDIGI_TRIGGER_FEEDBACK: SendTriggerReport(1, 1, ctrl.Start, ctrl.Strength); break;
+                                    case EEffectTriggerForceFeedbackFlydigi.STATE_FLYDIGI_TRIGGER_WEAPON: SendTriggerReport(1, 2, ctrl.Start, ctrl.End, ctrl.Strength); break;
+                                    case EEffectTriggerForceFeedbackFlydigi.STATE_FLYDIGI_TRIGGER_VIBRATION: SendTriggerReport(1, 3, ctrl.Start, ctrl.Strength, ctrl.Amplitude, ctrl.Frequency); break;
                                 }
                                 ctrl.CleanWriteDirty();
                             }
@@ -502,7 +502,7 @@ namespace ExtendInput.Controller.Flydigi
             outData[0] = 0x05;
             outData[1] = 0xA0;
             outData[2] = 0x01;
-            outData[3] = 0x01;
+            outData[3] = 0x00;
             outData[4] = Side;
             outData[5] = Effect;
             outData[6] = (byte)(Param.Length > 0 ? Param[0] : 0x00);
