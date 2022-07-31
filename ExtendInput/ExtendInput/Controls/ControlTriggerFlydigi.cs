@@ -10,8 +10,8 @@ namespace ExtendInput.Controls
     {
         STATE_FLYDIGI_TRIGGER_NONE,
         STATE_FLYDIGI_TRIGGER_FEEDBACK,  // start,      resistance
-        STATE_FLYDIGI_TRIGGER_WEAPON,    // start, end, resistance
         STATE_FLYDIGI_TRIGGER_VIBRATION, // start,      resistance, amplitude, frequency // PS5 doesn't have resistance here
+        STATE_FLYDIGI_TRIGGER_WEAPON,    // start, end, resistance
     }
     public interface IControlTriggerFlydigi : IControl
     {
