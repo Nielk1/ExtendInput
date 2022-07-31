@@ -147,14 +147,14 @@ namespace ExtendInput.Controls
             ControlTriggerFlydigi newData = new ControlTriggerFlydigi(AccessMode);
 
             newData.AnalogStage1 = this.AnalogStage1;
-            newData.Effect = Effect;
-            newData.Start = Start;
-            newData.End = End;
-            newData.Strength = Strength;
-            newData.Amplitude = Amplitude;
-            newData.Frequency = Frequency;
-            //newData.TriggerStop = TriggerStop;
-            //newData.TriggerStatus = TriggerStatus;
+            newData.Effect = this.Effect;
+            newData.Start = this.Start;
+            newData.End = this.End;
+            newData.Strength = this.Strength;
+            newData.Amplitude = this.Amplitude;
+            newData.Frequency = this.Frequency;
+            //newData.TriggerStop = this.TriggerStop;
+            //newData.TriggerStatus = this.TriggerStatus;
             newData.IsWriteDirty = this.IsWriteDirty; // need to preserve this stuff
 
             return newData;
@@ -197,7 +197,7 @@ namespace ExtendInput.Controls
                         }
                     }
                     return false;
-                case "Resistance":
+                case "Strength":
                     {
                         byte parsed;
                         if (byte.TryParse(value, out parsed))

@@ -194,7 +194,7 @@ namespace ExtendInput.Controls
                         }
                     }
                     return false;
-                case "Resistance":
+                case "Strength":
                     {
                         byte parsed;
                         if (byte.TryParse(value, out parsed))
