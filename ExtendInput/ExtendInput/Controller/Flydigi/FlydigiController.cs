@@ -442,7 +442,16 @@ namespace ExtendInput.Controller.Flydigi
 
 
 
-
+        byte Debounce_TriggerL_Effect = 0;
+        byte Debounce_TriggerL_P1 = 0;
+        byte Debounce_TriggerL_P2 = 0;
+        byte Debounce_TriggerL_P3 = 0;
+        byte Debounce_TriggerL_P4 = 0;
+        byte Debounce_TriggerR_Effect = 0;
+        byte Debounce_TriggerR_P1 = 0;
+        byte Debounce_TriggerR_P2 = 0;
+        byte Debounce_TriggerR_P3 = 0;
+        byte Debounce_TriggerR_P4 = 0;
         bool OutputThreadActive = false;
         Thread OutputThread;
         unsafe private void StartOutputThread()
@@ -454,7 +463,7 @@ namespace ExtendInput.Controller.Flydigi
                 for (; ; )
                 {
                     if (!OutputThreadActive) break;
-                    Thread.Sleep(1);
+                    Thread.Sleep(1000 / 60); // 1000/4
                     if (!OutputThreadActive) break;
                     //if(WriteStateDirtyPossible)
                     {
@@ -466,8 +475,8 @@ namespace ExtendInput.Controller.Flydigi
                                 {
                                     case EEffectTriggerForceFeedbackFlydigi.STATE_FLYDIGI_TRIGGER_NONE: SendTriggerReport(2, 0, 0); break;
                                     case EEffectTriggerForceFeedbackFlydigi.STATE_FLYDIGI_TRIGGER_FEEDBACK: SendTriggerReport(2, 1, ctrl.Start, ctrl.Strength); break;
-                                    case EEffectTriggerForceFeedbackFlydigi.STATE_FLYDIGI_TRIGGER_WEAPON: SendTriggerReport(2, 2, ctrl.Start, ctrl.End, ctrl.Strength); break;
-                                    case EEffectTriggerForceFeedbackFlydigi.STATE_FLYDIGI_TRIGGER_VIBRATION: SendTriggerReport(2, 3, ctrl.Start, ctrl.Strength, ctrl.Amplitude, ctrl.Frequency); break;
+                                    case EEffectTriggerForceFeedbackFlydigi.STATE_FLYDIGI_TRIGGER_VIBRATION: SendTriggerReport(2, 2, ctrl.Start, ctrl.Strength, ctrl.Amplitude, ctrl.Frequency); break;
+                                    case EEffectTriggerForceFeedbackFlydigi.STATE_FLYDIGI_TRIGGER_WEAPON: SendTriggerReport(2, 3, ctrl.Start, ctrl.End, ctrl.Strength); break;
                                 }
                                 ctrl.CleanWriteDirty();
                             }
@@ -480,8 +489,8 @@ namespace ExtendInput.Controller.Flydigi
                                 {
                                     case EEffectTriggerForceFeedbackFlydigi.STATE_FLYDIGI_TRIGGER_NONE: SendTriggerReport(1, 0, 0); break;
                                     case EEffectTriggerForceFeedbackFlydigi.STATE_FLYDIGI_TRIGGER_FEEDBACK: SendTriggerReport(1, 1, ctrl.Start, ctrl.Strength); break;
-                                    case EEffectTriggerForceFeedbackFlydigi.STATE_FLYDIGI_TRIGGER_WEAPON: SendTriggerReport(1, 2, ctrl.Start, ctrl.End, ctrl.Strength); break;
-                                    case EEffectTriggerForceFeedbackFlydigi.STATE_FLYDIGI_TRIGGER_VIBRATION: SendTriggerReport(1, 3, ctrl.Start, ctrl.Strength, ctrl.Amplitude, ctrl.Frequency); break;
+                                    case EEffectTriggerForceFeedbackFlydigi.STATE_FLYDIGI_TRIGGER_VIBRATION: SendTriggerReport(1, 2, ctrl.Start, ctrl.Strength, ctrl.Amplitude, ctrl.Frequency); break;
+                                    case EEffectTriggerForceFeedbackFlydigi.STATE_FLYDIGI_TRIGGER_WEAPON: SendTriggerReport(1, 3, ctrl.Start, ctrl.End, ctrl.Strength); break;
                                 }
                                 ctrl.CleanWriteDirty();
                             }
@@ -498,6 +507,33 @@ namespace ExtendInput.Controller.Flydigi
         }
         private void SendTriggerReport(byte Side, byte Effect, params byte[] Param)
         {
+            byte P1 = (byte)(Param.Length > 0 ? Param[0] : 0x00);
+            byte P2 = (byte)(Param.Length > 1 ? Param[1] : 0x00);
+            byte P3 = (byte)(Param.Length > 2 ? Param[2] : 0x00);
+            byte P4 = (byte)(Param.Length > 3 ? Param[3] : 0x00);
+
+            switch(Side)
+            {
+                case 1: // left
+                    if (Debounce_TriggerL_Effect == Effect
+                     && Debounce_TriggerL_P1 == P1
+                     && Debounce_TriggerL_P2 == P2
+                     && Debounce_TriggerL_P3 == P3
+                     && Debounce_TriggerL_P4 == P4)
+                        return;
+                    break;
+                case 2: // right
+                    if (Debounce_TriggerR_Effect == Effect
+                     && Debounce_TriggerR_P1 == P1
+                     && Debounce_TriggerR_P2 == P2
+                     && Debounce_TriggerR_P3 == P3
+                     && Debounce_TriggerR_P4 == P4)
+                        return;
+                    break;
+                default:
+                    return;
+            }
+
             byte[] outData = new byte[11];
             outData[0] = 0x05;
             outData[1] = 0xA0;
@@ -505,14 +541,32 @@ namespace ExtendInput.Controller.Flydigi
             outData[3] = 0x00;
             outData[4] = Side;
             outData[5] = Effect;
-            outData[6] = (byte)(Param.Length > 0 ? Param[0] : 0x00);
-            outData[7] = (byte)(Param.Length > 1 ? Param[1] : 0x00);
-            outData[8] = (byte)(Param.Length > 2 ? Param[2] : 0x00);
-            outData[9] = (byte)(Param.Length > 3 ? Param[3] : 0x00);
+            outData[6] = P1;
+            outData[7] = P2;
+            outData[8] = P3;
+            outData[9] = P4;
             outData[10] = 0x00;
             for (int i = 0; i < 10; i++)
                 unchecked { outData[10] += outData[i]; }
             _device.WriteReport(outData);
+
+            switch (Side)
+            {
+                case 1: // left
+                    Debounce_TriggerL_Effect = Effect;
+                    Debounce_TriggerL_P1 = P1;
+                    Debounce_TriggerL_P2 = P2;
+                    Debounce_TriggerL_P3 = P3;
+                    Debounce_TriggerL_P4 = P4;
+                    break;
+                case 2: // right
+                    Debounce_TriggerR_Effect = Effect;
+                    Debounce_TriggerR_P1 = P1;
+                    Debounce_TriggerR_P2 = P2;
+                    Debounce_TriggerR_P3 = P3;
+                    Debounce_TriggerR_P4 = P4;
+                    break;
+            }
         }
 
 

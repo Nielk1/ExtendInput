@@ -159,6 +159,7 @@ namespace ExtendInput.Controls
 
             return newData;
         }
+        public new void CleanWriteDirty() { IsWriteDirty = false; }
 
         public new bool SetProperty(string property, string value, params string[] paramaters)
         {
