@@ -84,14 +84,16 @@ namespace ExtendInput.Controller.Flydigi
     public class FlydigiController : IController
     {
         public const int VENDOR_FLYDIGI = 0x04B4;
-        public const int PRODUCT_FLYDIGI_DONGLE_1 = 0x2410;
-        public const int PRODUCT_FLYDIGI_DONGLE_2 = 0x2411;
-        public const int PRODUCT_FLYDIGI_DONGLE_3 = 0x2411;
-        public const int PRODUCT_FLYDIGI_USB = 0x2412;
+        public const int PRODUCT_FLYDIGI_DONGLE_1 = 0x2410; // One dot dongles
+        public const int PRODUCT_FLYDIGI_DONGLE_2 = 0x2411; // Two and Three dot dongles
+        public const int PRODUCT_FLYDIGI_DONGLE_3 = 0x2411; // Two and Three dot dongles
+        public const int PRODUCT_FLYDIGI_USB = 0x2412; // Controllers direct and type 4 dongles
         public const int REVISION_FLYDIGI_DONGLE_1 = 0x0303;
         public const int REVISION_FLYDIGI_DONGLE_2 = 0x0303;
-        public const int REVISION_FLYDIGI_DONGLE_3A = 0x0309;
-        public const int REVISION_FLYDIGI_DONGLE_3B = 0x0401;
+        public const int REVISION_FLYDIGI_DONGLE_3 = 0x0309;
+        public const int REVISION_FLYDIGI_DONGLE_3_2 = 0x0401;
+        public const int REVISION_FLYDIGI_DONGLE_3_LAST = 0x04FF;
+        public const int REVISION_FLYDIGI_DONGLE_4 = 0x0500;
         public const int REVISION_FLYDIGI_USB = 0x0303;
         public const int REVISION_FLYDIGI_APEX3_USB = 0x0500;
 
@@ -104,8 +106,6 @@ namespace ExtendInput.Controller.Flydigi
         private const string ATOM_CONNECTION_FLYDIGI_DONGLE_1 = "CONNECTION_FLYDIGI_DONGLE_1";
         private const string ATOM_CONNECTION_FLYDIGI_DONGLE_2 = "CONNECTION_FLYDIGI_DONGLE_2";
         private const string ATOM_CONNECTION_FLYDIGI_DONGLE_3 = "CONNECTION_FLYDIGI_DONGLE_3";
-        private const string ATOM_CONNECTION_FLYDIGI_DONGLE_3A = "CONNECTION_FLYDIGI_DONGLE_3A";
-        private const string ATOM_CONNECTION_FLYDIGI_DONGLE_3B = "CONNECTION_FLYDIGI_DONGLE_3B";
         private const string ATOM_CONNECTION_UNKKNOWN = "CONNECTION_UNKNOWN";
 
         private readonly string[] _CONNECTION_WIRE = new string[] { ATOM_CONNECTION_USB_WIRE, ATOM_CONNECTION_WIRE };
@@ -113,8 +113,7 @@ namespace ExtendInput.Controller.Flydigi
         private readonly string[] _CONNECTION_DONGLE = new string[] { ATOM_CONNECTION_FLYDIGI_DONGLE, ATOM_CONNECTION_DONGLE };
         private readonly string[] _CONNECTION_DONGLE_1 = new string[] { ATOM_CONNECTION_FLYDIGI_DONGLE_1, ATOM_CONNECTION_DONGLE };
         private readonly string[] _CONNECTION_DONGLE_2 = new string[] { ATOM_CONNECTION_FLYDIGI_DONGLE_2, ATOM_CONNECTION_DONGLE };
-        private readonly string[] _CONNECTION_DONGLE_3A = new string[] { ATOM_CONNECTION_FLYDIGI_DONGLE_3A, ATOM_CONNECTION_FLYDIGI_DONGLE_3, ATOM_CONNECTION_DONGLE };
-        private readonly string[] _CONNECTION_DONGLE_3B = new string[] { ATOM_CONNECTION_FLYDIGI_DONGLE_3B, ATOM_CONNECTION_FLYDIGI_DONGLE_3, ATOM_CONNECTION_DONGLE };
+        private readonly string[] _CONNECTION_DONGLE_3 = new string[] { ATOM_CONNECTION_FLYDIGI_DONGLE_3, ATOM_CONNECTION_DONGLE };
         private readonly string[] _CONNECTION_UNKKNOWN = new string[] { ATOM_CONNECTION_UNKKNOWN };
         #endregion String Definitions
 
@@ -336,8 +335,8 @@ namespace ExtendInput.Controller.Flydigi
                     case EConnectionType.Dongle:
                         if (_device.ProductId == PRODUCT_FLYDIGI_DONGLE_1 && _device.RevisionNumber == REVISION_FLYDIGI_DONGLE_1) return _CONNECTION_DONGLE_1;
                         if (_device.ProductId == PRODUCT_FLYDIGI_DONGLE_2 && _device.RevisionNumber == REVISION_FLYDIGI_DONGLE_2) return _CONNECTION_DONGLE_2;
-                        if (_device.ProductId == PRODUCT_FLYDIGI_DONGLE_3 && _device.RevisionNumber == REVISION_FLYDIGI_DONGLE_3A) return _CONNECTION_DONGLE_3A;
-                        if (_device.ProductId == PRODUCT_FLYDIGI_DONGLE_3 && _device.RevisionNumber == REVISION_FLYDIGI_DONGLE_3B) return _CONNECTION_DONGLE_3B;
+                        if (_device.ProductId == PRODUCT_FLYDIGI_DONGLE_3 && (_device.RevisionNumber >= REVISION_FLYDIGI_DONGLE_3
+                                                                           || _device.RevisionNumber <= REVISION_FLYDIGI_DONGLE_3_LAST)) return _CONNECTION_DONGLE_3;
                         return _CONNECTION_DONGLE;
                     default: return _CONNECTION_UNKKNOWN;
                 }
@@ -376,13 +375,12 @@ namespace ExtendInput.Controller.Flydigi
                     if (VID == VENDOR_FLYDIGI)
                     {
                         if (PID == PRODUCT_FLYDIGI_DONGLE_1 && REV == REVISION_FLYDIGI_DONGLE_1) // 1 dot dongle
-                            return "Flydigi USB Dongle• (3.3)";
+                            return $"Flydigi USB Dongle• ({bcdDeviceToString(REV)})";
                         if (PID == PRODUCT_FLYDIGI_DONGLE_2 && REV == REVISION_FLYDIGI_DONGLE_2) // 2 dot dongle
-                            return "Flydigi USB Dongle•• (3.3)";
-                        if (PID == PRODUCT_FLYDIGI_DONGLE_3 && REV == REVISION_FLYDIGI_DONGLE_3A) // 3 dot dongle
-                            return "Flydigi USB Dongle••• (3.9)";
-                        if (PID == PRODUCT_FLYDIGI_DONGLE_3 && REV == REVISION_FLYDIGI_DONGLE_3B) // 3 dot dongle
-                            return "Flydigi USB Dongle••• (4.1)";
+                            return $"Flydigi USB Dongle•• ({bcdDeviceToString(REV)})";
+                        if (PID == PRODUCT_FLYDIGI_DONGLE_3 && (REV >= REVISION_FLYDIGI_DONGLE_3
+                                                             || REV <= REVISION_FLYDIGI_DONGLE_3_LAST)) // 3 dot dongle
+                            return $"Flydigi USB Dongle••• ({bcdDeviceToString(REV)})";
                         return $"Flydigi Device <{PID:X4}>";
                     }
                     return $"Unknown Device <{VID:X4},{PID:X4}>";
@@ -393,6 +391,10 @@ namespace ExtendInput.Controller.Flydigi
             }
         }
 
+        private string bcdDeviceToString(int bcdDevice)
+        {
+            return $"{(bcdDevice >> 8):X}.{(bcdDevice & 0xFF):X2}";
+        }
         private string GetNameForSubType(FlyDigiSubType ControllerSubType)
         {
             return ControllerSubType.GetAttribute<ControllerSubTypeAttribute>()?.Name;
@@ -596,8 +598,8 @@ namespace ExtendInput.Controller.Flydigi
             {
                 if ((_device.ProductId == PRODUCT_FLYDIGI_DONGLE_1 && _device.RevisionNumber == REVISION_FLYDIGI_DONGLE_1) // 1 dot dongle
                  || (_device.ProductId == PRODUCT_FLYDIGI_DONGLE_2 && _device.RevisionNumber == REVISION_FLYDIGI_DONGLE_2) // 2 dot dongle
-                 || (_device.ProductId == PRODUCT_FLYDIGI_DONGLE_3 && _device.RevisionNumber == REVISION_FLYDIGI_DONGLE_3A) // 3 dot dongle
-                 || (_device.ProductId == PRODUCT_FLYDIGI_DONGLE_3 && _device.RevisionNumber == REVISION_FLYDIGI_DONGLE_3B)) // 3 dot dongle
+                 || (_device.ProductId == PRODUCT_FLYDIGI_DONGLE_3 && (_device.RevisionNumber >= REVISION_FLYDIGI_DONGLE_3
+                                                                    || _device.RevisionNumber <= REVISION_FLYDIGI_DONGLE_3_LAST))) // 3 dot dongle
                 {
                     this.ConnectionType = EConnectionType.Dongle;
                     CheckControllerDongleAliveThread = new Thread(() =>
@@ -622,9 +624,10 @@ namespace ExtendInput.Controller.Flydigi
                     this.ConnectionType = EConnectionType.USB;
                 }
 
-                if ((_device.ProductId == PRODUCT_FLYDIGI_DONGLE_2 && _device.RevisionNumber == REVISION_FLYDIGI_DONGLE_2) // 2 dot dongle
-                 || (_device.ProductId == PRODUCT_FLYDIGI_DONGLE_3 && _device.RevisionNumber == REVISION_FLYDIGI_DONGLE_3A) // 3 dot dongle
-                 || (_device.ProductId == PRODUCT_FLYDIGI_DONGLE_3 && _device.RevisionNumber == REVISION_FLYDIGI_DONGLE_3B) // 3 dot dongle
+                if ((_device.ProductId == PRODUCT_FLYDIGI_DONGLE_1 && _device.RevisionNumber == REVISION_FLYDIGI_DONGLE_1) // 1 dot dongle
+                 || (_device.ProductId == PRODUCT_FLYDIGI_DONGLE_2 && _device.RevisionNumber == REVISION_FLYDIGI_DONGLE_2) // 2 dot dongle
+                 || (_device.ProductId == PRODUCT_FLYDIGI_DONGLE_3 && (_device.RevisionNumber >= REVISION_FLYDIGI_DONGLE_3
+                                                                    || _device.RevisionNumber <= REVISION_FLYDIGI_DONGLE_3_LAST)) // 3 dot dongle
                  //|| (_device.ProductId == PRODUCT_FLYDIGI_USB && _device.RevisionNumber == REVISION_FLYDIGI_USB) // controller that supports USB
                  //|| (_device.ProductId == PRODUCT_FLYDIGI_USB && _device.RevisionNumber == REVISION_FLYDIGI_APEX3_USB))
                  || (_device.ProductId == PRODUCT_FLYDIGI_USB))
@@ -1097,9 +1100,9 @@ namespace ExtendInput.Controller.Flydigi
                         {
                             if (
                                 (reportData.ReportBytes[0] == 0xF0 && reportData.ReportBytes[1] == 0xFF)
-                             && (reportData.ReportBytes[0] == 0xF1 && reportData.ReportBytes[1] == 0xFF)
-                             && (reportData.ReportBytes[0] == 0x23)
-                             && (reportData.ReportBytes[0] == 0xFF && reportData.ReportBytes[1] == 0xF0))
+                             || (reportData.ReportBytes[0] == 0xF1 && reportData.ReportBytes[1] == 0xFF)
+                             || (reportData.ReportBytes[0] == 0x23)
+                             || (reportData.ReportBytes[0] == 0xFF && reportData.ReportBytes[1] == 0xF0))
                             {
                                 if (reportData.ReportBytes[2] == 0xAA && reportData.ReportBytes[3] == 0xAC) // Configuration Id // mIDelegateCallbackCurrentConfigId(reportData.ReportBytes[4])
                                 {
@@ -1448,8 +1451,8 @@ namespace ExtendInput.Controller.Flydigi
                 ControllerSubTypeAttribute attr = subType.GetAttribute<ControllerSubTypeAttribute>();
                 if ((ConnectionType == EConnectionType.USB && VENDOR_FLYDIGI == VID && PRODUCT_FLYDIGI_USB == PID && REVISION_FLYDIGI_USB == REV)
                  || (ConnectionType == EConnectionType.Dongle && VENDOR_FLYDIGI == VID && PRODUCT_FLYDIGI_DONGLE_2 == PID && REVISION_FLYDIGI_DONGLE_2 == REV)
-                 || (ConnectionType == EConnectionType.Dongle && VENDOR_FLYDIGI == VID && PRODUCT_FLYDIGI_DONGLE_3 == PID && REVISION_FLYDIGI_DONGLE_3A == REV)
-                 || (ConnectionType == EConnectionType.Dongle && VENDOR_FLYDIGI == VID && PRODUCT_FLYDIGI_DONGLE_3 == PID && REVISION_FLYDIGI_DONGLE_3B == REV))
+                 || (ConnectionType == EConnectionType.Dongle && VENDOR_FLYDIGI == VID && PRODUCT_FLYDIGI_DONGLE_3 == PID && (REV >= REVISION_FLYDIGI_DONGLE_3
+                                                                                                                           || REV <= REVISION_FLYDIGI_DONGLE_3_LAST)))
                 {
                     if (DetectedDeviceId.HasValue)
                     {
@@ -1649,10 +1652,10 @@ namespace ExtendInput.Controller.Flydigi
                 {
                     int Rank = 0;//(int)subType;
                     ControllerSubTypeAttribute attr = subType.GetAttribute<ControllerSubTypeAttribute>();
-                    if ((ConnectionType == EConnectionType.USB    && VENDOR_FLYDIGI == VID && PRODUCT_FLYDIGI_USB      == PID && REVISION_FLYDIGI_USB       == REV)
-                     || (ConnectionType == EConnectionType.Dongle && VENDOR_FLYDIGI == VID && PRODUCT_FLYDIGI_DONGLE_2 == PID && REVISION_FLYDIGI_DONGLE_2  == REV)
-                     || (ConnectionType == EConnectionType.Dongle && VENDOR_FLYDIGI == VID && PRODUCT_FLYDIGI_DONGLE_3 == PID && REVISION_FLYDIGI_DONGLE_3A == REV)
-                     || (ConnectionType == EConnectionType.Dongle && VENDOR_FLYDIGI == VID && PRODUCT_FLYDIGI_DONGLE_3 == PID && REVISION_FLYDIGI_DONGLE_3B == REV))
+                    if ((ConnectionType == EConnectionType.USB    && VENDOR_FLYDIGI == VID && PRODUCT_FLYDIGI_USB      == PID && REVISION_FLYDIGI_USB      == REV)
+                     || (ConnectionType == EConnectionType.Dongle && VENDOR_FLYDIGI == VID && PRODUCT_FLYDIGI_DONGLE_2 == PID && REVISION_FLYDIGI_DONGLE_2 == REV)
+                     || (ConnectionType == EConnectionType.Dongle && VENDOR_FLYDIGI == VID && PRODUCT_FLYDIGI_DONGLE_3 == PID && (REV >= REVISION_FLYDIGI_DONGLE_3
+                                                                                                                               || REV <= REVISION_FLYDIGI_DONGLE_3_LAST)))
                     {
                         if (DetectedDeviceId.HasValue)
                         {
