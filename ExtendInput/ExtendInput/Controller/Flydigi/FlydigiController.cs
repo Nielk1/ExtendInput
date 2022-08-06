@@ -436,7 +436,8 @@ namespace ExtendInput.Controller.Flydigi
         Thread CheckControllerStatusThread;
         Thread CheckControllerDongleAliveThread;
 
-
+        int WheelSplitDebounce = 0;
+        const int WHEEL_SPLIT_DEBOUNCE_LIMIT = 10;
 
 
 
@@ -458,6 +459,8 @@ namespace ExtendInput.Controller.Flydigi
         Thread OutputThread;
         unsafe private void StartOutputThread()
         {
+            if (OutputThreadActive)
+                return;
             //outBuffer = new SetStateData();
             OutputThreadActive = true;
             OutputThread = new Thread(() =>
@@ -913,8 +916,29 @@ namespace ExtendInput.Controller.Flydigi
                                             {
                                                 (State.Controls["cluster_right"] as IControlButtonQuadSlider).X = ControllerMathTools.QuickStickToFloat(TriggerLeft);
                                                 (State.Controls["cluster_right"] as IControlButtonQuadSlider).Y = ControllerMathTools.QuickStickToFloat(TriggerRight);
-                                                if (AccessMode == AccessMode.FullControl || TriggerLeft != RStickX || TriggerRight != RStickY || (TriggerLeft > (128 - 4) && TriggerLeft < (128 + 4) && TriggerRight > (128 - 4) && TriggerRight < (128 + 4)))
+
+                                                if (AccessMode == AccessMode.FullControl)
                                                 {
+                                                    // We have full control so the wheel and right stick should be seperated
+                                                    if (TriggerLeft == RStickX && TriggerRight == RStickY)
+                                                    {
+                                                        // The wheel and right stick still match, which suggests the wheel seperation command didn't work or
+                                                        // the controller power blipped quickly enough to lose the flag but not the be detected as removed
+                                                        if (WheelSplitDebounce == 0)
+                                                            SplitWheelAndStick();
+                                                        WheelSplitDebounce++;
+                                                        if (WheelSplitDebounce > WHEEL_SPLIT_DEBOUNCE_LIMIT)
+                                                            WheelSplitDebounce = 0;
+                                                    }
+                                                    else
+                                                    {
+                                                        (State.Controls["stick_right"] as IControlStickWithClick).X = ControllerMathTools.QuickStickToFloat(RStickX);
+                                                        (State.Controls["stick_right"] as IControlStickWithClick).Y = ControllerMathTools.QuickStickToFloat(RStickY);
+                                                    }
+                                                }
+                                                else if (TriggerLeft != RStickX || TriggerRight != RStickY || (TriggerLeft > (128 - 4) && TriggerLeft < (128 + 4) && TriggerRight > (128 - 4) && TriggerRight < (128 + 4)))
+                                                {
+                                                    // we are not in full control mode, so if the wheel and right stick are identical it means it's actually right stick input
                                                     (State.Controls["stick_right"] as IControlStickWithClick).X = ControllerMathTools.QuickStickToFloat(RStickX);
                                                     (State.Controls["stick_right"] as IControlStickWithClick).Y = ControllerMathTools.QuickStickToFloat(RStickY);
                                                 }
@@ -1883,7 +1907,10 @@ namespace ExtendInput.Controller.Flydigi
                         State.Controls["cluster_right"] = new ControlButtonQuadSlider(true, true, false, true);
                         Log("Device has \"Wheel\"");
                         if (AccessMode == AccessMode.FullControl)
+                        {
+                            WheelSplitDebounce = 0; // for if we need to re-check the wheel flag
                             SplitWheelAndStick();
+                        }
                     }
                     else
                     {
