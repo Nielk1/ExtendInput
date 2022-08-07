@@ -91,7 +91,7 @@ namespace ExtendInput.Controller.Flydigi
         public const int REVISION_FLYDIGI_DONGLE_1 = 0x0303;
         public const int REVISION_FLYDIGI_DONGLE_2 = 0x0303;
         public const int REVISION_FLYDIGI_DONGLE_3 = 0x0309;
-        public const int REVISION_FLYDIGI_DONGLE_3_2 = 0x0401;
+        //public const int REVISION_FLYDIGI_DONGLE_3_2 = 0x0401;
         public const int REVISION_FLYDIGI_DONGLE_3_LAST = 0x04FF;
         public const int REVISION_FLYDIGI_DONGLE_4 = 0x0500;
         public const int REVISION_FLYDIGI_USB = 0x0303;
@@ -1301,7 +1301,7 @@ namespace ExtendInput.Controller.Flydigi
                                 else if (reportData.ReportBytes[2] == 0xA0 && reportData.ReportBytes[3] == 0x02) // Trigger information
                                 {
                                     // see SetTriggerModeModel
-                                    Log($"Trigger Info: {reportData.ReportId:X2} {BitConverter.ToString(reportData.ReportBytes)}");
+                                    Log($"Trigger Info: {reportData.ReportId:X2} {BitConverter.ToString(reportData.ReportBytes)}", ConsoleColor.Yellow);
                                 }
                                 else if (reportData.ReportBytes[2] == 0xF5 && reportData.ReportBytes[3] == 0x01) // handerExtensionChipInfo
                                 {
@@ -1312,19 +1312,19 @@ namespace ExtendInput.Controller.Flydigi
                                     int LcdV2 = (reportData.ReportBytes[7] & 0x0F);
                                     int LcdV3 = (reportData.ReportBytes[7] >> 4);
 
-                                    Log($"Extension Chip Info: ExtCpuVerion: {CpuV1}.{CpuV2}.{CpuV3}  LcdVersion: {LcdV1}.{LcdV3}.{LcdV2}");
+                                    Log($"Extension Chip Info: ExtCpuVerion: {CpuV1}.{CpuV2}.{CpuV3}  LcdVersion: {LcdV1}.{LcdV3}.{LcdV2}", ConsoleColor.Yellow);
                                 }
                                 else if (reportData.ReportBytes[2] == 0xF2 && reportData.ReportBytes[3] == 0x03) // handerScreenInfo
                                 {
-                                    Log($"Screen Info: statusbarStatus: {reportData.ReportBytes[4]}  resourceStatus: {reportData.ReportBytes[5]}");
+                                    Log($"Screen Info: statusbarStatus: {reportData.ReportBytes[4]}  resourceStatus: {reportData.ReportBytes[5]}", ConsoleColor.Yellow);
                                 }
                                 else if (reportData.ReportBytes[2] == 0xF2 && reportData.ReportBytes[3] == 0x04) // handerScreenInfoSleepTime
                                 {
-                                    Log($"Screen Info Sleep Time: sleepTime: {reportData.ReportBytes[4]}");
+                                    Log($"Screen Info Sleep Time: sleepTime: {reportData.ReportBytes[4]}", ConsoleColor.Yellow);
                                 }
                                 else
                                 {
-                                    Log($"{reportData.ReportId:X2} {BitConverter.ToString(reportData.ReportBytes)}");
+                                    Log($"{reportData.ReportId:X2} {BitConverter.ToString(reportData.ReportBytes)}", ConsoleColor.Red);
                                 }
                             }
                             else
