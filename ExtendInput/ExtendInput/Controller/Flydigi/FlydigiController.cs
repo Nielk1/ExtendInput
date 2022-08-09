@@ -1473,7 +1473,7 @@ namespace ExtendInput.Controller.Flydigi
             {
                 int Rank = 0;//(int)subType;
                 ControllerSubTypeAttribute attr = subType.GetAttribute<ControllerSubTypeAttribute>();
-                if ((ConnectionType == EConnectionType.USB && VENDOR_FLYDIGI == VID && PRODUCT_FLYDIGI_USB == PID && REVISION_FLYDIGI_USB == REV)
+                if ((ConnectionType == EConnectionType.USB && VENDOR_FLYDIGI == VID && PRODUCT_FLYDIGI_USB == PID /*&& REVISION_FLYDIGI_USB == REV*/)
                  || (ConnectionType == EConnectionType.Dongle && VENDOR_FLYDIGI == VID && PRODUCT_FLYDIGI_DONGLE_2 == PID && REVISION_FLYDIGI_DONGLE_2 == REV)
                  || (ConnectionType == EConnectionType.Dongle && VENDOR_FLYDIGI == VID && PRODUCT_FLYDIGI_DONGLE_3 == PID && (REV >= REVISION_FLYDIGI_DONGLE_3
                                                                                                                            || REV <= REVISION_FLYDIGI_DONGLE_3_LAST)))
@@ -1676,7 +1676,7 @@ namespace ExtendInput.Controller.Flydigi
                 {
                     int Rank = 0;//(int)subType;
                     ControllerSubTypeAttribute attr = subType.GetAttribute<ControllerSubTypeAttribute>();
-                    if ((ConnectionType == EConnectionType.USB    && VENDOR_FLYDIGI == VID && PRODUCT_FLYDIGI_USB      == PID && REVISION_FLYDIGI_USB      == REV)
+                    if ((ConnectionType == EConnectionType.USB    && VENDOR_FLYDIGI == VID && PRODUCT_FLYDIGI_USB      == PID /*&& REVISION_FLYDIGI_USB      == REV*/)
                      || (ConnectionType == EConnectionType.Dongle && VENDOR_FLYDIGI == VID && PRODUCT_FLYDIGI_DONGLE_2 == PID && REVISION_FLYDIGI_DONGLE_2 == REV)
                      || (ConnectionType == EConnectionType.Dongle && VENDOR_FLYDIGI == VID && PRODUCT_FLYDIGI_DONGLE_3 == PID && (REV >= REVISION_FLYDIGI_DONGLE_3
                                                                                                                                || REV <= REVISION_FLYDIGI_DONGLE_3_LAST)))
