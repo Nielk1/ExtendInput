@@ -1137,6 +1137,8 @@ namespace ExtendInput.Controller.Flydigi
                                 }
                                 else if (reportData.ReportBytes[14] == 0xEC) // Controller State // handerDeviceInfo
                                 {
+                                    string MAC = $"{reportData.ReportBytes[4]:X2}:{reportData.ReportBytes[5]:X2}:{reportData.ReportBytes[6]:X2}:{reportData.ReportBytes[7]:X2}";
+                                    Log($"MAC: {MAC}", ConsoleColor.DarkGreen);
                                     int FirmwareRevision = reportData.ReportBytes[8] & 0xF;
                                     int FirmwareBuild = reportData.ReportBytes[8] >> 4;
                                     int FirmwareMinor = reportData.ReportBytes[9] & 0xF;
@@ -1155,47 +1157,61 @@ namespace ExtendInput.Controller.Flydigi
                                     }
                                     // reportData.ReportBytes[10] of 0 means unknown
                                     int batteryPercent = (int)((float)(BatteryReading - BatteryRangeMin) / (float)(BatteryRangeMax - BatteryRangeMin) * 100f);
-                                    //Log("Controller Power: " + batteryPercent);
+                                    Log($"Controller Power Raw: {batteryPercent}", ConsoleColor.DarkGreen);
                                     //deviceInfo.FirmwareVersionCode = FirmwareMajor * 1000 + FirmwareMinor * 100 + FirmwareBuild * 10 + FirmwareRevision;
                                     //deviceInfo.FirmwareVersion = FirmwareMajor + "." + FirmwareMinor + "." + FirmwareBuild + "." + FirmwareRevision;
-                                    /*switch (MotionSensorType)
+                                    Log($"FirmwareVersionCode: {(FirmwareMajor * 1000 + FirmwareMinor * 100 + FirmwareBuild * 10 + FirmwareRevision)}", ConsoleColor.DarkGreen);
+                                    Log($"FirmwareVersion: {FirmwareMajor}.{FirmwareMinor}.{FirmwareBuild}.{FirmwareRevision}", ConsoleColor.DarkGreen);
+                                    switch (MotionSensorType)
                                     {
                                         case 1:
-                                            deviceInfo.MotionSensorType = "ST";
+                                            //deviceInfo.MotionSensorType = "ST";
+                                            Log("MotionSensorType: ST", ConsoleColor.DarkGreen);
                                             break;
                                         case 2:
-                                            deviceInfo.MotionSensorType = "QST";
+                                            //deviceInfo.MotionSensorType = "QST";
+                                            Log("MotionSensorType: QST", ConsoleColor.DarkGreen);
                                             break;
-                                    }*/
+                                    }
                                     if (BatteryReading == 0)
                                     {
                                         batteryPercent = -1;
                                     }
+                                    string CpuType;
                                     if ((reportData.ReportBytes[11] & 0xFF) > 0)
                                     {
                                         //deviceInfo.CpuType = "wch";
+                                        CpuType = "wch";
                                     }
                                     else
                                     {
                                         //deviceInfo.CpuType = "nordic";
+                                        CpuType = "nordic";
                                     }
-                                    /*if (FirmwareMajor >= 6 && FirmwareMinor >= 1)
+                                    if (FirmwareMajor >= 6 && FirmwareMinor >= 1)
                                     {
-                                        deviceInfo.CpuType = "wch";
+                                        //deviceInfo.CpuType = "wch";
+                                        CpuType = "wch";
                                     }
-                                    if (deviceInfo.CpuType == "wch")
+                                    Log($"CpuType: {CpuType}, ConsoleColor.DarkGreen");
+                                    //if (deviceInfo.CpuType == "wch")
+                                    if (CpuType == "wch")
                                     {
                                         if ((reportData.ReportBytes[12] & 0xFF) == 1)
                                         {
-                                            deviceInfo.ConnectType = 2;
-                                            deviceInfo.CpuName = "ch573";
+                                            //deviceInfo.ConnectType = 2;
+                                            //deviceInfo.CpuName = "ch573";
+                                            Log($"ConnectType: 2", ConsoleColor.DarkGreen);
+                                            Log($"CpuName: ch573", ConsoleColor.DarkGreen);
                                         }
                                         else
                                         {
-                                            deviceInfo.ConnectType = 1;
-                                            deviceInfo.CpuName = "ch571";
+                                            //deviceInfo.ConnectType = 1;
+                                            //deviceInfo.CpuName = "ch571";
+                                            Log($"ConnectType: 1", ConsoleColor.DarkGreen);
+                                            Log($"CpuName: ch571", ConsoleColor.DarkGreen);
                                         }
-                                    }*/
+                                    }
                                     /*
                                     deviceInfo.DeviceId = deviceId;
                                     switch (deviceInfo.DeviceId)
@@ -1266,7 +1282,7 @@ namespace ExtendInput.Controller.Flydigi
                                     {
                                         byte? OldDetectedDeviceId = DetectedDeviceId;
                                         DetectedDeviceId = reportData.ReportBytes[2];
-                                        Log($"DetectedDeviceId set to {reportData.ReportBytes[2]:X2}", ConsoleColor.DarkYellow);
+                                        Log($"DetectedDeviceId set to {reportData.ReportBytes[2]}", ConsoleColor.DarkYellow);
                                         if (OldDetectedDeviceId != DetectedDeviceId)
                                         {
                                             lock (ResetControllerInfoNeededLock) ResetControllerInfoNeeded = true; // ResetControllerInfo();
