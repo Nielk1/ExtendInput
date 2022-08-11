@@ -485,7 +485,13 @@ namespace ExtendInput.Controller.Flydigi
                             {
                                 switch (ctrl.Effect)
                                 {
-                                    case EEffectTriggerForceFeedbackFlydigi.STATE_FLYDIGI_TRIGGER_NONE: SendTriggerReport(2, 1, 255, 0); TriggerR_Effect_InReset = true; break;
+                                    case EEffectTriggerForceFeedbackFlydigi.STATE_FLYDIGI_TRIGGER_NONE:
+                                        if (Debounce_TriggerR_Effect != 0)
+                                        {
+                                            SendTriggerReport(2, 1, 255, 0);
+                                            TriggerR_Effect_InReset = true;
+                                        }
+                                        break;
                                     case EEffectTriggerForceFeedbackFlydigi.STATE_FLYDIGI_TRIGGER_FEEDBACK: SendTriggerReport(2, 1, ctrl.Start, ctrl.Strength); break;
                                     case EEffectTriggerForceFeedbackFlydigi.STATE_FLYDIGI_TRIGGER_VIBRATION: SendTriggerReport(2, 2, ctrl.Start, ctrl.Strength, ctrl.Amplitude, ctrl.Frequency); break;
                                     case EEffectTriggerForceFeedbackFlydigi.STATE_FLYDIGI_TRIGGER_WEAPON: SendTriggerReport(2, 3, ctrl.Start, ctrl.End, ctrl.Strength); break;
@@ -504,7 +510,13 @@ namespace ExtendInput.Controller.Flydigi
                             {
                                 switch (ctrl.Effect)
                                 {
-                                    case EEffectTriggerForceFeedbackFlydigi.STATE_FLYDIGI_TRIGGER_NONE: SendTriggerReport(1, 1, 255, 0); TriggerL_Effect_InReset = true; break;
+                                    case EEffectTriggerForceFeedbackFlydigi.STATE_FLYDIGI_TRIGGER_NONE:
+                                        if (Debounce_TriggerL_Effect != 0)
+                                        {
+                                            SendTriggerReport(1, 1, 255, 0);
+                                            TriggerL_Effect_InReset = true;
+                                        }
+                                        break;
                                     case EEffectTriggerForceFeedbackFlydigi.STATE_FLYDIGI_TRIGGER_FEEDBACK: SendTriggerReport(1, 1, ctrl.Start, ctrl.Strength); break;
                                     case EEffectTriggerForceFeedbackFlydigi.STATE_FLYDIGI_TRIGGER_VIBRATION: SendTriggerReport(1, 2, ctrl.Start, ctrl.Strength, ctrl.Amplitude, ctrl.Frequency); break;
                                     case EEffectTriggerForceFeedbackFlydigi.STATE_FLYDIGI_TRIGGER_WEAPON: SendTriggerReport(1, 3, ctrl.Start, ctrl.End, ctrl.Strength); break;
