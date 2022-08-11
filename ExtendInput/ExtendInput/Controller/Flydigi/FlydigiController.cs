@@ -457,6 +457,8 @@ namespace ExtendInput.Controller.Flydigi
         byte Debounce_TriggerR_P4 = 0;
         bool OutputThreadActive = false;
         Thread OutputThread;
+        bool TriggerL_Effect_InReset = false;
+        bool TriggerR_Effect_InReset = false;
         unsafe private void StartOutputThread()
         {
             if (OutputThreadActive)
@@ -474,11 +476,16 @@ namespace ExtendInput.Controller.Flydigi
                     {
                         {
                             IControlTriggerFlydigi ctrl = (State.Controls["trigger_right"] as IControlTriggerFlydigi);
-                            if (ctrl != null && ctrl.IsWriteDirty)
+                            if (ctrl != null && TriggerR_Effect_InReset)
+                            {
+                                SendTriggerReport(2, 0, 0);
+                                TriggerR_Effect_InReset = false;
+                            }
+                            else if (ctrl != null && ctrl.IsWriteDirty)
                             {
                                 switch (ctrl.Effect)
                                 {
-                                    case EEffectTriggerForceFeedbackFlydigi.STATE_FLYDIGI_TRIGGER_NONE: SendTriggerReport(2, 0, 0); break;
+                                    case EEffectTriggerForceFeedbackFlydigi.STATE_FLYDIGI_TRIGGER_NONE: SendTriggerReport(2, 1, 255, 0); TriggerR_Effect_InReset = true; break;
                                     case EEffectTriggerForceFeedbackFlydigi.STATE_FLYDIGI_TRIGGER_FEEDBACK: SendTriggerReport(2, 1, ctrl.Start, ctrl.Strength); break;
                                     case EEffectTriggerForceFeedbackFlydigi.STATE_FLYDIGI_TRIGGER_VIBRATION: SendTriggerReport(2, 2, ctrl.Start, ctrl.Strength, ctrl.Amplitude, ctrl.Frequency); break;
                                     case EEffectTriggerForceFeedbackFlydigi.STATE_FLYDIGI_TRIGGER_WEAPON: SendTriggerReport(2, 3, ctrl.Start, ctrl.End, ctrl.Strength); break;
@@ -488,11 +495,16 @@ namespace ExtendInput.Controller.Flydigi
                         }
                         {
                             IControlTriggerFlydigi ctrl = (State.Controls["trigger_left"] as IControlTriggerFlydigi);
-                            if (ctrl != null && ctrl.IsWriteDirty)
+                            if (ctrl != null && TriggerL_Effect_InReset)
+                            {
+                                SendTriggerReport(1, 0, 0);
+                                TriggerL_Effect_InReset = false;
+                            }
+                            else if (ctrl != null && ctrl.IsWriteDirty)
                             {
                                 switch (ctrl.Effect)
                                 {
-                                    case EEffectTriggerForceFeedbackFlydigi.STATE_FLYDIGI_TRIGGER_NONE: SendTriggerReport(1, 0, 0); break;
+                                    case EEffectTriggerForceFeedbackFlydigi.STATE_FLYDIGI_TRIGGER_NONE: SendTriggerReport(1, 1, 255, 0); TriggerL_Effect_InReset = true; break;
                                     case EEffectTriggerForceFeedbackFlydigi.STATE_FLYDIGI_TRIGGER_FEEDBACK: SendTriggerReport(1, 1, ctrl.Start, ctrl.Strength); break;
                                     case EEffectTriggerForceFeedbackFlydigi.STATE_FLYDIGI_TRIGGER_VIBRATION: SendTriggerReport(1, 2, ctrl.Start, ctrl.Strength, ctrl.Amplitude, ctrl.Frequency); break;
                                     case EEffectTriggerForceFeedbackFlydigi.STATE_FLYDIGI_TRIGGER_WEAPON: SendTriggerReport(1, 3, ctrl.Start, ctrl.End, ctrl.Strength); break;
