@@ -170,4 +170,10 @@
     </None>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PreBuildEvent>echo Running Database Builder
+pushd "$(SolutionDir)DatabaseBuilder\bin\$(ConfigurationName)"
+DatabaseBuilder.exe
+popd</PreBuildEvent>
+  </PropertyGroup>
 </Project>

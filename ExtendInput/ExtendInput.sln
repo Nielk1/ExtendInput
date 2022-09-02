@@ -4,6 +4,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 16.0.29709.97
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExtendInput", "ExtendInput\ExtendInput.csproj", "{4D027481-A0EA-41F3-9284-7353E2103CA6}"
+	ProjectSection(ProjectDependencies) = postProject
+		{A8CA7531-2774-4839-B89B-9343B075CCC8} = {A8CA7531-2774-4839-B89B-9343B075CCC8}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExtendInputControllerTester", "ExtendInputControllerTester\ExtendInputControllerTester.csproj", "{87EF694C-12BA-4395-A963-68C4CEAE516A}"
 EndProject

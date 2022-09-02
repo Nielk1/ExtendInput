@@ -2,8 +2,8 @@
   "Name": "Retro Fighter Defender (DI Mode)",
   "Tokens": [ "DEVICE_RETROFIGHTER_DEFENDER", "DEVICE_GAMEPAD" ],
   "Select": {
-    "VID": "0x2563",
-    "PID": "0x0575"
+    "VID": 0x2563,
+    "PID": 0x0575
     // name: Retro Fighters Gamepad
   },
   "Controls": {
