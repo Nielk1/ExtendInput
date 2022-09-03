@@ -92,6 +92,7 @@ namespace ExtendInput.Controller.Sony
         public const int PRODUCT_SONY_DONGLE_DFU = 0x0BA1; // wierd broken state, being flashed?
         public const int PRODUCT_SONY_DS4V1 = 0x05C4; // and BT
         public const int PRODUCT_SONY_DS4V2 = 0x09CC; // and BT
+        public const int PRODUCT_HORI_HORIPAD4 = 0x05C5;
 
         // Brook
         public const int VENDOR_BROOK = 0x0C12;
@@ -214,6 +215,15 @@ namespace ExtendInput.Controller.Sony
                 NoMac: true,
                 PadIsClickOnly: true)]
             BrookMars = 100, // wired only controller, so it is detected immediately
+
+            [ControllerSubType(
+                Token: new string[] { "DEVICE_BROOKMARS", "DEVICE_DS4", "DEVICE_GAMEPAD" },
+                Name: "Brook Mars Wired Controller",
+                //NoTemperture: true,
+                USB_VID: VENDOR_SONY, USB_PID: PRODUCT_HORI_HORIPAD4,
+                NoMac: true,
+                PadIsClickOnly: true)] // no LED, no rumble (yet), might have another device with the same PID such as a strike pack
+            Horipad4 = 101, // wired only controller, so it is detected immediately
 
             // These controllers have specific strange properties:
             // 1. These controllers all share the same Private/Pulic Key, which means Sony could blacklist them all from the PS4 if they wanted

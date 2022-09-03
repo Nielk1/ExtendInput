@@ -16,6 +16,7 @@ namespace ExtendInput.Controller.Sony
             new Dictionary<string, dynamic>(){ { "VID", DualShock4Controller.VENDOR_SONY }, { "PID", DualShock4Controller.PRODUCT_SONY_DONGLE } },
             new Dictionary<string, dynamic>(){ { "VID", DualShock4Controller.VENDOR_SONY }, { "PID", DualShock4Controller.PRODUCT_SONY_DS4V1 } },
             new Dictionary<string, dynamic>(){ { "VID", DualShock4Controller.VENDOR_SONY }, { "PID", DualShock4Controller.PRODUCT_SONY_DS4V2 } },
+            new Dictionary<string, dynamic>(){ { "VID", DualShock4Controller.VENDOR_SONY }, { "PID", DualShock4Controller.PRODUCT_HORI_HORIPAD4 } },
             new Dictionary<string, dynamic>(){ { "VID", DualShock4Controller.VENDOR_BROOK }, { "PID", DualShock4Controller.PRODUCT_BROOK_MARS } },
         };
 
@@ -45,6 +46,7 @@ namespace ExtendInput.Controller.Sony
                     DualShock4Controller.PRODUCT_SONY_DONGLE,
                     DualShock4Controller.PRODUCT_SONY_DS4V1,
                     DualShock4Controller.PRODUCT_SONY_DS4V2,
+                    DualShock4Controller.PRODUCT_HORI_HORIPAD4,
                 }.Contains(_device.ProductId))
                     return null;
             }
