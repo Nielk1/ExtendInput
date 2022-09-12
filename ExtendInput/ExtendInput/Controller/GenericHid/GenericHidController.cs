@@ -12,6 +12,72 @@ namespace ExtendInput.Controller.GenericHid
 {
     public class GenericHidController : IController
     {
+        bool OutputThreadActive = false;
+        Thread OutputThread;
+        DateTime LastWrite = DateTime.UtcNow;
+        private void StartOutputThread()
+        {
+            OutputThreadActive = true;
+            // TODO: group controls that can write out to the controller somehow so they can be listed
+            // TODO: make this use a generic list of controls instead of relying on rumble_left and rumble_right
+            // TODO: implement write target values in controller JSON since right now we're double-using read commands and actually reads might be needed for some sub-var referencing if we ever get that made
+            OutputThread = new Thread(() =>
+            {
+                for (; ; )
+                {
+                    if (!OutputThreadActive) break;
+                    Thread.Sleep(1);
+                    if (!OutputThreadActive) break;
+                    //if(WriteStateDirtyPossible)
+                    {
+                        bool DataToWrite = false;
+                        {
+                            IControlEccentricRotatingMass ctrl = (State.Controls["rumble_left"] as IControlEccentricRotatingMass);
+                            if (ctrl != null && ctrl.IsWriteDirty)
+                            {
+                                //if (!DataToWrite) outBuffer = new byte[3];
+                                outBuffer[1] = (byte)(ctrl.Power * 0xFF);
+                                ctrl.CleanWriteDirty();
+                                DataToWrite = true;
+                            }
+                        }
+                        {
+                            IControlEccentricRotatingMass ctrl = (State.Controls["rumble_right"] as IControlEccentricRotatingMass);
+                            if (ctrl != null && ctrl.IsWriteDirty)
+                            {
+                                //if (!DataToWrite) outBuffer = new byte[3];
+                                outBuffer[2] = (byte)(ctrl.Power * 0xFF);
+                                ctrl.CleanWriteDirty();
+                                DataToWrite = true;
+                            }
+                        }
+                        // if it's been a whole second since the last write, write again
+                        // TODO: move this into the ControlEccentricRotatingMass as an auto re-dirty system or something?
+                        if (LastWrite.AddSeconds(1) < DateTime.UtcNow)
+                            DataToWrite = true;
+
+                        if (DataToWrite)
+                            SendReport();
+                    }
+                    if (!OutputThreadActive) break;
+                }
+            });
+            OutputThread.Start();
+        }
+        private void StopOutputThread()
+        {
+            OutputThreadActive = false;
+        }
+        byte[] outBuffer = new byte[3];
+        private void SendReport()
+        {
+            LastWrite = DateTime.UtcNow;
+            bool success = _device.WriteReport(outBuffer);
+        }
+
+
+
+
         public EConnectionType ConnectionType => EConnectionType.Unknown;
 
         public string[] ConnectionTypeCode => new string[] { "CONNECTION_UNKNOWN" };
@@ -72,7 +138,7 @@ namespace ExtendInput.Controller.GenericHid
                         GenericControlAttribute attr = item.GetCustomAttributes(false).OfType<GenericControlAttribute>().SingleOrDefault();
                         if (attr != null)
                         {
-                            ConstructorInfo con = item.GetConstructor(new Type[] { typeof(string), typeof(AddressableValue[]) });
+                            ConstructorInfo con = item.GetConstructor(new Type[] { typeof(AccessMode), typeof(string), typeof(AddressableValue[]), typeof(Dictionary<string, dynamic>) });
                             if (con != null)
                                 ControlTypes[attr.Name] = item;
                         }
@@ -91,7 +157,7 @@ namespace ExtendInput.Controller.GenericHid
                     }
 
                     var addressables = control.Value.Paramaters.Select(dr => new AddressableValue(dr)).ToArray();
-                    IControl controlInstance = (IControl)Activator.CreateInstance(ControlTypes[control.Value.ControlName], control.Value.FactoryName, (object)addressables);
+                    IControl controlInstance = (IControl)Activator.CreateInstance(ControlTypes[control.Value.ControlName], AccessMode, control.Value.FactoryName, (object)addressables, control.Value.Properties);
                     State.Controls[controlName] = controlInstance;
                     AddressableValues[controlName] = addressables;
                 }
@@ -171,6 +237,7 @@ namespace ExtendInput.Controller.GenericHid
                 State.EndStateChange(true);
             }).Start(); // fire this off in a thread so we don't get stuck as what called us to Initalize is probably locking in a way that will block their event handler
             _device.StartReading();
+            StartOutputThread();
         }
 
         public void DeInitalize()
@@ -189,6 +256,7 @@ namespace ExtendInput.Controller.GenericHid
                 _device.StopReading();
 
                 PollingState = EPollingState.Inactive;
+                StopOutputThread();
                 _device.CloseDevice();
             }
         }

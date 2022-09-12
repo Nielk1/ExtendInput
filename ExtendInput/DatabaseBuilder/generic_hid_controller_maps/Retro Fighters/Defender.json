@@ -4,7 +4,9 @@
   "Select": {
     "VID": 0x2563,
     "PID": 0x0575
+    // company: ShanWan
     // name: Retro Fighters Gamepad
+    // S/N on xinput mode?: 10F36D6
   },
   "Controls": {
     "cluster_right": {

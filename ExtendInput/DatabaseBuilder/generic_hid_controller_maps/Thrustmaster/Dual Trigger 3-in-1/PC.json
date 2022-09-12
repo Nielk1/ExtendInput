@@ -53,6 +53,17 @@
     "stick_right": {
       "ControlName": "StickWithClick",
       "Paramaters": [ "r0b4-00/+FF", "r0b7-00/+FF", "r0b1a3" ]
+    },
+    "rumble_left": {
+      "ControlName": "EccentricRotatingMass",
+      "Paramaters": [ "r0b0-0+FF" ],
+      "Properties": { "w": "h" } // weight: heavy
+    },
+    "rumble_right": {
+      "ControlName": "EccentricRotatingMass",
+      "Paramaters": [ "r0b1-0+FF" ],
+      "Properties": { "w": "l" } // weight: light
     }
   }
 } // rumble is a report write of r0b0-0+FF for heavy left and r0b1-0+FF for light right
+// consider implementing logic to flag rumble_left and rumble_right as needing full control (if rumble never stops) or safe write (if rumble stops itself) permission preventing the control from being created

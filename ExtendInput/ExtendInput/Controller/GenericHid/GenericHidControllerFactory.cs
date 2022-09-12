@@ -18,6 +18,8 @@ namespace ExtendInput.Controller.GenericHid
         public string FactoryName { get; set; }
         [JsonProperty("p")]
         public dynamic[] Paramaters { get; set; }
+        [JsonProperty("r")]
+        public Dictionary<string, dynamic> Properties { get; set; }
     }
     public class ControllerDbEntry
     {

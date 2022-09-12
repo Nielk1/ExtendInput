@@ -1,6 +1,7 @@
 ﻿using ExtendInput.Controller.GenericHid;
 using ExtendInput.DeviceProvider;
 using System;
+using System.Collections.Generic;
 
 namespace ExtendInput.Controls
 {
@@ -24,7 +25,7 @@ namespace ExtendInput.Controls
 
         private AddressableValue[] addressableValues;
         private string factoryName;
-        public ControlDualStrikePivot(string factoryName, AddressableValue[] addressableValues)
+        public ControlDualStrikePivot(AccessMode accessMode, string factoryName, AddressableValue[] addressableValues, Dictionary<string, dynamic> properties)
         {
             this.factoryName = factoryName;
             this.addressableValues = addressableValues;

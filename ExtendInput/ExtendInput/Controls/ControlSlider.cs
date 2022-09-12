@@ -23,7 +23,7 @@ namespace ExtendInput.Controls
 
         private AddressableValue[] addressableValues;
         private string factoryName;
-        public ControlSlider(string factoryName, AddressableValue[] addressableValues)
+        public ControlSlider(AccessMode accessMode, string factoryName, AddressableValue[] addressableValues, Dictionary<string, dynamic> properties)
         {
             this.factoryName = factoryName;
             this.addressableValues = addressableValues;

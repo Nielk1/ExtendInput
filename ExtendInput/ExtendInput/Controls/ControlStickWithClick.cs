@@ -24,7 +24,7 @@ namespace ExtendInput.Controls
 
         private AddressableValue[] addressableValues;
         private string factoryName;
-        public ControlStickWithClick(string factoryName, AddressableValue[] addressableValues)
+        public ControlStickWithClick(AccessMode accessMode, string factoryName, AddressableValue[] addressableValues, Dictionary<string, dynamic> properties)
         {
             this.factoryName = factoryName;
             this.addressableValues = addressableValues;

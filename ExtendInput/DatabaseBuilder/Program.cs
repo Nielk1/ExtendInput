@@ -33,6 +33,8 @@ namespace DatabaseBuilder
                         if (control.Value["FactoryName"] != null)
                             newObj["c"][control.Name]["f"] = control.Value["FactoryName"];
                         newObj["c"][control.Name]["p"] = control.Value["Paramaters"];
+                        if (control.Value["Properties"] != null)
+                            newObj["c"][control.Name]["r"] = control.Value["Properties"];
                     }
                     JObject wrapperObject = new JObject();
                     wrapperObject["t"] = "GHID";
