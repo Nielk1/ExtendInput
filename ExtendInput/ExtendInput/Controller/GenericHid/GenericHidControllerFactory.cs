@@ -31,6 +31,8 @@ namespace ExtendInput.Controller.GenericHid
         public Dictionary<string, dynamic> Select { get; set; }
         [JsonProperty("c")]
         public Dictionary<string, ControlData> Controls { get; set; }
+        [JsonProperty("ol")]
+        public Dictionary<byte, int> OutputReportLengths { get; set; }
     }
     public class GenericHidControllerFactory : IControllerFactory
     {

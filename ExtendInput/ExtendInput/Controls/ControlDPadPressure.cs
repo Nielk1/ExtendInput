@@ -83,7 +83,7 @@ namespace ExtendInput.Controls
             return newData;
         }
 
-        public void SetGenericValue(IReport report)
+        public void ProcessReportForGenericController(IReport report)
         {
             byte? DirectionValue = addressableValues[0].GetByte(report);
             if(DirectionValue.HasValue)

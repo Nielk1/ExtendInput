@@ -60,7 +60,7 @@ namespace ExtendInput.Controls
             return newData;
         }
 
-        public void SetGenericValue(IReport report)
+        public void ProcessReportForGenericController(IReport report)
         {
             ButtonA = addressableValues[0].GetBoolean(report) ?? ButtonA;
             ButtonB = addressableValues[1].GetBoolean(report) ?? ButtonB;

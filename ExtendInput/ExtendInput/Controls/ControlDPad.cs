@@ -71,7 +71,7 @@ namespace ExtendInput.Controls
             return newData;
         }
 
-        public void SetGenericValue(IReport report)
+        public void ProcessReportForGenericController(IReport report)
         {
             switch(factoryName)
             {

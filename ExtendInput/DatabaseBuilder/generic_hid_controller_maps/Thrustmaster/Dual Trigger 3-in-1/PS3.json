@@ -5,6 +5,9 @@
     "VID": 0x044F,
     "PID": 0xB324
   },
+  "OutputReportLengths": {
+    "0": 2
+  },
   "Controls": {
     "cluster_right": {
       "ControlName": "ButtonQuadPressure",

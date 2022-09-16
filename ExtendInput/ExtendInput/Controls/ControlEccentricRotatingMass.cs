@@ -14,7 +14,7 @@ namespace ExtendInput.Controls
     }
 
     [GenericControl("EccentricRotatingMass")]
-    public class ControlEccentricRotatingMass : IControlEccentricRotatingMass, IGenericControl
+    public class ControlEccentricRotatingMass : IControlEccentricRotatingMass, IGenericControl, IGenericOutputControl
     {
         private float? _power;
         public float? Power // State is null if not settable, only apply mode if valid and able to
@@ -100,10 +100,14 @@ namespace ExtendInput.Controls
             return newData;
         }
 
-        public void SetGenericValue(IReport report)
+        public void ProcessReportForGenericController(IReport report)
         {
             // this is written tot he controller, not read from it, so there's no reason for generic read logic
             //Power = addressableValues[0].GetFloat(report) ?? Power;
+
+            // actually we do need this function because we need to handle if there are cross-references to other report IDs inside the addressable value, though we don't support that yet
+            // if we did that, we'd need to process the children of the addressable value instead of the main addressable value.
+            // maybe replace the "GetX" function with a "PopulateSubValues" or something that updates all children but doesn't return
         }
 
         public bool IsWriteDirty { get; private set; }
@@ -126,6 +130,13 @@ namespace ExtendInput.Controls
                     break;
             }
             return false;
+        }
+
+        public void GenerateReportsForGenericController(Dictionary<byte, byte[]> rawReport)
+        {
+            rawReport[(byte)addressableValues[0].ReportID] = addressableValues[0].SetValue(
+                rawReport.ContainsKey((byte)addressableValues[0].ReportID) ? rawReport[(byte)addressableValues[0].ReportID] : null,
+                (byte)(Power * 255f)); // consider adding a factory name to use types other than byte on this, probably the right move
         }
     }
 }

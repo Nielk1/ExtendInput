@@ -53,7 +53,7 @@ namespace ExtendInput.Controls
             return newData;
         }
 
-        public void SetGenericValue(IReport report)
+        public void ProcessReportForGenericController(IReport report)
         {
             DigitalStage1 = addressableValues[0].GetBoolean(report) ?? DigitalStage1;
         }

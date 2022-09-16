@@ -86,7 +86,7 @@ namespace ExtendInput.Controls
             return newData;
         }
 
-        public void SetGenericValue(IReport report)
+        public void ProcessReportForGenericController(IReport report)
         {
             X = addressableValues[0].GetFloat(report) ?? X;
             Y = addressableValues[1].GetFloat(report) ?? Y;

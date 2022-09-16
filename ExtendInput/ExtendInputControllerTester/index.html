@@ -1037,7 +1037,8 @@
                         var ctrl = renderElement.find('#control_render_' + controller_id + '__' + control_id);
                         if (controlData.Power == 0) {
                             ctrl.find('.spin').css("animation-duration", "unset");
-                            if (ctrl.find('.spin').data("power") != 0) {
+                            var OldSpin = ctrl.find('.spin').data("power");
+                            if (OldSpin != 0 && OldSpin != controlData.Power) {
                                 ctrl.find('.spin').attr("transform", "rotate(" + (Math.random() * 360) + ")");
                             }
                         } else {

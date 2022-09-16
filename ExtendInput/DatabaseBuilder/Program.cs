@@ -25,6 +25,7 @@ namespace DatabaseBuilder
                     newObj["n"] = obj["Name"];
                     newObj["t"] = obj["Tokens"];
                     newObj["s"] = obj["Select"];
+                    newObj["ol"] = obj["OutputReportLengths"];
                     newObj["c"] = new JObject();
                     foreach (JProperty control in obj["Controls"])
                     {
@@ -36,6 +37,7 @@ namespace DatabaseBuilder
                         if (control.Value["Properties"] != null)
                             newObj["c"][control.Name]["r"] = control.Value["Properties"];
                     }
+
                     JObject wrapperObject = new JObject();
                     wrapperObject["t"] = "GHID";
                     wrapperObject["d"] = newObj;

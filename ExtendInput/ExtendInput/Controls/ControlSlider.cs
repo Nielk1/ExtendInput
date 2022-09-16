@@ -53,7 +53,7 @@ namespace ExtendInput.Controls
             return newData;
         }
 
-        public void SetGenericValue(IReport report)
+        public void ProcessReportForGenericController(IReport report)
         {
             AnalogStage1 = addressableValues[0].GetFloat(report) ?? AnalogStage1;
         }
