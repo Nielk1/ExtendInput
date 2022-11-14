@@ -97,6 +97,8 @@
     <Compile Include="Controller\IControllerFactory.cs" />
     <Compile Include="Controller\SixtyBeat\SixtyBeatGamepadControllerFactory.cs" />
     <Compile Include="Controller\SixtyBeat\SixtyBeatGamepadController.cs" />
+    <Compile Include="Controller\TourBox\TourBoxController.cs" />
+    <Compile Include="Controller\TourBox\TourBoxControllerFactory.cs" />
     <Compile Include="Controls\ControlButtonGenesis3.cs" />
     <Compile Include="Controls\ControlButtonPressure.cs" />
     <Compile Include="Controls\ControlButtonPS5Mute.cs" />
@@ -119,6 +121,8 @@
     <Compile Include="Controls\ControlRocker.cs" />
     <Compile Include="Controls\ControlStickWithClick.cs" />
     <Compile Include="Controls\IGenericControl.cs" />
+    <Compile Include="DeviceProvider\SerialDevice.cs" />
+    <Compile Include="DeviceProvider\SerialDeviceProvider.cs" />
     <Compile Include="DeviceProvider\ReportData.cs" />
     <Compile Include="MadgwickAHRS.cs" />
     <Compile Include="Tools.cs" />

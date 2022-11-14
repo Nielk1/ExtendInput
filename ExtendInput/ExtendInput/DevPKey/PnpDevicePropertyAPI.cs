@@ -35,8 +35,8 @@ namespace ExtendInput.DevPKey
 
             Guid hidGuid = new Guid();
             Native.PnpDevicePropertyAPINative.HidD_GetHidGuid(ref hidGuid);
-            IntPtr deviceInfoSet = Native.PnpDevicePropertyAPINative.SetupDiGetClassDevs(ref hidGuid, deviceInstanceId, 0, Native.PnpDevicePropertyAPINative.DIGCF_PRESENT | Native.PnpDevicePropertyAPINative.DIGCF_DEVICEINTERFACE);
-            //IntPtr deviceInfoSet = Native.PnpDevicePropertyAPINative.SetupDiGetClassDevs(IntPtr.Zero, deviceInstanceId, 0, Native.PnpDevicePropertyAPINative.DIGCF_PRESENT | Native.PnpDevicePropertyAPINative.DIGCF_DEVICEINTERFACE | Native.PnpDevicePropertyAPINative.DIGCF_ALLCLASSES);
+            //IntPtr deviceInfoSet = Native.PnpDevicePropertyAPINative.SetupDiGetClassDevs(ref hidGuid, deviceInstanceId, 0, Native.PnpDevicePropertyAPINative.DIGCF_PRESENT | Native.PnpDevicePropertyAPINative.DIGCF_DEVICEINTERFACE);
+            IntPtr deviceInfoSet = Native.PnpDevicePropertyAPINative.SetupDiGetClassDevs(IntPtr.Zero, deviceInstanceId, 0, Native.PnpDevicePropertyAPINative.DIGCF_PRESENT | Native.PnpDevicePropertyAPINative.DIGCF_DEVICEINTERFACE | Native.PnpDevicePropertyAPINative.DIGCF_ALLCLASSES);
             /*bool tempval = */
             try
             {
@@ -90,7 +90,8 @@ namespace ExtendInput.DevPKey
                             {
                                 try
                                 {
-                                    string result = Encoding.Unicode.GetString(dataBuffer.Take(requiredSize).TakeWhile(dr => dr != '\0').ToArray());
+                                    //string result = Encoding.Unicode.GetString(dataBuffer.Take(requiredSize).TakeWhile(dr => dr != '\0').ToArray());
+                                    string result = Encoding.Unicode.GetString(dataBuffer.Take(requiredSize).ToArray());
                                     if (result.Length > 4)
                                     {
                                         results.Add(arrItem, result);
@@ -146,6 +147,76 @@ namespace ExtendInput.DevPKey
             return new Guid(temp);
         }
 
+        public static string GetDeviceHardwareId(string deviceInstanceId)
+        {
+            byte[] temp = GetDeviceProperty(deviceInstanceId, Native.PnpDevicePropertyAPINative.DEVPKEY_Device_HardwareIds);
+
+            if (temp == null)
+                return null;
+
+            string result = Encoding.Unicode.GetString(temp);
+
+            return result.Split(new char[] { '\0' }, StringSplitOptions.RemoveEmptyEntries)[0];
+        }
+
+        private static string[] GetTrimmedHardareIdForAttributes(string deviceInstanceId)
+        {
+            string HardwareID = GetDeviceHardwareId(deviceInstanceId);
+            if (string.IsNullOrWhiteSpace(HardwareID))
+                return null;
+            string[] parts = HardwareID.Split(new char[] { '\\' }, 3);
+            if (parts.Length < 2)
+                return null;
+            return parts[1]?.Split('&');
+        }
+
+        public static UInt16? GetDeviceVendorId(string deviceInstanceId)
+        {
+            string[] parts = GetTrimmedHardareIdForAttributes(deviceInstanceId);
+            if (parts == null)
+                return null;
+            UInt16 parseTmp;
+            foreach (string part in parts)
+            {
+                string[] subparts = part.Split(new char[] { '_' }, 2);
+                if (subparts.Length == 2 && subparts[0] == "VID")
+                    if (UInt16.TryParse(subparts[1], System.Globalization.NumberStyles.HexNumber, null, out parseTmp))
+                        return parseTmp;
+            }
+            return null;
+        }
+
+        public static UInt16? GetDeviceProductId(string deviceInstanceId)
+        {
+            string[] parts = GetTrimmedHardareIdForAttributes(deviceInstanceId);
+            if (parts == null)
+                return null;
+            UInt16 parseTmp;
+            foreach (string part in parts)
+            {
+                string[] subparts = part.Split(new char[] { '_' }, 2);
+                if (subparts.Length == 2 && subparts[0] == "PID")
+                    if (UInt16.TryParse(subparts[1], System.Globalization.NumberStyles.HexNumber, null, out parseTmp))
+                        return parseTmp;
+            }
+            return null;
+        }
+
+        public static UInt16? GetDeviceRevisionNumber(string deviceInstanceId)
+        {
+            string[] parts = GetTrimmedHardareIdForAttributes(deviceInstanceId);
+            if (parts == null)
+                return null;
+            UInt16 parseTmp;
+            foreach (string part in parts)
+            {
+                string[] subparts = part.Split(new char[] { '_' }, 2);
+                if (subparts.Length == 2 && subparts[0] == "REV")
+                    if (UInt16.TryParse(subparts[1], System.Globalization.NumberStyles.HexNumber, null, out parseTmp))
+                        return parseTmp;
+            }
+            return null;
+        }
 
         public static bool GetParentDeviceInstanceId(string DeviceInstanceId, out string ParentDeviceInstanceId)
         {

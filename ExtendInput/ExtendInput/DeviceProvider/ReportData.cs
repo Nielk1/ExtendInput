@@ -11,6 +11,7 @@ namespace ExtendInput.DeviceProvider
         XINP = 0x504e4958, // 'XINP'
         HID  = 0x7e444948, // 'HID~'
         GENB = 0x424e4547, // 'GENB'
+        SER  = 0x7e524553, // '~RES'
     }
 
     public interface IReport
@@ -30,6 +31,12 @@ namespace ExtendInput.DeviceProvider
         public REPORT_TYPE ReportTypeCode => REPORT_TYPE.HID;
         public HidReportType ReportType;
         public byte ReportId;
+        public byte[] ReportBytes;
+    }
+
+    public struct SerialReport : IReport
+    {
+        public REPORT_TYPE ReportTypeCode => REPORT_TYPE.SER;
         public byte[] ReportBytes;
     }
 
