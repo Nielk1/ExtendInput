@@ -1217,7 +1217,7 @@ namespace ExtendInput.Controller.Flydigi
                                         //deviceInfo.CpuType = "wch";
                                         CpuType = "wch";
                                     }
-                                    Log($"CpuType: {CpuType}, ConsoleColor.DarkGreen");
+                                    Log($"CpuType: {CpuType}", ConsoleColor.DarkGreen);
                                     //if (deviceInfo.CpuType == "wch")
                                     if (CpuType == "wch")
                                     {

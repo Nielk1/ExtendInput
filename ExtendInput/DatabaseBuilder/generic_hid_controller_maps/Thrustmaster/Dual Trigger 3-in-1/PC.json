@@ -68,5 +68,5 @@
       "Properties": { "w": "l" } // weight: light
     }
   }
-} // rumble is a report write of r0b0-0+FF for heavy left and r0b1-0+FF for light right
+}
 // consider implementing logic to flag rumble_left and rumble_right as needing full control (if rumble never stops) or safe write (if rumble stops itself) permission preventing the control from being created

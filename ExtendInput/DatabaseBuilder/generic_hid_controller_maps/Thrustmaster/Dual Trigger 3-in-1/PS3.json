@@ -64,4 +64,4 @@
       "Properties": { "w": "l" } // weight: light
     }
   }
-} // rumble is a report write of r0b0-0+FF for heavy left and r0b1-0+FF for light right
+}

@@ -244,7 +244,7 @@ namespace ExtendInput.Controller.Sony
             PartialDetection2E2415CA = 200,
             
             [ControllerSubType(
-                Token: new string[] { "DEVICE_DS4_8951", "DEVICE_DS4", "DEVICE_GAMEPAD" },
+                Token: new string[] { "DEVICE_DS4_8951", "DEVICE_DS4_2E2415CA", "DEVICE_DS4", "DEVICE_GAMEPAD" },
                 PadMaxX: 1918,
                 PadMaxY: 940,
                 Name: "Model No. PS4-8951",
@@ -260,7 +260,7 @@ namespace ExtendInput.Controller.Sony
             No8951,
             
             [ControllerSubType(
-                Token: new string[] { "DEVICE_DS4_8952", "DEVICE_DS4", "DEVICE_GAMEPAD" },
+                Token: new string[] { "DEVICE_DS4_8952", "DEVICE_DS4_2E2415CA", "DEVICE_DS4", "DEVICE_GAMEPAD" },
                 PadMaxX: 940,
                 PadMaxY: 940,
                 PhysicalWidth: 23,
@@ -280,7 +280,7 @@ namespace ExtendInput.Controller.Sony
             No8952,
             
             [ControllerSubType(
-                Token: new string[] { "DEVICE_DS4_SZ4002B", "DEVICE_DS4", "DEVICE_GAMEPAD" },
+                Token: new string[] { "DEVICE_DS4_SZ4002B", "DEVICE_DS4_2E2415CA", "DEVICE_DS4", "DEVICE_GAMEPAD" },
                 PadMaxX: 1900,
                 PadMaxY: 940,
                 Name: "Senze SZ-4002B",
@@ -296,7 +296,7 @@ namespace ExtendInput.Controller.Sony
             SZ4002B,
             
             [ControllerSubType(
-                Token: new string[] { "DEVICE_DS4_SZ4003B", "DEVICE_DS4", "DEVICE_GAMEPAD" },
+                Token: new string[] { "DEVICE_DS4_SZ4003B", "DEVICE_DS4_2E2415CA", "DEVICE_DS4", "DEVICE_GAMEPAD" },
                 PadMaxX: 1918,
                 PadMaxY: 940,
                 Name: "Senze SZ-4003B",
@@ -312,7 +312,7 @@ namespace ExtendInput.Controller.Sony
             SZ4003B,
             
             [ControllerSubType(
-                Token: new string[] { "DEVICE_DS4_YIYANG498", "DEVICE_DS4", "DEVICE_GAMEPAD" },
+                Token: new string[] { "DEVICE_DS4_YIYANG498", "DEVICE_DS4_2E2415CA", "DEVICE_DS4", "DEVICE_GAMEPAD" },
                 PadMaxX: 1918,
                 PadMaxY: 940,
                 PhysicalWidth: 40,
@@ -337,7 +337,7 @@ namespace ExtendInput.Controller.Sony
             //         \                    /
             //  180,940 \__________________/ 1738,940 ~ aprox
             [ControllerSubType(
-                Token: new string[] { "DEVICE_DS4_SZ4011B", "DEVICE_DS4", "DEVICE_GAMEPAD" },
+                Token: new string[] { "DEVICE_DS4_SZ4011B", "DEVICE_DS4_2E2415CA", "DEVICE_DS4", "DEVICE_GAMEPAD" },
                 PadMaxX: 1918,
                 PadMaxY: 940,
                 Name: "Senze SZ-4011B",
@@ -352,7 +352,7 @@ namespace ExtendInput.Controller.Sony
             SZ4011B,
 
             [ControllerSubType(
-                Token: new string[] { "DEVICE_DS4_STK4003", "DEVICE_DS4", "DEVICE_GAMEPAD" },
+                Token: new string[] { "DEVICE_DS4_STK4003", "DEVICE_DS4_2E2415CA", "DEVICE_DS4", "DEVICE_GAMEPAD" },
                 PadMaxX: 1918,
                 PadMaxY: 940,
                 Name: "Saitake STK-4003",
@@ -368,7 +368,7 @@ namespace ExtendInput.Controller.Sony
             STK4003,
 
             [ControllerSubType(
-                Token: new string[] { "DEVICE_DS4_Gamory2075B", "DEVICE_DS4", "DEVICE_GAMEPAD" },
+                Token: new string[] { "DEVICE_DS4_Gamory2075B", "DEVICE_DS4_2E2415CA", "DEVICE_DS4", "DEVICE_GAMEPAD" },
                 PadMaxX: 1918,
                 PadMaxY: 940,
                 Name: "Gamory 2075B",
@@ -387,7 +387,7 @@ namespace ExtendInput.Controller.Sony
             //        \                    /
             // 223,940 \__________________/ 1705,940
             [ControllerSubType(
-                Token: new string[] { "DEVICE_DS4_P4GamepadQ300", "DEVICE_DS4", "DEVICE_GAMEPAD" },
+                Token: new string[] { "DEVICE_DS4_P4GamepadQ300", "DEVICE_DS4_2E2415CA", "DEVICE_DS4", "DEVICE_GAMEPAD" },
                 PadMaxX: 1918,
                 PadMaxY: 940,
                 PhysicalWidth: 43,
@@ -898,27 +898,6 @@ namespace ExtendInput.Controller.Sony
             }
 
             return Candidates.OrderByDescending(dr => dr.Item1).FirstOrDefault()?.Item2 ?? (FromDongle ? DS4SubType.None : DS4SubType.Unknown);
-
-            /*switch (VID)
-            {
-                case VENDOR_SONY:
-                    switch (PID)
-                    {
-                        case PRODUCT_SONY_DS4V1:
-                            return FromDongle ? DS4SubType.SonyDS4V1 : DS4SubType.UnknownDS4V1; // assume it's offical if it's on the dongle for now to reduce code complexity, since we will be blocked from accessing a lot of fancy stuff
-                        case PRODUCT_SONY_DS4V2:
-                            return FromDongle ? DS4SubType.SonyDS4V2 : DS4SubType.UnknownDS4V2; // assume it's offical if it's on the dongle for now to reduce code complexity, since we will be blocked from accessing a lot of fancy stuff
-                    }
-                    break;
-                case VENDOR_BROOK:
-                    switch (PID)
-                    {
-                        case PRODUCT_BROOK_MARS:
-                            return DS4SubType.BrookMars;
-                    }
-                    break;
-            }
-            return FromDongle ? DS4SubType.None : DS4SubType.Unknown;*/
         }
 
 
@@ -1192,33 +1171,6 @@ namespace ExtendInput.Controller.Sony
                                             Finger1Valid = false;
                                         if (Finger2 && (F2X > TouchPadMaxX || F2Y > TouchPadMaxY))
                                             Finger2Valid = false;
-
-                                        // we don't have to check if the finger is valid here since ANY value over the max of the 8951 proves this is an 8952, valid or invalid, since only the 8951 has this strange problem
-                                        /*if (ControllerSubType == DS4SubType.PartialDetection2E2415CA && (F1X > NO8952Attr.PadMaxX || F2X > NO8952Attr.PadMaxY))
-                                        {
-                                            if (ConnectionType == EConnectionType.Bluetooth)
-                                            {
-                                                if (_device.VendorId == VENDOR_SONY && _device.ProductId == PRODUCT_SONY_DS4V2)
-                                                {
-                                                    // TODO: see if we can figure out how to tell these apart, though manual override should be possible
-                                                    ChangeControllerSubType(DS4SubType.No8951);
-                                                    //ChangeControllerSubType(DS4SubType.SZ4003B);
-                                                }
-                                                else if (_device.VendorId == VENDOR_SONY && _device.ProductId == PRODUCT_SONY_DS4V1)
-                                                {
-                                                    // TODO: see if we can figure out how to tell these apart, though manual override should be possible
-                                                    ChangeControllerSubType(DS4SubType.SZ4002B);
-                                                    //ChangeControllerSubType(DS4SubType.Yiyang498);
-                                                }
-                                            }
-                                            else if (ConnectionType == EConnectionType.USB && !string.IsNullOrWhiteSpace(SerialNumber))
-                                            {
-                                                if (_device.VendorId == VENDOR_SONY && _device.ProductId == PRODUCT_SONY_DS4V1)
-                                                {
-                                                    ChangeControllerSubType(DS4SubType.SZ4003B);
-                                                }
-                                            }
-                                        }*/
                                     }
 
                                     if (Finger1Valid || Finger2Valid)
