@@ -43,7 +43,13 @@ namespace ExtendInput.Controls
 
             return newData;
         }
+
+        public void CleanReadDirty()
+        {
+            foreach (var key in Data.Keys)
+            {
+                Data[key]?.CleanReadDirty();
+            }
+        }
     }
-
-
 }

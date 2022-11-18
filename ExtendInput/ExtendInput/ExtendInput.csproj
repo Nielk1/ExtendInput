@@ -110,6 +110,8 @@
     <Compile Include="Controls\ControlDPadPressure.cs" />
     <Compile Include="Controls\ControlCombinedTrigger.cs" />
     <Compile Include="Controls\ControlEccentricRotatingMass.cs" />
+    <Compile Include="Controls\ControlScrollWheelRelative.cs" />
+    <Compile Include="Controls\ControlSpinnerRelative.cs" />
     <Compile Include="Controls\ControlTriggerForceFeedback.cs" />
     <Compile Include="Controls\ControlTriggerFlydigi.cs" />
     <Compile Include="Controls\ControlTriggerPS5.cs" />

@@ -12,7 +12,9 @@ namespace ExtendInput.Controls
         Type Type(string key);
 
         bool IsWriteDirty { get; }
+        bool IsReadDirty { get; }
         void CleanWriteDirty();
         bool SetProperty(string property, string value, params string[] paramaters);
+        void CleanReadDirty();
     }
 }

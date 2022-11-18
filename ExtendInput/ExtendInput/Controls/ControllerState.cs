@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace ExtendInput.Controls
 {
-    public class ControllerState : ICloneable
+    public class ControllerState //: ICloneable
     {
         public ControlCollection Controls { get; private set; }
         private SemaphoreSlim StateLock;
@@ -31,13 +31,13 @@ namespace ExtendInput.Controls
             StateLock.Release();
         }
 
-        public object Clone()
+        /*public object Clone()
         {
             ControllerState newState = new ControllerState();
 
             newState.Controls = (ControlCollection)this.Controls.Clone();
 
             return newState;
-        }
+        }*/
     }
 }

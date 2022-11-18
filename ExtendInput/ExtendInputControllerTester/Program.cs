@@ -468,6 +468,7 @@ namespace ExtendInputControllerTester
             //_ = websocket.SendMessage("DeviceManager:ControllerState", controls);
 
             ControlCollection State = (ControlCollection)controls.Clone();
+            controls.CleanReadDirty();
 
             ControllersLock.Wait();
             try

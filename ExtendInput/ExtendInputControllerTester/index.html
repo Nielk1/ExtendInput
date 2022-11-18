@@ -29,6 +29,16 @@
             stroke: red;
         }
 
+        div.wheel_click {
+            border: solid 3px #999;
+        }
+        div.wheel_click.active-o {
+            border-color: #333;
+        }
+        div.wheel_click.disable-o {
+            border-color: red;
+        }
+
         .controller_icon,
         .connection_icon {
             width: auto;
@@ -45,12 +55,15 @@
             height: 100vh;
             overflow-y: scroll;
             position: fixed;
+            margin-top: -5px;
+            padding-top: 5px;
         }
 
         #state_data {
             padding-left: 400px;
-            margin-left: 5px;
-            margin-right: 5px;
+            /*margin-left: 5px;
+            margin-right: 5px;*/
+            margin: 5px;
         }
         .activate_controller::after {
             content: "Activate";
@@ -90,6 +103,43 @@
                 column-count: 2;
             }
         }*/
+
+        .spinner {
+            transition-timing-function: linear;
+            transition-duration: 0.05s;
+        }
+
+        .wheel {
+            perspective: none;
+            border: 1px solid #333;
+            margin: 0 auto;
+            width: 30px;
+            height: 100px;
+            overflow: hidden;
+        }
+
+        .wheel__inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            margin: 0 auto;
+            transform-style: preserve-3d;
+            transition-timing-function: linear;
+            transition-duration: 0.1s;
+        }
+
+        .wheel__segment
+        {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 40px;
+            position: absolute;
+            top: 50%;
+            background-color: #fff;
+            border-top: solid black 1px;
+        }
     </style>
 
     <title>Hello, world!</title>
@@ -1046,6 +1096,64 @@
                         }
                         ctrl.find('.spin').data("power", controlData.Power);
                         ctrl.find('.btn_text').text(controlData.Power.toFixed(3).padStart(6, ' ') + '%');
+                    }
+                    break;
+
+                case 'ExtendInput.Controls.ControlSpinnerRelative':
+                    {
+                        var renderElement = wrapper.find('.control-value');
+                        renderElement.addClass('text-center');
+                        if (NewSubtype || renderElement.children('svg').length == 0) {
+                            renderElement.empty().append(
+                                '<svg id="control_render_' + controller_id + '__' + control_id + '" width="76" height="86" xmlns="http://www.w3.org/2000/svg">' +
+                                '<g transform="translate(38,38)">' +
+                                '<path class="spinner" class="btn_x_border" d="M 20 0 L 28 1 A 28 28 0 0 1 3 28 L 1 20 L -1 20 L -3 28 A 28 28 0 0 1 -28 1 L -20 0 L -28 -1 A 28 28 0 0 1 -1 -28 L 0 -20 L 1 -28 A 28 28 0 0 1 28 -1 z" stroke="#000" fill="transparent"></path>' +
+                                '</g>' +
+                                '</svg>');
+                            var ctrl = renderElement.find('#control_render_' + controller_id + '__' + control_id);
+                            ctrl.find('.spinner').data("rotation", 0);
+                        }
+                        var ctrl = renderElement.find('#control_render_' + controller_id + '__' + control_id);
+                        var NewSpin = ctrl.find('.spinner').data("rotation") + controlData.Delta * 360 / controlData.Divisions;
+                        ctrl.find('.spinner').data("rotation", NewSpin);
+                        ctrl.find('.spinner').css("transform", "rotate(" + NewSpin + "deg)");
+                    }
+                    break;
+                case 'ExtendInput.Controls.ControlScrollWheelRelative':
+                    {
+                        var renderElement = wrapper.find('.control-value');
+                        renderElement.addClass('text-center');
+                        if (NewSubtype || renderElement.children('div.wheel_parent').length == 0) {
+                            var wheel_height = 92;
+                            var items = 24 / 2;
+                            var diameter = wheel_height;
+                            var radius = diameter / 2;
+                            var angle = 360 / items;
+                            var circumference = Math.PI * diameter;
+                            var height = circumference / items;
+                            var controlHtml =
+                                '<div class="wheel_parent" id="control_render_' + controller_id + '__' + control_id + '" width="76" height="86">' +
+                                '<div class="wheel_click" style="padding:2px;margin:0 auto;width: 40px;">' +
+                                '<div class="wheel">' +
+                                //`<div class="wheel__inner" style="transform-origin: 50% calc(50% + ${height / 2}px); margin-top: -${height / 2}px">`;
+                                `<div class="wheel__inner" style="transform-origin: 50% calc(50% + ${height / 2}px); margin-top: -${height / 2}px">`;
+                            for (let i = 0; i < items; i++) {
+                                var transform = `rotateX(${angle * i}deg) translateZ(${radius}px)`;
+                                controlHtml += '<div class="wheel__segment" style="transform:' + transform + '; height:' + height + 'px;"><span></span></div>';
+                            }
+                            controlHtml += '</div>' +
+                                '</div>' +
+                                '</div>' +
+                                '</div>';
+                            renderElement.empty().append(controlHtml);
+                            var ctrl = renderElement.find('#control_render_' + controller_id + '__' + control_id);
+                            ctrl.find('.wheel__inner').data("rotation", 0);
+                        }
+                        var ctrl = renderElement.find('#control_render_' + controller_id + '__' + control_id);
+                        var NewSpin = ctrl.find('.wheel__inner').data("rotation") - controlData.Delta * 360 / controlData.Divisions;
+                        ctrl.find('.wheel__inner').data("rotation", NewSpin);
+                        ctrl.find('.wheel__inner').css("transform", "rotateX(" + NewSpin + "deg)");
+                        if (controlData.HasClick) if (controlData.Click) ctrl.find('.wheel_click').addClass('active-o'); else ctrl.find('.wheel_click').removeClass('active-o', 'disable-o'); else ctrl.find('.wheel_click').addClass('disable-o');
                     }
                     break;
                 /*case 'ExtendInput.Controls.ControlButtonPair':

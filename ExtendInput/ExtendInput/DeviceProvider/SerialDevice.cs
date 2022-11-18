@@ -323,8 +323,9 @@ namespace ExtendInput.DeviceProvider
         {
             lock (internalDevice)
             {
-                byte[] buffer = new byte[internalDevice.BytesToRead];
-                internalDevice.Read(buffer, 0, internalDevice.BytesToRead);
+                int readLen = internalDevice.BytesToRead;
+                byte[] buffer = new byte[readLen];
+                internalDevice.Read(buffer, 0, readLen);
                 try
                 {
                     sendingQueue.EnqueueTask(new SerialReport() { ReportBytes = buffer });

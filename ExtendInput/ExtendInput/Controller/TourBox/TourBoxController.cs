@@ -95,9 +95,9 @@ namespace ExtendInput.Controller.TourBox
             State.Controls["button_c2"] = new ControlButton();
             State.Controls["button_tour"] = new ControlButton();
             State.Controls["dpad"] = new ControlButtonQuad();
-            //State.Controls["spinner_knob"] = new ControlSpinner();
-            //State.Controls["spinner_dial"] = new ControlSpinner();
-            //State.Controls["scrollwheel"] = new ControlScrollWheel();
+            State.Controls["spinner_knob"] = new ControlSpinnerRelative() { Divisions = 30f };
+            State.Controls["spinner_dial"] = new ControlSpinnerRelative() { Divisions = 30f };
+            State.Controls["scrollwheel"] = new ControlScrollWheelRelative() { HasClick = true, Divisions = 24f };
 
             IsPresent = true;
             //Connected = true;
@@ -138,10 +138,10 @@ namespace ExtendInput.Controller.TourBox
                 ConnectedState.Wait();
                 try
                 {
-                    State.StartStateChange();
-                    try
+                    foreach(byte b in reportData.ReportBytes)
                     {
-                        foreach(byte b in reportData.ReportBytes)
+                        State.StartStateChange();
+                        try
                         {
                             bool down = (b & 0x80) == 0x00;
                             switch (b & ~0x80)
@@ -180,32 +180,38 @@ namespace ExtendInput.Controller.TourBox
                                     (State.Controls["dpad"] as IControlButtonQuad).ButtonE = down;
                                     break;
                                 case 0x04: // Knob CCW
-                                    //(State.Controls["spinner_knob"] as IControlSpinner)
+                                    if (down)
+                                        (State.Controls["spinner_knob"] as IControlSpinnerRelative).Delta -= 1;
                                     break;
                                 case 0x44: // Knob CW
-                                    //(State.Controls["spinner_knob"] as IControlSpinner)
+                                    if (down)
+                                        (State.Controls["spinner_knob"] as IControlSpinnerRelative).Delta += 1;
                                     break;
                                 case 0x09: // Scroll Dwn
-                                    //(State.Controls["scrollwheel"] as IControlScrollWheel)
+                                    if (down)
+                                        (State.Controls["scrollwheel"] as IControlScrollWheelRelative).Delta += 1;
                                     break;
                                 case 0x0A: // Scroll Clk
-                                    //(State.Controls["scrollwheel"] as IControlScrollWheel)
+                                    (State.Controls["scrollwheel"] as IControlScrollWheelRelative).Click = down;
                                     break;
                                 case 0x49: // Scroll Up
-                                    //(State.Controls["scrollwheel"] as IControlScrollWheel)
+                                    if (down)
+                                        (State.Controls["scrollwheel"] as IControlScrollWheelRelative).Delta -= 1;
                                     break;
                                 case 0x0F: // Dial CCW
-                                    //(State.Controls["spinner_dial"] as IControlSpinner)
+                                    if (down)
+                                        (State.Controls["spinner_dial"] as IControlSpinnerRelative).Delta -= 1;
                                     break;
                                 case 0x4F: // Dial CW
-                                    //(State.Controls["spinner_dial"] as IControlSpinner)
+                                    if (down)
+                                        (State.Controls["spinner_dial"] as IControlSpinnerRelative).Delta += 1;
                                     break;
                             }
                         }
-                    }
-                    finally
-                    {
-                        State.EndStateChange(true);
+                        finally
+                        {
+                            State.EndStateChange(true);
+                        }
                     }
                 }
                 finally
