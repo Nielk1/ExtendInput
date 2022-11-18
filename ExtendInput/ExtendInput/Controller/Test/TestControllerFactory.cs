@@ -55,16 +55,20 @@ namespace ExtendInput.Controller.Test
                             // If the candidate still exists, is connected, and has the expected player number
                             if (candidate != null /*&& candidate.IsConnected*/ && (byte)candidate.UserIndex == i)
                             {
-                                candidate.SetVibration(0x0015, 0x0015);
+                                //candidate.SetVibration(0x1500, 0x1500);
+                                candidate.SetVibration(0x371B, 0x371B);
                                 Thread.Sleep(50);
                                 candidate.SetVibration(0x0000, 0x0000);
-                                candidate.SetVibration(0x000C, 0x000C);
+                                //candidate.SetVibration(0x0C00, 0x0C00);
+                                candidate.SetVibration(0x216A, 0x216A);
                                 Thread.Sleep(20);
                                 candidate.SetVibration(0x0000, 0x0000);
-                                candidate.SetVibration(0x0015, 0x0015);
+                                //candidate.SetVibration(0x1500, 0x1500);
+                                candidate.SetVibration(0x371B, 0x371B);
                                 Thread.Sleep(20);
                                 candidate.SetVibration(0x0000, 0x0000);
-                                candidate.SetVibration(0x0036, 0x0036);
+                                //candidate.SetVibration(0x3600, 0x3600);
+                                candidate.SetVibration(0x8AD3, 0x8AD3);
                                 Thread.Sleep(20);
                                 candidate.SetVibration(0x0000, 0x0000);
                             }
