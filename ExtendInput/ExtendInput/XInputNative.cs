@@ -136,11 +136,18 @@ namespace ExtendInput
         };
 
 
+        public enum ControllType : int
+        {
+            XINPUT_FLAG_ALL = 0,
+            XINPUT_FLAG_GAMEPAD = 1,
+        }
+
+
         [DllImport("xinput1_4.dll")]
         public static extern int XInputGetCapabilities
         (
             int dwUserIndex,   // [in] Index of the gamer associated with the device
-            int dwFlags,       // [in] Input flags that identify the device type
+            ControllType dwFlags,       // [in] Input flags that identify the device type
             ref XInputCapabilities pCapabilities  // [out] Receives the capabilities
         );
 
@@ -149,7 +156,7 @@ namespace ExtendInput
         (
             int a1,            // [in] unknown, should probably be 1
             int dwUserIndex,   // [in] Index of the gamer associated with the device
-            int dwFlags,       // [in] Input flags that identify the device type
+            ControllType dwFlags,       // [in] Input flags that identify the device type
             ref XInputCapabilitiesEx pCapabilities  // [out] Receives the capabilities
         );
 

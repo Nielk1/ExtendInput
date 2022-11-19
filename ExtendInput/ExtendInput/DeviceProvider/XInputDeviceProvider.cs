@@ -56,7 +56,7 @@ namespace ExtendInput.DeviceProvider
 
                         if (DeviceCache[i] == null)
                         {
-                            if (XInputNative.XInputGetCapabilities(i + 1, 0, ref data) == 0)
+                            if (XInputNative.XInputGetCapabilities(i, XInputNative.ControllType.XINPUT_FLAG_ALL, ref data) == 0)
                             {
                                 if (DeviceCache[i] == null)
                                     DeviceCache[i] = new XInputDevice(i);
@@ -66,7 +66,7 @@ namespace ExtendInput.DeviceProvider
                         }
                         else
                         {
-                            bool connected = XInputNative.XInputGetCapabilities(i + 1, 0, ref data) == 0;
+                            bool connected = XInputNative.XInputGetCapabilities(i, XInputNative.ControllType.XINPUT_FLAG_ALL, ref data) == 0;
                             if (!connected)
                             {
                                 DeviceRemovedEventHandler threadSafeEventHandler = DeviceRemoved;

@@ -11,7 +11,7 @@ namespace ExtendInput.DeviceProvider
 {
     public class XInputDevice : IDevice
     {
-        public string DevicePath { get { return $"SharpDX.XInput.Controller({UserIndex})"; } }
+        public string DevicePath { get { return $"XInput.Controller({UserIndex})"; } }
         public int ProductId
         {
             get
@@ -19,7 +19,7 @@ namespace ExtendInput.DeviceProvider
                 try
                 {
                     XInputNative.XInputCapabilitiesEx data = new XInputNative.XInputCapabilitiesEx();
-                    if (XInputNative.XInputGetCapabilitiesEx(1, UserIndex + 1, 0, ref data) == 0)
+                    if (XInputNative.XInputGetCapabilitiesEx(1, UserIndex, XInputNative.ControllType.XINPUT_FLAG_ALL, ref data) == 0)
                         return data.PID;
                 }
                 catch { }
@@ -33,7 +33,7 @@ namespace ExtendInput.DeviceProvider
                 try
                 {
                     XInputNative.XInputCapabilitiesEx data = new XInputNative.XInputCapabilitiesEx();
-                    if (XInputNative.XInputGetCapabilitiesEx(1, UserIndex + 1, 0, ref data) == 0)
+                    if (XInputNative.XInputGetCapabilitiesEx(1, UserIndex, XInputNative.ControllType.XINPUT_FLAG_ALL, ref data) == 0)
                         return data.VID;
                 }
                 catch { }
@@ -47,7 +47,7 @@ namespace ExtendInput.DeviceProvider
                 try
                 {
                     XInputNative.XInputCapabilitiesEx data = new XInputNative.XInputCapabilitiesEx();
-                    if (XInputNative.XInputGetCapabilitiesEx(1, UserIndex + 1, 0, ref data) == 0)
+                    if (XInputNative.XInputGetCapabilitiesEx(1, UserIndex, XInputNative.ControllType.XINPUT_FLAG_ALL, ref data) == 0)
                         return data.REV;
                 }
                 catch { }
@@ -61,7 +61,7 @@ namespace ExtendInput.DeviceProvider
                 try
                 {
                     XInputNative.XInputCapabilitiesEx data = new XInputNative.XInputCapabilitiesEx();
-                    if (XInputNative.XInputGetCapabilitiesEx(1, UserIndex + 1, 0, ref data) == 0)
+                    if (XInputNative.XInputGetCapabilitiesEx(1, UserIndex, XInputNative.ControllType.XINPUT_FLAG_ALL, ref data) == 0)
                         return data.XID;
                 }
                 catch { }
@@ -189,7 +189,7 @@ namespace ExtendInput.DeviceProvider
                             //if (XInputNative.XInputGetCapabilitiesEx(1, (int)internalDevice.UserIndex, 0, ref data) == 0)
 
                             XInputNative.XInputState data = new XInputNative.XInputState();
-                            if (XInputNative.XInputGetStateEx(UserIndex + 1, ref data) == 0)
+                            if (XInputNative.XInputGetStateEx(UserIndex, ref data) == 0)
                             {
                                 //if (!IsConnected)
                                 //{
@@ -279,7 +279,7 @@ namespace ExtendInput.DeviceProvider
                 LeftMotorSpeed = Left,
                 RightMotorSpeed = Right,
             };
-            XInputNative.XInputSetState(UserIndex + 1, ref pVibration);
+            XInputNative.XInputSetState(UserIndex, ref pVibration);
         }
 
         //public string UniqueKey => $"XInputDevice {DevPKey.PnpDevicePropertyAPI.devicePathToInstanceId(this.DevicePath)}";
