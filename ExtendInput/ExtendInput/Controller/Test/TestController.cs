@@ -104,10 +104,10 @@ namespace ExtendInput.Controller.Test
 
             State.Controls["cluster_left"] = new ControlDPad();
             State.Controls["cluster_right"] = new ControlButtonQuad();
-            State.Controls["bumpers_left"] = new ControlButton();
-            State.Controls["bumpers_right"] = new ControlButton();
-            State.Controls["triggers_left"] = new ControlTrigger();
-            State.Controls["triggers_right"] = new ControlTrigger();
+            State.Controls["bumper_left"] = new ControlButton();
+            State.Controls["bumper_right"] = new ControlButton();
+            State.Controls["trigger_left"] = new ControlTrigger();
+            State.Controls["trigger_right"] = new ControlTrigger();
             State.Controls["menu_left"] = new ControlButton();
             State.Controls["menu_right"] = new ControlButton();
             State.Controls["home"] = new ControlButton();
@@ -239,8 +239,8 @@ namespace ExtendInput.Controller.Test
                                     case 0x06: (State.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.West; break;
                                     case 0x07: (State.Controls["cluster_left"] as IControlDPad).Direction = EDPadDirection.NorthWest; break;
                                 }
-                                (State.Controls["bumper_left" ] as IControlButton).DigitalStage1 = (reportData.ReportBytes[0] & 0x40) == 0x10;
-                                (State.Controls["bumper_right"] as IControlButton).DigitalStage1 = (reportData.ReportBytes[0] & 0x80) == 0x20;
+                                (State.Controls["bumper_left" ] as IControlButton).DigitalStage1 = (reportData.ReportBytes[0] & 0x10) == 0x10;
+                                (State.Controls["bumper_right"] as IControlButton).DigitalStage1 = (reportData.ReportBytes[0] & 0x20) == 0x20;
 
                                 (State.Controls["trigger_left" ] as IControlTrigger).AnalogStage1 = (float)(reportData.ReportBytes[17] > 0 ? reportData.ReportBytes[8] : (reportData.ReportBytes[0] & 0x40) == 0x40 ? byte.MaxValue : 0) / byte.MaxValue;
                                 (State.Controls["trigger_right"] as IControlTrigger).AnalogStage1 = (float)(reportData.ReportBytes[18] > 0 ? reportData.ReportBytes[9] : (reportData.ReportBytes[0] & 0x80) == 0x80 ? byte.MaxValue : 0) / byte.MaxValue;
