@@ -140,7 +140,7 @@ namespace ExtendInput.Controller.Test
             //    }
             //});
 
-            AddDevice(device);
+            //AddDevice(device);
 
             //if (device.DevicePath.Contains("&col05"))
             /*{
@@ -170,6 +170,9 @@ namespace ExtendInput.Controller.Test
                 _device2.StartReading();
             }*/
             Initalized = false;
+
+            device.DeviceReport += OnReport;
+            State.ControllerStateUpdate += State_ControllerStateUpdate;
         }
         //bool AbortStatusThread = false;
         //Thread CheckControllerStatusThread;
@@ -179,7 +182,7 @@ namespace ExtendInput.Controller.Test
             //AbortStatusThread = true;
         }
 
-        public void AddDevice(HidDevice device)
+        /*public void AddDevice(HidDevice device)
         {
             lock (InitalizationLock)
             {
@@ -192,7 +195,7 @@ namespace ExtendInput.Controller.Test
                     device.StartReading();
                 }
             }
-        }
+        }*/
         public ControllerState GetState()
         {
             return State;

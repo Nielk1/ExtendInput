@@ -136,20 +136,17 @@ namespace ExtendInput.Controller.Test
                                 TestController ctrl = null;
                                 if (Controllers.ContainsKey(ContrainerID.Value))
                                 {
-                                    ctrl = Controllers[ContrainerID.Value];
-                                    ctrl.AddDevice(deviceHid);
                                 }
                                 else
                                 {
-                                    Controllers[ContrainerID.Value] = new TestController(ContrainerID.Value.ToString(), AccessMode, deviceHid);
-                                    ctrl = Controllers[ContrainerID.Value];
+                                    ctrl = new TestController(ContrainerID.Value.ToString(), AccessMode, deviceHid);
+                                    Controllers[ContrainerID.Value] = ctrl;
+
+                                    DeviceToControllerKeyMap[device.UniqueKey] = ContrainerID.Value;
+                                    if (!ControllerToDeviceKeyMap.ContainsKey(ContrainerID.Value))
+                                        ControllerToDeviceKeyMap[ContrainerID.Value] = new HashSet<string>();
+                                    ControllerToDeviceKeyMap[ContrainerID.Value].Add(device.UniqueKey);
                                 }
-
-                                DeviceToControllerKeyMap[device.UniqueKey] = ContrainerID.Value;
-                                if (!ControllerToDeviceKeyMap.ContainsKey(ContrainerID.Value))
-                                    ControllerToDeviceKeyMap[ContrainerID.Value] = new HashSet<string>();
-                                ControllerToDeviceKeyMap[ContrainerID.Value].Add(device.UniqueKey);
-
                                 return ctrl;
                             }
                     }
