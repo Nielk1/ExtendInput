@@ -247,8 +247,8 @@ namespace ExtendInput.Controller.Test
                                 (State.Controls["bumper_left" ] as IControlButton).DigitalStage1 = (reportData.ReportBytes[0] & 0x10) == 0x10;
                                 (State.Controls["bumper_right"] as IControlButton).DigitalStage1 = (reportData.ReportBytes[0] & 0x20) == 0x20;
 
-                                (State.Controls["trigger_left" ] as IControlTrigger).AnalogStage1 = (float)(reportData.ReportBytes[17] > 0 ? reportData.ReportBytes[8] : (reportData.ReportBytes[0] & 0x40) == 0x40 ? byte.MaxValue : 0) / byte.MaxValue;
-                                (State.Controls["trigger_right"] as IControlTrigger).AnalogStage1 = (float)(reportData.ReportBytes[18] > 0 ? reportData.ReportBytes[9] : (reportData.ReportBytes[0] & 0x80) == 0x80 ? byte.MaxValue : 0) / byte.MaxValue;
+                                (State.Controls["trigger_left" ] as IControlTrigger).AnalogStage1 = (float)(reportData.ReportBytes[17] > 0 ? reportData.ReportBytes[17] : (reportData.ReportBytes[0] & 0x40) == 0x40 ? byte.MaxValue : 0) / byte.MaxValue;
+                                (State.Controls["trigger_right"] as IControlTrigger).AnalogStage1 = (float)(reportData.ReportBytes[18] > 0 ? reportData.ReportBytes[18] : (reportData.ReportBytes[0] & 0x80) == 0x80 ? byte.MaxValue : 0) / byte.MaxValue;
 
                                 (State.Controls["stick_left"] as IControlStickWithClick).X = ControllerMathTools.QuickStickToFloat(reportData.ReportBytes[3]);
                                 (State.Controls["stick_left"] as IControlStickWithClick).Y = ControllerMathTools.QuickStickToFloat(reportData.ReportBytes[4]);
@@ -262,10 +262,10 @@ namespace ExtendInput.Controller.Test
 
                                 (State.Controls["home"] as IControlButton).DigitalStage1 = (reportData.ReportBytes[1] & 0x10) == 0x10;
 
-                                (State.Controls["m1"   ] as IControlButton).DigitalStage1 = (reportData.ReportBytes[23] & 0x01) == 0x01;
-                                (State.Controls["m2"   ] as IControlButton).DigitalStage1 = (reportData.ReportBytes[23] & 0x02) == 0x02;
-                                (State.Controls["mute" ] as IControlButton).DigitalStage1 = (reportData.ReportBytes[23] & 0x10) == 0x10;
-                                (State.Controls["share"] as IControlButton).DigitalStage1 = (reportData.ReportBytes[23] & 0x20) == 0x20;
+                                (State.Controls["m1"   ] as IControlButton).DigitalStage1 = (reportData.ReportBytes[24] & 0x01) == 0x01;
+                                (State.Controls["m2"   ] as IControlButton).DigitalStage1 = (reportData.ReportBytes[24] & 0x02) == 0x02;
+                                (State.Controls["mute" ] as IControlButton).DigitalStage1 = (reportData.ReportBytes[24] & 0x10) == 0x10;
+                                (State.Controls["share"] as IControlButton).DigitalStage1 = (reportData.ReportBytes[24] & 0x20) == 0x20;
 
                                 (State.Controls["motion"] as ControlMotion).AngularVelocityX = BitConverter.ToInt16(reportData.ReportBytes, 28);
                                 (State.Controls["motion"] as ControlMotion).AngularVelocityZ = BitConverter.ToInt16(reportData.ReportBytes, 30);
