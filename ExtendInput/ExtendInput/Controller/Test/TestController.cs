@@ -32,14 +32,14 @@ namespace ExtendInput.Controller.Test
         {
             get
             {
-                //return new string[] { _device?.DevicePath ?? _device2.DevicePath };
-                return new string[] { devices.First().DevicePath };
+                return new string[] { _device?.DevicePath };
+                //return new string[] { devices.First().DevicePath };
             }
         }
         public bool HasSelectableAlternatives => false;
         public Dictionary<string, string> Alternates => null;
         //public IDevice DeviceHackRef => devices.First();
-        private HashSet<HidDevice> devices;
+        //private HashSet<HidDevice> devices;
         int reportUsageLock = 0;
 
         public event ControllerNameUpdateEvent ControllerMetadataUpdate;
@@ -76,7 +76,8 @@ namespace ExtendInput.Controller.Test
 
 
         public Dictionary<string, dynamic> DeviceProperties => null;
-        private HidDevice deviceVendor => devices.Where(dr => dr.Usages?.Contains(0xff000003u) ?? false).FirstOrDefault();
+        //private HidDevice deviceVendor => devices.Where(dr => dr.Usages?.Contains(0xff000003u) ?? false).FirstOrDefault();
+        private HidDevice _device;
 
 
         private AccessMode AccessMode;
@@ -85,7 +86,8 @@ namespace ExtendInput.Controller.Test
         {
             ConnectionUniqueID = UniqueKey;
             this.AccessMode = AccessMode;
-            devices = new HashSet<HidDevice>();
+            //devices = new HashSet<HidDevice>();
+            _device = device;
 
             if (device.ProductId == PRODUCT_TEST_TEST)
             {
@@ -300,8 +302,9 @@ namespace ExtendInput.Controller.Test
                 if (Initalized)
                     return;
 
-                foreach (var device in devices)
-                    device.StartReading();
+                //foreach (var device in devices)
+                //    device.StartReading();
+                _device.StartReading();
 
                 //EnableConfigMode();
                 //CheckControllerStatusThread?.Abort();
@@ -331,11 +334,13 @@ namespace ExtendInput.Controller.Test
 
                 //AbortStatusThread = true;
 
-                foreach (var device in devices)
-                {
-                    device.StopReading();
-                    device.CloseDevice();
-                }
+                //foreach (var device in devices)
+                //{
+                //    device.StopReading();
+                //    device.CloseDevice();
+                //}
+                _device.StopReading();
+                _device.CloseDevice();
 
                 ConfigMode = false;
                 ConfigModeKeyData = false;
