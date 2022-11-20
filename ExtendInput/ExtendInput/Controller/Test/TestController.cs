@@ -264,7 +264,7 @@ namespace ExtendInput.Controller.Test
 
                                 (State.Controls["m1"   ] as IControlButton).DigitalStage1 = (reportData.ReportBytes[24] & 0x01) == 0x01;
                                 (State.Controls["m2"   ] as IControlButton).DigitalStage1 = (reportData.ReportBytes[24] & 0x02) == 0x02;
-                                (State.Controls["mute" ] as IControlButton).DigitalStage1 = (reportData.ReportBytes[24] & 0x10) == 0x10;
+                                (State.Controls["mute" ] as IControlButton).DigitalStage1 = (reportData.ReportBytes[24] & 0x40) == 0x40;
                                 (State.Controls["share"] as IControlButton).DigitalStage1 = (reportData.ReportBytes[24] & 0x20) == 0x20;
 
                                 (State.Controls["motion"] as ControlMotion).AngularVelocityX = BitConverter.ToInt16(reportData.ReportBytes, 28);
