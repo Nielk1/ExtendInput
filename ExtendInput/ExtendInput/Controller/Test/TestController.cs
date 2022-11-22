@@ -269,12 +269,12 @@ namespace ExtendInput.Controller.Test
                                 (State.Controls["share"] as IControlButton).DigitalStage1 = (reportData.ReportBytes[24] & 0x20) == 0x20;
                                 (State.Controls["mute" ] as IControlButton).DigitalStage1 = (reportData.ReportBytes[24] & 0x40) == 0x40;
 
-                                (State.Controls["motion"] as ControlMotion).AngularVelocityX = BitConverter.ToInt16(reportData.ReportBytes, 28);
-                                (State.Controls["motion"] as ControlMotion).AngularVelocityZ = BitConverter.ToInt16(reportData.ReportBytes, 30);
-                                (State.Controls["motion"] as ControlMotion).AngularVelocityY = BitConverter.ToInt16(reportData.ReportBytes, 32);
-                                (State.Controls["motion"] as ControlMotion).AccelerometerX = BitConverter.ToInt16(reportData.ReportBytes, 34);
-                                (State.Controls["motion"] as ControlMotion).AccelerometerY = BitConverter.ToInt16(reportData.ReportBytes, 36);
-                                (State.Controls["motion"] as ControlMotion).AccelerometerZ = BitConverter.ToInt16(reportData.ReportBytes, 38);
+                                (State.Controls["motion"] as ControlMotion).AngularVelocityX = Convert.ToInt16((UInt16)(reportData.ReportBytes[28] + (reportData.ReportBytes[29] << 8)));//BitConverter.ToInt16(reportData.ReportBytes, 28);
+                                (State.Controls["motion"] as ControlMotion).AngularVelocityZ = Convert.ToInt16((Int16)(reportData.ReportBytes[30] + (reportData.ReportBytes[31] << 8)));//BitConverter.ToInt16(reportData.ReportBytes, 30);
+                                (State.Controls["motion"] as ControlMotion).AngularVelocityY = Convert.ToInt16((Int16)(reportData.ReportBytes[32] + (reportData.ReportBytes[33] << 8)));//BitConverter.ToInt16(reportData.ReportBytes, 32);
+                                (State.Controls["motion"] as ControlMotion).AccelerometerX = Convert.ToInt16((Int16)(reportData.ReportBytes[34] + (reportData.ReportBytes[35] << 8)));//BitConverter.ToInt16(reportData.ReportBytes, 34);
+                                (State.Controls["motion"] as ControlMotion).AccelerometerY = Convert.ToInt16((Int16)(reportData.ReportBytes[36] + (reportData.ReportBytes[37] << 8)));//BitConverter.ToInt16(reportData.ReportBytes, 36);
+                                (State.Controls["motion"] as ControlMotion).AccelerometerZ = Convert.ToInt16((Int16)(reportData.ReportBytes[38] + (reportData.ReportBytes[39] << 8)));//BitConverter.ToInt16(reportData.ReportBytes, 38);
                             }
                             finally
                             {
