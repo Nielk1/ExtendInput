@@ -7,6 +7,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Windows.Forms;
 
 namespace ExtendInput.Controller.Test
 {
@@ -121,7 +122,7 @@ namespace ExtendInput.Controller.Test
             State.Controls["m2"] = new ControlButton();
             State.Controls["m"] = new ControlButton();
             State.Controls["share"] = new ControlButton();
-            State.Controls["mute"] = new ControlButton();
+            State.Controls["mute"] = new ControlButtonLightToggle(AccessMode);
 
             State.Controls["motion"] = new ControlMotion();
 
@@ -232,11 +233,20 @@ namespace ExtendInput.Controller.Test
                         || left2.IsWriteDirty
                         || right2.IsWriteDirty)
                         {
-                            bool success = _device.WriteReport(new byte[7] { 0x00, 0x02, 0x08, (byte)(left1.Power * 255f), (byte)(right1.Power * 255f), (byte)(left2.Power * 255f), (byte)(right2.Power * 255f) });
+                            bool success = _device.WriteReport(new byte[] { 0x00, 0x02, 0x08, (byte)(right1.Power * 255f), (byte)(left1.Power * 255f), (byte)(right2.Power * 255f), (byte)(left2.Power * 255f) });
                             left1.CleanWriteDirty();
                             right1.CleanWriteDirty();
                             left2.CleanWriteDirty();
                             right2.CleanWriteDirty();
+                        }
+
+                        ControlButtonLightToggle MuteButton = State.Controls["mute"] as ControlButtonLightToggle;
+
+                        if (MuteButton.IsWriteDirty)
+                        {
+                            bool HomeLight = true;
+                            bool success = _device.WriteReport(new byte[] { 0x00, 0x03, 0x00, (byte)(HomeLight ? 0x01 : 0x00), (byte)(MuteButton.State == MuteButton.States[1] ? 0x01 : 0x00) });
+                            MuteButton.CleanWriteDirty();
                         }
                     }
                     if (!OutputThreadActive) break;

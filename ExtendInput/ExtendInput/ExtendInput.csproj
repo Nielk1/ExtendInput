@@ -102,6 +102,7 @@
     <Compile Include="Controller\TourBox\TourBoxController.cs" />
     <Compile Include="Controller\TourBox\TourBoxControllerFactory.cs" />
     <Compile Include="Controls\ControlButtonGenesis3.cs" />
+    <Compile Include="Controls\ControlButtonLightToggle.cs" />
     <Compile Include="Controls\ControlButtonPressure.cs" />
     <Compile Include="Controls\ControlButtonPS5Mute.cs" />
     <Compile Include="Controls\ControlButtonGenesis6.cs" />
