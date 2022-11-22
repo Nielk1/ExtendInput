@@ -1156,6 +1156,94 @@
                         if (controlData.HasClick) if (controlData.Click) ctrl.find('.wheel_click').addClass('active-o'); else ctrl.find('.wheel_click').removeClass('active-o', 'disable-o'); else ctrl.find('.wheel_click').addClass('disable-o');
                     }
                     break;
+
+                case 'ExtendInput.Controls.ControlMotion':
+                    {
+                        /*
+  "AccelerometerX": 0,
+  "AccelerometerY": 0,
+  "AccelerometerZ": 0,
+  "AngularVelocityX": 35,
+  "AngularVelocityY": -6,
+  "AngularVelocityZ": -9,
+  "OrientationW": 0,
+  "OrientationX": 0,
+  "OrientationY": 0,
+  "OrientationZ": 0,
+  "DataStuck": false,
+  "IsWriteDirty": false,
+  "IsReadDirty": false
+  //32767
+  //-32768
+*/
+                        var renderElement = wrapper.find('.control-value');
+                        renderElement.addClass('text-center');
+                        if (NewSubtype || renderElement.children('svg').length == 0) {
+                            renderElement.empty().append(
+                                '<svg id="control_render_' + controller_id + '__' + control_id + '" width="140" height="' + (38 + 35 * 5) + '" xmlns="http://www.w3.org/2000/svg">' +
+                                '<g>' +
+
+                                '<g transform="translate(0,' + (35 * 0) + ')">' +
+                                '<path class="btn_AccelerometerX"      d="M 6,6 m 0,16 128,0 0,-16 -128,0 z" stroke="#000" fill="#fff"></path>' +
+                                '<path class="btn_AccelerometerX_data" d="M 6,6 m 0,16 128,0 0,-16 -128,0 z" stroke="#000" fill="#333"></path>' +
+                                '<text class="btn_AccelerometerX_text chord_text" x="70" y="34" text-anchor="middle">0.000%</text>' +
+                                '</g>' +
+
+                                '<g transform="translate(0,' + (35 * 1) + ')">' +
+                                '<path class="btn_AccelerometerY"      d="M 6,6 m 0,16 128,0 0,-16 -128,0 z" stroke="#000" fill="#fff"></path>' +
+                                '<path class="btn_AccelerometerY_data" d="M 6,6 m 0,16 128,0 0,-16 -128,0 z" stroke="#000" fill="#333"></path>' +
+                                '<text class="btn_AccelerometerY_text chord_text" x="70" y="34" text-anchor="middle">0.000%</text>' +
+                                '</g>' +
+
+                                '<g transform="translate(0,' + (35 * 2) + ')">' +
+                                '<path class="btn_AccelerometerZ"      d="M 6,6 m 0,16 128,0 0,-16 -128,0 z" stroke="#000" fill="#fff"></path>' +
+                                '<path class="btn_AccelerometerZ_data" d="M 6,6 m 0,16 128,0 0,-16 -128,0 z" stroke="#000" fill="#333"></path>' +
+                                '<text class="btn_AccelerometerZ_text chord_text" x="70" y="34" text-anchor="middle">0.000%</text>' +
+                                '</g>' +
+
+                                '<g transform="translate(0,' + (35 * 3) + ')">' +
+                                '<path class="btn_AngularVelocityX"      d="M 6,6 m 0,16 128,0 0,-16 -128,0 z" stroke="#000" fill="#fff"></path>' +
+                                '<path class="btn_AngularVelocityX_data" d="M 6,6 m 0,16 128,0 0,-16 -128,0 z" stroke="#000" fill="#333"></path>' +
+                                '<text class="btn_AngularVelocityX_text chord_text" x="70" y="34" text-anchor="middle">0.000%</text>' +
+                                '</g>' +
+
+                                '<g transform="translate(0,' + (35 * 4) + ')">' +
+                                '<path class="btn_AngularVelocityY"      d="M 6,6 m 0,16 128,0 0,-16 -128,0 z" stroke="#000" fill="#fff"></path>' +
+                                '<path class="btn_AngularVelocityY_data" d="M 6,6 m 0,16 128,0 0,-16 -128,0 z" stroke="#000" fill="#333"></path>' +
+                                '<text class="btn_AngularVelocityY_text chord_text" x="70" y="34" text-anchor="middle">0.000%</text>' +
+                                '</g>' +
+
+                                '<g transform="translate(0,' + (35 * 5) + ')">' +
+                                '<path class="btn_AngularVelocityZ"      d="M 6,6 m 0,16 128,0 0,-16 -128,0 z" stroke="#000" fill="#fff"></path>' +
+                                '<path class="btn_AngularVelocityZ_data" d="M 6,6 m 0,16 128,0 0,-16 -128,0 z" stroke="#000" fill="#333"></path>' +
+                                '<text class="btn_AngularVelocityZ_text chord_text" x="70" y="34" text-anchor="middle">0.000%</text>' +
+                                '</g>' +
+
+                                '</g>' +
+                                '</svg>');
+                        }
+                        var ctrl = renderElement.find('#control_render_' + controller_id + '__' + control_id);
+
+                        ctrl.find('.btn_AccelerometerX_text').text((controlData.AccelerometerX * 100 / 32767).toFixed(3) + '%');
+                        ctrl.find('.btn_AccelerometerX_data').css('clip-path', 'inset(0 ' + ((controlData.AccelerometerX + 32767) * 100 / 32767 / 2) + '% 0 0)');
+
+                        ctrl.find('.btn_AccelerometerY_text').text((controlData.AccelerometerY * 100 / 32767).toFixed(3) + '%');
+                        ctrl.find('.btn_AccelerometerY_data').css('clip-path', 'inset(0 ' + ((controlData.AccelerometerY + 32767) * 100 / 32767 / 2) + '% 0 0)');
+
+                        ctrl.find('.btn_AccelerometerZ_text').text((controlData.AccelerometerZ * 100 / 32767).toFixed(3) + '%');
+                        ctrl.find('.btn_AccelerometerZ_data').css('clip-path', 'inset(0 ' + ((controlData.AccelerometerZ + 32767) * 100 / 32767 / 2) + '% 0 0)');
+
+                        ctrl.find('.btn_AngularVelocityX_text').text((controlData.AngularVelocityX * 100 / 32767).toFixed(3) + '%');
+                        ctrl.find('.btn_AngularVelocityX_data').css('clip-path', 'inset(0 ' + ((controlData.AngularVelocityX + 32767) * 100 / 32767 / 2) + '% 0 0)');
+
+                        ctrl.find('.btn_AngularVelocityY_text').text((controlData.AngularVelocityY * 100 / 32767).toFixed(3) + '%');
+                        ctrl.find('.btn_AngularVelocityY_data').css('clip-path', 'inset(0 ' + ((controlData.AngularVelocityY + 32767) * 100 / 32767 / 2) + '% 0 0)');
+
+                        ctrl.find('.btn_AngularVelocityZ_text').text((controlData.AngularVelocityZ * 100 / 32767).toFixed(3) + '%');
+                        ctrl.find('.btn_AngularVelocityZ_data').css('clip-path', 'inset(0 ' + ((controlData.AngularVelocityZ + 32767) * 100 / 32767 / 2) + '% 0 0)');
+                    }
+                    break;
+
                 /*case 'ExtendInput.Controls.ControlButtonPair':
                     //case 'ExtendInput.Controls.ControlTriggerPair':
                     {
