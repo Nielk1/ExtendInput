@@ -31,7 +31,7 @@ namespace ExtendInput.Controls
         }
 
         private AccessMode AccessMode;
-        public ControlEccentricRotatingMass(AccessMode AccessMode)
+        public ControlEccentricRotatingMass(AccessMode AccessMode, bool IsHeavy = false)
         {
             this.AccessMode = AccessMode;
             if (AccessMode == AccessMode.FullControl)
@@ -42,6 +42,7 @@ namespace ExtendInput.Controls
             {
                 Power = null;
             }
+            this.IsHeavy = IsHeavy;
         }
 
         public bool IsHeavy { get; private set; }

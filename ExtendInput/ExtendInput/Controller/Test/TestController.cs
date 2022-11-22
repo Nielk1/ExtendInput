@@ -1,4 +1,5 @@
-﻿using ExtendInput.Controls;
+﻿using ExtendInput;
+using ExtendInput.Controls;
 using ExtendInput.DeviceProvider;
 using System;
 using System.Collections.Generic;
@@ -124,6 +125,12 @@ namespace ExtendInput.Controller.Test
 
             State.Controls["motion"] = new ControlMotion();
 
+            State.Controls["rumble_left"] = new ControlEccentricRotatingMass(AccessMode, IsHeavy: true);
+            State.Controls["rumble_right"] = new ControlEccentricRotatingMass(AccessMode, IsHeavy: false);
+            State.Controls["trumble_left"] = new ControlEccentricRotatingMass(AccessMode, IsHeavy: false);
+            State.Controls["trumble_right"] = new ControlEccentricRotatingMass(AccessMode, IsHeavy: false);
+
+
             /*if (device.ProductId == PRODUCT_TEST_TEST && (AccessMode == AccessMode.FullControl || AccessMode == AccessMode.SafeWriteOnly))
             {
                 State.Controls["menu2_left"] = new ControlButton();
@@ -184,6 +191,82 @@ namespace ExtendInput.Controller.Test
         {
             //AbortStatusThread = true;
         }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        bool OutputThreadActive = false;
+        Thread OutputThread;
+        private void StartOutputThread()
+        {
+            OutputThreadActive = true;
+            // TODO: fix the speed of this thread, it runs too fast, might need per reportID/type throttles or something
+            OutputThread = new Thread(() =>
+            {
+                for (; ; )
+                {
+                    if (!OutputThreadActive) break;
+                    Thread.Sleep(1000 / 60);
+                    if (!OutputThreadActive) break;
+                    //if(WriteStateDirtyPossible)
+                    {
+                        IControlEccentricRotatingMass left1 = State.Controls["rumble_left"] as IControlEccentricRotatingMass;
+                        IControlEccentricRotatingMass right1 = State.Controls["rumble_right"] as IControlEccentricRotatingMass;
+                        IControlEccentricRotatingMass left2 = State.Controls["trumble_left"] as IControlEccentricRotatingMass;
+                        IControlEccentricRotatingMass right2 = State.Controls["trumble_right"] as IControlEccentricRotatingMass;
+
+                        if (left1.IsWriteDirty
+                        || right1.IsWriteDirty
+                        || left2.IsWriteDirty
+                        || right2.IsWriteDirty)
+                        {
+                            bool success = _device.WriteReport(new byte[7] { 0x00, 0x02, 0x08, (byte)(left1.Power * 255f), (byte)(right1.Power * 255f), (byte)(left2.Power * 255f), (byte)(right2.Power * 255f) });
+                            left1.CleanWriteDirty();
+                            right1.CleanWriteDirty();
+                            left2.CleanWriteDirty();
+                            right2.CleanWriteDirty();
+                        }
+                    }
+                    if (!OutputThreadActive) break;
+                }
+            });
+            OutputThread.Start();
+        }
+        private void StopOutputThread()
+        {
+            OutputThreadActive = false;
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         /*public void AddDevice(HidDevice device)
         {
@@ -248,8 +331,11 @@ namespace ExtendInput.Controller.Test
                                 (State.Controls["bumper_left" ] as IControlButton).DigitalStage1 = (reportData.ReportBytes[0] & 0x10) == 0x10;
                                 (State.Controls["bumper_right"] as IControlButton).DigitalStage1 = (reportData.ReportBytes[0] & 0x20) == 0x20;
 
-                                (State.Controls["trigger_left" ] as IControlTrigger).AnalogStage1 = (float)(reportData.ReportBytes[17] > 0 ? reportData.ReportBytes[17] : (reportData.ReportBytes[0] & 0x40) == 0x40 ? byte.MaxValue : 0) / byte.MaxValue;
-                                (State.Controls["trigger_right"] as IControlTrigger).AnalogStage1 = (float)(reportData.ReportBytes[18] > 0 ? reportData.ReportBytes[18] : (reportData.ReportBytes[0] & 0x80) == 0x80 ? byte.MaxValue : 0) / byte.MaxValue;
+                                // can't trust digital data as trigger internally is 12 bits, so any value is digital
+                                //(State.Controls["trigger_left" ] as IControlTrigger).AnalogStage1 = (float)(reportData.ReportBytes[17] > 0 ? reportData.ReportBytes[17] : (reportData.ReportBytes[0] & 0x40) == 0x40 ? byte.MaxValue : 0) / byte.MaxValue;
+                                //(State.Controls["trigger_right"] as IControlTrigger).AnalogStage1 = (float)(reportData.ReportBytes[18] > 0 ? reportData.ReportBytes[18] : (reportData.ReportBytes[0] & 0x80) == 0x80 ? byte.MaxValue : 0) / byte.MaxValue;
+                                (State.Controls["trigger_left" ] as IControlTrigger).AnalogStage1 = (float)reportData.ReportBytes[17] / byte.MaxValue;
+                                (State.Controls["trigger_right"] as IControlTrigger).AnalogStage1 = (float)reportData.ReportBytes[18] / byte.MaxValue;
 
                                 (State.Controls["stick_left"] as IControlStickWithClick).X = ControllerMathTools.QuickStickToFloat(reportData.ReportBytes[3]);
                                 (State.Controls["stick_left"] as IControlStickWithClick).Y = ControllerMathTools.QuickStickToFloat(reportData.ReportBytes[4]);
@@ -324,6 +410,7 @@ namespace ExtendInput.Controller.Test
                 //CheckControllerStatusThread.Start();
 
                 Initalized = true;
+                StartOutputThread();
             }
         }
 
@@ -342,6 +429,7 @@ namespace ExtendInput.Controller.Test
                 //    device.CloseDevice();
                 //}
                 _device.StopReading();
+                StopOutputThread();
                 _device.CloseDevice();
 
                 ConfigMode = false;
