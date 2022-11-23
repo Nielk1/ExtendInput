@@ -354,18 +354,18 @@ namespace ExtendInput.Controller.Test
                                 UInt16 trigger_left  = BitConverter.ToUInt16(reportData.ReportBytes, 21);
                                 //UInt16 trigger_right = (UInt16)(reportData.ReportBytes[24] + (reportData.ReportBytes[23] << 8));
                                 UInt16 trigger_right = BitConverter.ToUInt16(reportData.ReportBytes, 24);
-                                (State.Controls["trigger_left" ] as IControlTrigger).AnalogStage1 = (float)(trigger_left  > 0 ? trigger_left  : (reportData.ReportBytes[0] & 0x40) == 0x40 ? 0x4ff : 0) / 0x4ff;
-                                (State.Controls["trigger_right"] as IControlTrigger).AnalogStage1 = (float)(trigger_right > 0 ? trigger_right : (reportData.ReportBytes[0] & 0x80) == 0x80 ? 0x3ff : 0) / 0x4ff;
+                                (State.Controls["trigger_left" ] as IControlTrigger).AnalogStage1 = (float)(trigger_left  > 0 ? trigger_left  : (reportData.ReportBytes[0] & 0x40) == 0x40 ? 0x3ff : 0) / 0x3ff;
+                                (State.Controls["trigger_right"] as IControlTrigger).AnalogStage1 = (float)(trigger_right > 0 ? trigger_right : (reportData.ReportBytes[0] & 0x80) == 0x80 ? 0x3ff : 0) / 0x3ff;
 
                                 //(State.Controls["stick_left"] as IControlStickWithClick).X = ControllerMathTools.QuickStickToFloat(reportData.ReportBytes[3]);
-                                (State.Controls["stick_left"] as IControlStickWithClick).X = BitConverter.ToInt16(reportData.ReportBytes, 3) * 1.0f / Int16.MaxValue;
                                 //(State.Controls["stick_left"] as IControlStickWithClick).Y = ControllerMathTools.QuickStickToFloat(reportData.ReportBytes[4]);
-                                (State.Controls["stick_left"] as IControlStickWithClick).Y = BitConverter.ToInt16(reportData.ReportBytes, 5) * 1.0f / Int16.MaxValue;
+                                (State.Controls["stick_left"] as IControlStickWithClick).X = BitConverter.ToInt16(reportData.ReportBytes, 3) *  1.0f / Int16.MaxValue;
+                                (State.Controls["stick_left"] as IControlStickWithClick).Y = BitConverter.ToInt16(reportData.ReportBytes, 5) * -1.0f / Int16.MaxValue;
                                 (State.Controls["stick_left"] as IControlStickWithClick).Click = (reportData.ReportBytes[1] & 0x04) == 0x04;
                                 //(State.Controls["stick_right"] as IControlStickWithClick).X = ControllerMathTools.QuickStickToFloat(reportData.ReportBytes[5]);
-                                (State.Controls["stick_right"] as IControlStickWithClick).X = BitConverter.ToInt16(reportData.ReportBytes, 7) * 1.0f / Int16.MaxValue;
                                 //(State.Controls["stick_right"] as IControlStickWithClick).Y = ControllerMathTools.QuickStickToFloat(reportData.ReportBytes[6]);
-                                (State.Controls["stick_right"] as IControlStickWithClick).Y = BitConverter.ToInt16(reportData.ReportBytes, 9) * 1.0f / Int16.MaxValue;
+                                (State.Controls["stick_right"] as IControlStickWithClick).X = BitConverter.ToInt16(reportData.ReportBytes, 7) *  1.0f / Int16.MaxValue;
+                                (State.Controls["stick_right"] as IControlStickWithClick).Y = BitConverter.ToInt16(reportData.ReportBytes, 9) * -1.0f / Int16.MaxValue;
                                 (State.Controls["stick_right"] as IControlStickWithClick).Click = (reportData.ReportBytes[1] & 0x08) == 0x08;
 
                                 (State.Controls["menu_left" ] as IControlButton).DigitalStage1 = (reportData.ReportBytes[1] & 0x01) == 0x01;
