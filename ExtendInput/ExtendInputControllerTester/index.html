@@ -596,8 +596,19 @@
                         }
 
                         var listElement = $('#control_property_list_' + controller_id + '__' + control_id);
+                        var ActiveEffect = listElement.find('.active[data-value]').data('value');
                         listElement.find('[data-value="' + controlData.Effect + '"]').addClass('active');
                         listElement.find('.active[data-value][data-value!="' + controlData.Effect + '"]').removeClass('active');
+                        if (controlData.Effect != ActiveEffect) {
+                            var enableBits = TriggerEffectInputEnables[controlData.Effect];
+                            if (enableBits == null)
+                                enableBits = "11111";
+                            listElement.find('input[data-property][data-property="Start"]'    ).prop("disabled", enableBits[0] == "0");
+                            listElement.find('input[data-property][data-property="End"]'      ).prop("disabled", enableBits[1] == "0");
+                            listElement.find('input[data-property][data-property="Strength"]' ).prop("disabled", enableBits[2] == "0");
+                            listElement.find('input[data-property][data-property="Amplitude"]').prop("disabled", enableBits[3] == "0");
+                            listElement.find('input[data-property][data-property="Frequency"]').prop("disabled", enableBits[4] == "0");
+                        }
                     }
                     break;
 
