@@ -348,14 +348,22 @@ namespace ExtendInput.Controller.Test
                                 // can't trust digital data as trigger internally is 12 bits, so any value is digital
                                 //(State.Controls["trigger_left" ] as IControlTrigger).AnalogStage1 = (float)(reportData.ReportBytes[17] > 0 ? reportData.ReportBytes[17] : (reportData.ReportBytes[0] & 0x40) == 0x40 ? byte.MaxValue : 0) / byte.MaxValue;
                                 //(State.Controls["trigger_right"] as IControlTrigger).AnalogStage1 = (float)(reportData.ReportBytes[18] > 0 ? reportData.ReportBytes[18] : (reportData.ReportBytes[0] & 0x80) == 0x80 ? byte.MaxValue : 0) / byte.MaxValue;
-                                (State.Controls["trigger_left" ] as IControlTrigger).AnalogStage1 = (float)reportData.ReportBytes[17] / byte.MaxValue;
-                                (State.Controls["trigger_right"] as IControlTrigger).AnalogStage1 = (float)reportData.ReportBytes[18] / byte.MaxValue;
+                                //(State.Controls["trigger_left" ] as IControlTrigger).AnalogStage1 = (float)reportData.ReportBytes[17] / byte.MaxValue;
+                                //(State.Controls["trigger_right"] as IControlTrigger).AnalogStage1 = (float)reportData.ReportBytes[18] / byte.MaxValue;
+                                UInt16 trigger_left  = (UInt16)(reportData.ReportBytes[22] + (reportData.ReportBytes[21] << 8));
+                                UInt16 trigger_right = (UInt16)(reportData.ReportBytes[24] + (reportData.ReportBytes[23] << 8));
+                                (State.Controls["trigger_left" ] as IControlTrigger).AnalogStage1 = (float)(trigger_left  > 0 ? trigger_left  : (reportData.ReportBytes[0] & 0x40) == 0x40 ? 0xfff : 0) / 0xfff;
+                                (State.Controls["trigger_right"] as IControlTrigger).AnalogStage1 = (float)(trigger_right > 0 ? trigger_right : (reportData.ReportBytes[0] & 0x80) == 0x80 ? 0xfff : 0) / 0xfff;
 
-                                (State.Controls["stick_left"] as IControlStickWithClick).X = ControllerMathTools.QuickStickToFloat(reportData.ReportBytes[3]);
-                                (State.Controls["stick_left"] as IControlStickWithClick).Y = ControllerMathTools.QuickStickToFloat(reportData.ReportBytes[4]);
+                                //(State.Controls["stick_left"] as IControlStickWithClick).X = ControllerMathTools.QuickStickToFloat(reportData.ReportBytes[3]);
+                                (State.Controls["stick_left"] as IControlStickWithClick).X = BitConverter.ToInt16(reportData.ReportBytes.Skip(3).Take(2).Reverse().ToArray(), 0) * 1.0f / Int16.MaxValue;
+                                //(State.Controls["stick_left"] as IControlStickWithClick).Y = ControllerMathTools.QuickStickToFloat(reportData.ReportBytes[4]);
+                                (State.Controls["stick_left"] as IControlStickWithClick).Y = BitConverter.ToInt16(reportData.ReportBytes.Skip(5).Take(2).Reverse().ToArray(), 0) * 1.0f / Int16.MaxValue;
                                 (State.Controls["stick_left"] as IControlStickWithClick).Click = (reportData.ReportBytes[1] & 0x04) == 0x04;
-                                (State.Controls["stick_right"] as IControlStickWithClick).X = ControllerMathTools.QuickStickToFloat(reportData.ReportBytes[5]);
-                                (State.Controls["stick_right"] as IControlStickWithClick).Y = ControllerMathTools.QuickStickToFloat(reportData.ReportBytes[6]);
+                                //(State.Controls["stick_right"] as IControlStickWithClick).X = ControllerMathTools.QuickStickToFloat(reportData.ReportBytes[5]);
+                                (State.Controls["stick_right"] as IControlStickWithClick).X = BitConverter.ToInt16(reportData.ReportBytes.Skip(7).Take(2).Reverse().ToArray(), 0) * 1.0f / Int16.MaxValue;
+                                //(State.Controls["stick_right"] as IControlStickWithClick).Y = ControllerMathTools.QuickStickToFloat(reportData.ReportBytes[6]);
+                                (State.Controls["stick_right"] as IControlStickWithClick).Y = BitConverter.ToInt16(reportData.ReportBytes.Skip(9).Take(2).Reverse().ToArray(), 0) * 1.0f / Int16.MaxValue;
                                 (State.Controls["stick_right"] as IControlStickWithClick).Click = (reportData.ReportBytes[1] & 0x08) == 0x08;
 
                                 (State.Controls["menu_left" ] as IControlButton).DigitalStage1 = (reportData.ReportBytes[1] & 0x01) == 0x01;
@@ -364,18 +372,29 @@ namespace ExtendInput.Controller.Test
                                 //(State.Controls["home"] as IControlButton).DigitalStage1 = (reportData.ReportBytes[1] & 0x10) == 0x10;
                                 (State.Controls["home"] as ControlButtonLightBrightness).DigitalStage1 = (reportData.ReportBytes[1] & 0x10) == 0x10;
 
-                                (State.Controls["m1"   ] as IControlButton).DigitalStage1 = (reportData.ReportBytes[24] & 0x01) == 0x01;
-                                (State.Controls["m2"   ] as IControlButton).DigitalStage1 = (reportData.ReportBytes[24] & 0x02) == 0x02;
-                                (State.Controls["m"    ] as IControlButton).DigitalStage1 = (reportData.ReportBytes[24] & 0x10) == 0x10;
-                                (State.Controls["share"] as IControlButton).DigitalStage1 = (reportData.ReportBytes[24] & 0x20) == 0x20;
-                                (State.Controls["mute" ] as IControlButton).DigitalStage1 = (reportData.ReportBytes[24] & 0x40) == 0x40;
+                                //(State.Controls["m1"   ] as IControlButton).DigitalStage1 = (reportData.ReportBytes[24] & 0x01) == 0x01;
+                                //(State.Controls["m2"   ] as IControlButton).DigitalStage1 = (reportData.ReportBytes[24] & 0x02) == 0x02;
+                                //(State.Controls["m"    ] as IControlButton).DigitalStage1 = (reportData.ReportBytes[24] & 0x10) == 0x10;
+                                //(State.Controls["share"] as IControlButton).DigitalStage1 = (reportData.ReportBytes[24] & 0x20) == 0x20;
+                                //(State.Controls["mute" ] as IControlButton).DigitalStage1 = (reportData.ReportBytes[24] & 0x40) == 0x40;
+                                (State.Controls["m1"   ] as IControlButton).DigitalStage1 = (reportData.ReportBytes[30] & 0x01) == 0x01;
+                                (State.Controls["m2"   ] as IControlButton).DigitalStage1 = (reportData.ReportBytes[30] & 0x02) == 0x02;
+                                (State.Controls["m"    ] as IControlButton).DigitalStage1 = (reportData.ReportBytes[30] & 0x10) == 0x10;
+                                (State.Controls["share"] as IControlButton).DigitalStage1 = (reportData.ReportBytes[30] & 0x20) == 0x20;
+                                (State.Controls["mute" ] as IControlButton).DigitalStage1 = (reportData.ReportBytes[30] & 0x40) == 0x40;
 
-                                (State.Controls["motion"] as ControlMotion).AngularVelocityX = BitConverter.ToInt16(reportData.ReportBytes.Skip(28).Take(2).Reverse().ToArray(), 0);
-                                (State.Controls["motion"] as ControlMotion).AngularVelocityZ = BitConverter.ToInt16(reportData.ReportBytes.Skip(30).Take(2).Reverse().ToArray(), 0);
-                                (State.Controls["motion"] as ControlMotion).AngularVelocityY = BitConverter.ToInt16(reportData.ReportBytes.Skip(32).Take(2).Reverse().ToArray(), 0);
-                                (State.Controls["motion"] as ControlMotion).AccelerometerX = BitConverter.ToInt16(reportData.ReportBytes.Skip(34).Take(2).Reverse().ToArray(), 0);
-                                (State.Controls["motion"] as ControlMotion).AccelerometerY = BitConverter.ToInt16(reportData.ReportBytes.Skip(36).Take(2).Reverse().ToArray(), 0);
-                                (State.Controls["motion"] as ControlMotion).AccelerometerZ = BitConverter.ToInt16(reportData.ReportBytes.Skip(38).Take(2).Reverse().ToArray(), 0);
+                                //(State.Controls["motion"] as ControlMotion).AngularVelocityX = BitConverter.ToInt16(reportData.ReportBytes.Skip(28).Take(2).Reverse().ToArray(), 0);
+                                //(State.Controls["motion"] as ControlMotion).AngularVelocityZ = BitConverter.ToInt16(reportData.ReportBytes.Skip(30).Take(2).Reverse().ToArray(), 0);
+                                //(State.Controls["motion"] as ControlMotion).AngularVelocityY = BitConverter.ToInt16(reportData.ReportBytes.Skip(32).Take(2).Reverse().ToArray(), 0);
+                                //(State.Controls["motion"] as ControlMotion).AccelerometerX = BitConverter.ToInt16(reportData.ReportBytes.Skip(34).Take(2).Reverse().ToArray(), 0);
+                                //(State.Controls["motion"] as ControlMotion).AccelerometerY = BitConverter.ToInt16(reportData.ReportBytes.Skip(36).Take(2).Reverse().ToArray(), 0);
+                                //(State.Controls["motion"] as ControlMotion).AccelerometerZ = BitConverter.ToInt16(reportData.ReportBytes.Skip(38).Take(2).Reverse().ToArray(), 0);
+                                (State.Controls["motion"] as ControlMotion).AngularVelocityX = BitConverter.ToInt16(reportData.ReportBytes.Skip(34).Take(2).Reverse().ToArray(), 0);
+                                (State.Controls["motion"] as ControlMotion).AngularVelocityZ = BitConverter.ToInt16(reportData.ReportBytes.Skip(36).Take(2).Reverse().ToArray(), 0);
+                                (State.Controls["motion"] as ControlMotion).AngularVelocityY = BitConverter.ToInt16(reportData.ReportBytes.Skip(38).Take(2).Reverse().ToArray(), 0);
+                                (State.Controls["motion"] as ControlMotion).AccelerometerX = BitConverter.ToInt16(reportData.ReportBytes.Skip(40).Take(2).Reverse().ToArray(), 0);
+                                (State.Controls["motion"] as ControlMotion).AccelerometerY = BitConverter.ToInt16(reportData.ReportBytes.Skip(42).Take(2).Reverse().ToArray(), 0);
+                                (State.Controls["motion"] as ControlMotion).AccelerometerZ = BitConverter.ToInt16(reportData.ReportBytes.Skip(44).Take(2).Reverse().ToArray(), 0);
                             }
                             finally
                             {
