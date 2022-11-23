@@ -508,6 +508,34 @@
                         }
                     }
                     break;
+                case 'ExtendInput.Controls.ControlButtonLightBrightness':
+                    {
+                        var renderElement = wrapper.find('.control-value');
+                        renderElement.addClass('text-center');
+                        if (NewSubtype || renderElement.children('svg').length == 0) {
+                            renderElement.empty().append(
+                                '<svg id="control_render_' + controller_id + '__' + control_id + '" width="62" height="62" xmlns="http://www.w3.org/2000/svg">' +
+                                '<g>' +
+                                '<ellipse class="" ry="29" rx="29" cy="' + 31 + '" cx="' + 31 + '" stroke="#000" fill="#fff" />' +
+                                '<ellipse class="btn_x_data" ry="0" rx="0" cy="' + 31 + '" cx="' + 31 + '" stroke="#000" fill="#333" />' +
+                                '</g>' +
+                                '</svg>');
+                            var inputsWrapperElement = $('<div class="form-group" id="control_property_list_' + controller_id + '__' + control_id + '"/>');
+                            inputsWrapperElement.append('<label class="small mb-0">Brightness</label\>');
+                            inputsWrapperElement.append('<input type="range" data-property="Brightness" class="control_property_item form-control-range" value="' + controlData.Brightness + '" min="0" max="1" step="' + (1 / controlData.Levels) + '" \>');
+                            renderElement.append(inputsWrapperElement);
+                        }
+                        var ctrl = renderElement.find('#control_render_' + controller_id + '__' + control_id);
+                        var listElement = $('#control_state_list_' + controller_id + '__' + control_id);
+                        listElement.find('[data-id="Brightness"]').addClass('active');
+                        listElement.find('.active[data-id][data-id!="Brightness"]').removeClass('active');
+                        if (controlData.DigitalStage1) {
+                            ctrl.find(".btn_x_data").attr('rx', 29).attr('ry', 29);
+                        } else {
+                            ctrl.find(".btn_x_data").attr('rx', 0).attr('ry', 0);
+                        }
+                    }
+                    break;
 
                 case 'ExtendInput.Controls.ControlTriggerPS5':
                     {

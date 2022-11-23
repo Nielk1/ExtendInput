@@ -114,7 +114,8 @@ namespace ExtendInput.Controller.Test
             State.Controls["trigger_right"] = new ControlTrigger();
             State.Controls["menu_left"] = new ControlButton();
             State.Controls["menu_right"] = new ControlButton();
-            State.Controls["home"] = new ControlButtonLightToggle(AccessMode) { State = "STATE_LIGHT_ON" };
+            //State.Controls["home"] = new ControlButtonLightToggle(AccessMode) { State = "STATE_LIGHT_ON" };
+            State.Controls["home"] = new ControlButtonLightBrightness(AccessMode, Brightness: 1.0f, Levels: 100);
             State.Controls["stick_left"] = new ControlStickWithClick();
             State.Controls["stick_right"] = new ControlStickWithClick();
 
@@ -240,12 +241,14 @@ namespace ExtendInput.Controller.Test
                             right2.CleanWriteDirty();
                         }
 
-                        ControlButtonLightToggle HomeButton = State.Controls["home"] as ControlButtonLightToggle;
+                        //ControlButtonLightToggle HomeButton = State.Controls["home"] as ControlButtonLightToggle;
+                        ControlButtonLightBrightness HomeButton = State.Controls["home"] as ControlButtonLightBrightness;
                         ControlButtonLightToggle MuteButton = State.Controls["mute"] as ControlButtonLightToggle;
 
                         if (HomeButton.IsWriteDirty || MuteButton.IsWriteDirty)
                         {
-                            bool success = _device.WriteReport(new byte[] { 0x00, 0x03, 0x00, (byte)(HomeButton.State == HomeButton.States[1] ? 0x01 : 0x00), (byte)(MuteButton.State == MuteButton.States[1] ? 0x01 : 0x00) });
+                            //bool success = _device.WriteReport(new byte[] { 0x00, 0x03, 0x00, (byte)(HomeButton.State == HomeButton.States[1] ? 0x01 : 0x00), (byte)(MuteButton.State == MuteButton.States[1] ? 0x01 : 0x00) });
+                            bool success = _device.WriteReport(new byte[] { 0x00, 0x03, 0x00, (byte)(HomeButton.Brightness * HomeButton.Levels), (byte)(MuteButton.State == MuteButton.States[1] ? 0x01 : 0x00) });
                             HomeButton.CleanWriteDirty();
                             MuteButton.CleanWriteDirty();
                         }
@@ -358,7 +361,8 @@ namespace ExtendInput.Controller.Test
                                 (State.Controls["menu_left" ] as IControlButton).DigitalStage1 = (reportData.ReportBytes[1] & 0x01) == 0x01;
                                 (State.Controls["menu_right"] as IControlButton).DigitalStage1 = (reportData.ReportBytes[1] & 0x02) == 0x02;
 
-                                (State.Controls["home"] as IControlButton).DigitalStage1 = (reportData.ReportBytes[1] & 0x10) == 0x10;
+                                //(State.Controls["home"] as IControlButton).DigitalStage1 = (reportData.ReportBytes[1] & 0x10) == 0x10;
+                                (State.Controls["home"] as ControlButtonLightBrightness).DigitalStage1 = (reportData.ReportBytes[1] & 0x10) == 0x10;
 
                                 (State.Controls["m1"   ] as IControlButton).DigitalStage1 = (reportData.ReportBytes[24] & 0x01) == 0x01;
                                 (State.Controls["m2"   ] as IControlButton).DigitalStage1 = (reportData.ReportBytes[24] & 0x02) == 0x02;
