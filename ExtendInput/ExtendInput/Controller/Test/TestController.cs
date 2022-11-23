@@ -353,7 +353,7 @@ namespace ExtendInput.Controller.Test
                                 //UInt16 trigger_left  = (UInt16)(reportData.ReportBytes[22] + (reportData.ReportBytes[21] << 8));
                                 UInt16 trigger_left  = BitConverter.ToUInt16(reportData.ReportBytes, 21);
                                 //UInt16 trigger_right = (UInt16)(reportData.ReportBytes[24] + (reportData.ReportBytes[23] << 8));
-                                UInt16 trigger_right = BitConverter.ToUInt16(reportData.ReportBytes, 24);
+                                UInt16 trigger_right = BitConverter.ToUInt16(reportData.ReportBytes, 23);
                                 (State.Controls["trigger_left" ] as IControlTrigger).AnalogStage1 = (float)(trigger_left  > 0 ? trigger_left  : (reportData.ReportBytes[0] & 0x40) == 0x40 ? 0x3ff : 0) / 0x3ff;
                                 (State.Controls["trigger_right"] as IControlTrigger).AnalogStage1 = (float)(trigger_right > 0 ? trigger_right : (reportData.ReportBytes[0] & 0x80) == 0x80 ? 0x3ff : 0) / 0x3ff;
 
