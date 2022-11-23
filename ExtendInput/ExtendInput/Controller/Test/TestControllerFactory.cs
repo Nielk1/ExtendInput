@@ -37,14 +37,14 @@ namespace ExtendInput.Controller.Test
         WeakReference<XInputDevice>[] CandidateXInputDevicesX = new WeakReference<XInputDevice>[XINPUT_PLAYER_COUNT];
         // TODO: Store a XInputDevice.UniqueKey to UserIndex map so we can handle XInputDevice removals, make the above WeakReference into a strong reference
         DateTime[] CandidateXInputDevicesLastSeen = new DateTime[XINPUT_PLAYER_COUNT];
-        DateTime SawCandidateHidDeviceForXInput = DateTime.MinValue;
+        //DateTime SawCandidateHidDeviceForXInput = DateTime.MinValue;
 
         private void CheckXInputData()
         {
             lock (CandidateXInputLock)
             {
                 DateTime checkTime = DateTime.UtcNow;
-                if (SawCandidateHidDeviceForXInput.AddSeconds(10) > checkTime)
+                //if (SawCandidateHidDeviceForXInput.AddSeconds(10) > checkTime)
                 {
                     for (int i = 0; i < XINPUT_PLAYER_COUNT; i++)
                     {
@@ -109,6 +109,9 @@ namespace ExtendInput.Controller.Test
             if (deviceXInput != null)
             {
                 if (this.AccessMode != AccessMode.FullControl)
+                    return null;
+
+                if ((deviceXInput.VendorId != -1 && deviceXInput.VendorId != 0x045e) || (deviceXInput.ProductId != -1 && deviceXInput.ProductId != 0x02ff))
                     return null;
 
                 lock (CandidateXInputLock)
