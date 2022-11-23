@@ -114,7 +114,7 @@ namespace ExtendInput.Controller.Test
             State.Controls["trigger_right"] = new ControlTrigger();
             State.Controls["menu_left"] = new ControlButton();
             State.Controls["menu_right"] = new ControlButton();
-            State.Controls["home"] = new ControlButton();
+            State.Controls["home"] = new ControlButtonLightToggle(AccessMode) { State = "STATE_LIGHT_ON" };
             State.Controls["stick_left"] = new ControlStickWithClick();
             State.Controls["stick_right"] = new ControlStickWithClick();
 
@@ -122,7 +122,7 @@ namespace ExtendInput.Controller.Test
             State.Controls["m2"] = new ControlButton();
             State.Controls["m"] = new ControlButton();
             State.Controls["share"] = new ControlButton();
-            State.Controls["mute"] = new ControlButtonLightToggle(AccessMode);
+            State.Controls["mute"] = new ControlButtonLightToggle(AccessMode) {  State = "STATE_LIGHT_ON" };
 
             State.Controls["motion"] = new ControlMotion();
 
@@ -240,12 +240,13 @@ namespace ExtendInput.Controller.Test
                             right2.CleanWriteDirty();
                         }
 
+                        ControlButtonLightToggle HomeButton = State.Controls["home"] as ControlButtonLightToggle;
                         ControlButtonLightToggle MuteButton = State.Controls["mute"] as ControlButtonLightToggle;
 
-                        if (MuteButton.IsWriteDirty)
+                        if (HomeButton.IsWriteDirty || MuteButton.IsWriteDirty)
                         {
-                            bool HomeLight = true;
-                            bool success = _device.WriteReport(new byte[] { 0x00, 0x03, 0x00, (byte)(HomeLight ? 0x01 : 0x00), (byte)(MuteButton.State == MuteButton.States[1] ? 0x01 : 0x00) });
+                            bool success = _device.WriteReport(new byte[] { 0x00, 0x03, 0x00, (byte)(HomeButton.State == HomeButton.States[1] ? 0x01 : 0x00), (byte)(MuteButton.State == MuteButton.States[1] ? 0x01 : 0x00) });
+                            HomeButton.CleanWriteDirty();
                             MuteButton.CleanWriteDirty();
                         }
                     }
