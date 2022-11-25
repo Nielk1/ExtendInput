@@ -313,7 +313,7 @@ namespace ExtendInput.Controller.Test
 
             // this logic appears to be for a 0x20BC/0x5044
 
-            Console.WriteLine($"{reportData.ReportId:X2} {BitConverter.ToString(reportData.ReportBytes)}");
+            //Console.WriteLine($"{reportData.ReportId:X2} {BitConverter.ToString(reportData.ReportBytes)}");
 
             if (0 == Interlocked.Exchange(ref reportUsageLock, 1))
             {
@@ -391,11 +391,11 @@ namespace ExtendInput.Controller.Test
                                 //(State.Controls["motion"] as ControlMotion).AccelerometerX = BitConverter.ToInt16(reportData.ReportBytes.Skip(34).Take(2).Reverse().ToArray(), 0);
                                 //(State.Controls["motion"] as ControlMotion).AccelerometerY = BitConverter.ToInt16(reportData.ReportBytes.Skip(36).Take(2).Reverse().ToArray(), 0);
                                 //(State.Controls["motion"] as ControlMotion).AccelerometerZ = BitConverter.ToInt16(reportData.ReportBytes.Skip(38).Take(2).Reverse().ToArray(), 0);
-                                (State.Controls["motion"] as ControlMotion).AngularVelocityX = BitConverter.ToInt16(reportData.ReportBytes.Skip(34).Take(2).Reverse().ToArray(), 0);
-                                (State.Controls["motion"] as ControlMotion).AngularVelocityZ = BitConverter.ToInt16(reportData.ReportBytes.Skip(36).Take(2).Reverse().ToArray(), 0);
-                                (State.Controls["motion"] as ControlMotion).AngularVelocityY = BitConverter.ToInt16(reportData.ReportBytes.Skip(38).Take(2).Reverse().ToArray(), 0);
-                                (State.Controls["motion"] as ControlMotion).AccelerometerX = BitConverter.ToInt16(reportData.ReportBytes.Skip(40).Take(2).Reverse().ToArray(), 0);
-                                (State.Controls["motion"] as ControlMotion).AccelerometerY = BitConverter.ToInt16(reportData.ReportBytes.Skip(42).Take(2).Reverse().ToArray(), 0);
+                                (State.Controls["motion"] as ControlMotion).AngularVelocityX = BitConverter.ToInt16(reportData.ReportBytes.Skip(36).Take(2).Reverse().ToArray(), 0);
+                                (State.Controls["motion"] as ControlMotion).AngularVelocityY = BitConverter.ToInt16(reportData.ReportBytes.Skip(34).Take(2).Reverse().ToArray(), 0);
+                                (State.Controls["motion"] as ControlMotion).AngularVelocityZ = BitConverter.ToInt16(reportData.ReportBytes.Skip(38).Take(2).Reverse().ToArray(), 0);
+                                (State.Controls["motion"] as ControlMotion).AccelerometerX = BitConverter.ToInt16(reportData.ReportBytes.Skip(42).Take(2).Reverse().ToArray(), 0);
+                                (State.Controls["motion"] as ControlMotion).AccelerometerY = BitConverter.ToInt16(reportData.ReportBytes.Skip(40).Take(2).Reverse().ToArray(), 0);
                                 (State.Controls["motion"] as ControlMotion).AccelerometerZ = BitConverter.ToInt16(reportData.ReportBytes.Skip(44).Take(2).Reverse().ToArray(), 0);
                             }
                             finally
