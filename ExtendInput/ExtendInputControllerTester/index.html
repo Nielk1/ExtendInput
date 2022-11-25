@@ -1498,9 +1498,9 @@
             var $state_data = $('#state_data');
             var knownChildren = {};
             $state_data.children().each((i, elem) => knownChildren[elem.id] = true);
-            var NewSubtype = (ControllerActiveSubtype != data.ControllerTypeCode);
-            ControllerActiveSubtype = data.ControllerTypeCode;
             var controller_id = cyrb53(data.ConnectionUniqueID);
+            var NewSubtype = (ControllerActiveSubtype[controller_id] != data.ControllerTypeCode);
+            ControllerActiveSubtype[controller_id] = data.ControllerTypeCode;
             for (const control_id in data.State) {
                 RenderControl(data.ConnectionUniqueID, controller_id, control_id, data.State[control_id].Data, data.State[control_id].Type, $state_data, NewSubtype, knownChildren);
             }
@@ -1537,6 +1537,7 @@
             var controller_id = cyrb53(controller);
             var existing = $controllers.children('#controller_' + controller_id);
             existing.remove();
+            delete ControllerActiveSubtype[controller_id];
             // deactivate the controller if it's active
         }
 
@@ -1728,10 +1729,7 @@
         }
 
         var $controllers = null;
-
-        var ControllerActive = false;
-        var ControllerActiveSubtype = null;
-        var ControllerPollAjax = null;
+        var ControllerActiveSubtype = {};
 
         const cord_formatter = new Intl.NumberFormat('en-US', {
             minimumFractionDigits: 2,
@@ -1746,30 +1744,8 @@
             $controllers.on('click', '.activate_controller', function (evt) {
                 evt.preventDefault();
                 $state_data.empty();
-                //$('#controller_state').remove();
-                if (ControllerActive) {
-                    //$.post("/activate_controller", null, function (data) { });
-                    socket.send(JSON.stringify({ function: 'DeviceManager::ActivateController', data: data }));
-
-                    if (ControllerPollAjax != null) ControllerPollAjax.abort();
-                    ControllerActive = false;
-                    $controllers.find('.card.border-primary').removeClass('border-primary');
-                    $('body').removeClass('controller-active');
-                } else {
-                    $(evt.target).parent().addClass('border-primary');
-                    //$(evt.target).parent().parent().after('<div id="controller_state" class="col-sm-6 col-lg-4 pb-4"/><div class="card"><div class="card-body">TEST</div></div></div>');
-
-                    socket.send(JSON.stringify({ function: 'DeviceManager::ActivateController', data: $(evt.target).data('id') }));
-                    /*$.post("/activate_controller", $(evt.target).data('id'), function (data) {
-                        if (data) {
-                            ControllerActive = true;
-                            $('body').addClass('controller-active');
-                            PollControllerFunc();
-                        } else {
-                            //$('#controller_state').remove();
-                        }
-                    });*/
-                }
+                $(evt.target).parent().addClass('border-primary');
+                socket.send(JSON.stringify({ function: 'DeviceManager::ActivateController', data: $(evt.target).data('id') }));
                 return true;
             });
 

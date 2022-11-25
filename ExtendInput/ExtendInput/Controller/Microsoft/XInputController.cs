@@ -117,6 +117,9 @@ namespace ExtendInput.Controller.Microsoft
             State.Controls["stick_left"] = new ControlStickWithClick();
             State.Controls["stick_right"] = new ControlStickWithClick();
 
+            State.Controls["rumble_left"] = new ControlEccentricRotatingMass(AccessMode.FullControl, IsHeavy: true);
+            State.Controls["rumble_right"] = new ControlEccentricRotatingMass(AccessMode.FullControl, IsHeavy: false);
+
             IsPresent = true;
             //Connected = true;
 
@@ -131,6 +134,61 @@ namespace ExtendInput.Controller.Microsoft
         public void Dispose()
         {
         }
+
+
+
+
+
+
+
+
+
+        bool OutputThreadActive = false;
+        Thread OutputThread;
+        private void StartOutputThread()
+        {
+            OutputThreadActive = true;
+            // TODO: fix the speed of this thread, it runs too fast, might need per reportID/type throttles or something
+            OutputThread = new Thread(() =>
+            {
+                for (; ; )
+                {
+                    if (!OutputThreadActive) break;
+                    Thread.Sleep(1000 / 60);
+                    if (!OutputThreadActive) break;
+                    //if(WriteStateDirtyPossible)
+                    {
+                        IControlEccentricRotatingMass left1 = State.Controls["rumble_left"] as IControlEccentricRotatingMass;
+                        IControlEccentricRotatingMass right1 = State.Controls["rumble_right"] as IControlEccentricRotatingMass;
+
+                        if (left1.IsWriteDirty
+                        || right1.IsWriteDirty)
+                        {
+                            _device.SetVibration((ushort)(left1.Power.Value * ushort.MaxValue), (ushort)(right1.Power.Value * ushort.MaxValue));
+                            left1.CleanWriteDirty();
+                            right1.CleanWriteDirty();
+                        }
+                    }
+                    if (!OutputThreadActive) break;
+                }
+            });
+            OutputThread.Start();
+        }
+        private void StopOutputThread()
+        {
+            OutputThreadActive = false;
+        }
+
+
+
+
+
+
+
+
+
+
+
 
         public ControllerState GetState()
         {
@@ -293,6 +351,7 @@ namespace ExtendInput.Controller.Microsoft
 
             Initalized = 2;
             _device.StartReading();
+            StartOutputThread();
         }
 
         public void HalfInitalize()
@@ -312,6 +371,7 @@ namespace ExtendInput.Controller.Microsoft
             if (Initalized == 0) return;
 
             _device.StopReading();
+            StopOutputThread();
 
             Initalized = 0;
             //_device.CloseDevice();
