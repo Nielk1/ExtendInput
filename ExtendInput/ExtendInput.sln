@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.3.32901.215
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29709.97
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExtendInput", "ExtendInput\ExtendInput.csproj", "{4D027481-A0EA-41F3-9284-7353E2103CA6}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -11,8 +11,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExtendInputControllerTester", "ExtendInputControllerTester\ExtendInputControllerTester.csproj", "{87EF694C-12BA-4395-A963-68C4CEAE516A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DatabaseBuilder", "DatabaseBuilder\DatabaseBuilder.csproj", "{A8CA7531-2774-4839-B89B-9343B075CCC8}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestControllerWrapperTest", "TestControllerWrapperTest\TestControllerWrapperTest.csproj", "{D9873318-2551-42E6-9C14-67A57A12556E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -32,10 +30,6 @@ Global
 		{A8CA7531-2774-4839-B89B-9343B075CCC8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A8CA7531-2774-4839-B89B-9343B075CCC8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A8CA7531-2774-4839-B89B-9343B075CCC8}.Release|Any CPU.Build.0 = Release|Any CPU
-		{D9873318-2551-42E6-9C14-67A57A12556E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D9873318-2551-42E6-9C14-67A57A12556E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D9873318-2551-42E6-9C14-67A57A12556E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D9873318-2551-42E6-9C14-67A57A12556E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
