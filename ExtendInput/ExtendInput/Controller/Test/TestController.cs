@@ -115,7 +115,7 @@ namespace ExtendInput.Controller.Test
             State.Controls["menu_left"] = new ControlButton();
             State.Controls["menu_right"] = new ControlButton();
             //State.Controls["home"] = new ControlButtonLightToggle(AccessMode) { State = "STATE_LIGHT_ON" };
-            State.Controls["home"] = new ControlButtonLightBrightness(AccessMode, Brightness: 1.0f, Levels: 100);
+            State.Controls["home"] = new ControlButtonLightBrightness(AccessMode, Brightness: 1.0f, Levels: 68);
             State.Controls["stick_left"] = new ControlStickWithClick();
             State.Controls["stick_right"] = new ControlStickWithClick();
 
@@ -248,7 +248,7 @@ namespace ExtendInput.Controller.Test
                         if (HomeButton.IsWriteDirty || MuteButton.IsWriteDirty)
                         {
                             //bool success = _device.WriteReport(new byte[] { 0x00, 0x03, 0x00, (byte)(HomeButton.State == HomeButton.States[1] ? 0x01 : 0x00), (byte)(MuteButton.State == MuteButton.States[1] ? 0x01 : 0x00) });
-                            bool success = _device.WriteReport(new byte[] { 0x00, 0x03, 0x00, (byte)(HomeButton.Brightness * HomeButton.Levels), (byte)(MuteButton.State == MuteButton.States[1] ? 0x01 : 0x00) });
+                            bool success = _device.WriteReport(new byte[] { 0x00, 0x03, 0x00, (byte)(HomeButton.Brightness * HomeButton.Levels + (HomeButton.Brightness > 0 ? 32 : 0)), (byte)(MuteButton.State == MuteButton.States[1] ? 0x01 : 0x00) });
                             HomeButton.CleanWriteDirty();
                             MuteButton.CleanWriteDirty();
                         }
@@ -391,12 +391,12 @@ namespace ExtendInput.Controller.Test
                                 //(State.Controls["motion"] as ControlMotion).AngularVelocityX = BitConverter.ToInt16(reportData.ReportBytes.Skip(28).Take(2).Reverse().ToArray(), 0);
                                 //(State.Controls["motion"] as ControlMotion).AngularVelocityZ = BitConverter.ToInt16(reportData.ReportBytes.Skip(30).Take(2).Reverse().ToArray(), 0);
                                 //(State.Controls["motion"] as ControlMotion).AngularVelocityY = BitConverter.ToInt16(reportData.ReportBytes.Skip(32).Take(2).Reverse().ToArray(), 0);
-                                (State.Controls["motion"] as ControlMotion).AccelerometerX = BitConverter.ToInt16(reportData.ReportBytes.Skip(42).Take(2).Reverse().ToArray(), 0);
-                                (State.Controls["motion"] as ControlMotion).AccelerometerY = BitConverter.ToInt16(reportData.ReportBytes.Skip(44).Take(2).Reverse().ToArray(), 0);
-                                (State.Controls["motion"] as ControlMotion).AccelerometerZ = BitConverter.ToInt16(reportData.ReportBytes.Skip(40).Take(2).Reverse().ToArray(), 0);
-                                (State.Controls["motion"] as ControlMotion).AngularVelocityX = BitConverter.ToInt16(reportData.ReportBytes.Skip(36).Take(2).Reverse().ToArray(), 0);
-                                (State.Controls["motion"] as ControlMotion).AngularVelocityY = BitConverter.ToInt16(reportData.ReportBytes.Skip(38).Take(2).Reverse().ToArray(), 0);
-                                (State.Controls["motion"] as ControlMotion).AngularVelocityZ = BitConverter.ToInt16(reportData.ReportBytes.Skip(34).Take(2).Reverse().ToArray(), 0);
+                                (State.Controls["motion"] as ControlMotion).AccelerometerX = (Int16)Math.Max(Math.Min((Int32)BitConverter.ToInt16(reportData.ReportBytes.Skip(42).Take(2).Reverse().ToArray(), 0) * 2, Int16.MaxValue), Int16.MinValue);
+                                (State.Controls["motion"] as ControlMotion).AccelerometerY = (Int16)Math.Max(Math.Min((Int32)BitConverter.ToInt16(reportData.ReportBytes.Skip(44).Take(2).Reverse().ToArray(), 0) * 2, Int16.MaxValue), Int16.MinValue);
+                                (State.Controls["motion"] as ControlMotion).AccelerometerZ = (Int16)Math.Max(Math.Min((Int32)BitConverter.ToInt16(reportData.ReportBytes.Skip(40).Take(2).Reverse().ToArray(), 0) * 2, Int16.MaxValue), Int16.MinValue);
+                                (State.Controls["motion"] as ControlMotion).AngularVelocityX = (Int16)Math.Max(Math.Min((Int32)BitConverter.ToInt16(reportData.ReportBytes.Skip(36).Take(2).Reverse().ToArray(), 0) * 2, Int16.MaxValue), Int16.MinValue);
+                                (State.Controls["motion"] as ControlMotion).AngularVelocityY = (Int16)Math.Max(Math.Min((Int32)BitConverter.ToInt16(reportData.ReportBytes.Skip(38).Take(2).Reverse().ToArray(), 0) * 2, Int16.MaxValue), Int16.MinValue);
+                                (State.Controls["motion"] as ControlMotion).AngularVelocityZ = (Int16)Math.Max(Math.Min((Int32)BitConverter.ToInt16(reportData.ReportBytes.Skip(34).Take(2).Reverse().ToArray(), 0) * 2, Int16.MaxValue), Int16.MinValue);
                             }
                             finally
                             {
