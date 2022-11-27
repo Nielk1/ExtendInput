@@ -446,6 +446,20 @@ namespace ExtendInput.Controller.Test
                 //});
                 //CheckControllerStatusThread.Start();
 
+                if (AccessMode == AccessMode.FullControl)
+                {
+                    byte[] ResetDeadzones = new byte[10] {
+                        0, 5, 18, 100,
+                        0,   // LDeadzone
+                        0,   // RDeadzone
+                        0,   // LTDeadzone
+                        100, // LTDeadzoneEdge
+                        0,   // RTDeadzone
+                        100, // RTDeadzoneEdge
+                    };
+                    _device.WriteReport(ResetDeadzones);
+                }
+
                 Initalized = true;
                 StartOutputThread();
             }
