@@ -248,7 +248,7 @@ namespace ExtendInput.Controller.Test
                         if (HomeButton.IsWriteDirty || MuteButton.IsWriteDirty)
                         {
                             //bool success = _device.WriteReport(new byte[] { 0x00, 0x03, 0x00, (byte)(HomeButton.State == HomeButton.States[1] ? 0x01 : 0x00), (byte)(MuteButton.State == MuteButton.States[1] ? 0x01 : 0x00) });
-                            bool success = _device.WriteReport(new byte[] { 0x00, 0x03, 0x00, (byte)(HomeButton.Brightness * HomeButton.Levels + (HomeButton.Brightness > 0 ? 32 : 0)), (byte)(MuteButton.State == MuteButton.States[1] ? 0x01 : 0x00) });
+                            bool success = _device.WriteReport(new byte[] { 0x00, 0x03, 0x00, (byte)(HomeButton.Brightness * (HomeButton.Levels - 1) + (HomeButton.Brightness > 0 ? 32 : 0)), (byte)(MuteButton.State == MuteButton.States[1] ? 0x01 : 0x00) });
                             HomeButton.CleanWriteDirty();
                             MuteButton.CleanWriteDirty();
                         }
