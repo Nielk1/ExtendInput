@@ -394,9 +394,9 @@ namespace ExtendInput.Controller.Test
                                 (State.Controls["motion"] as ControlMotion).AccelerometerX = (Int16)Math.Max(Math.Min((Int32)BitConverter.ToInt16(reportData.ReportBytes.Skip(42).Take(2).Reverse().ToArray(), 0) * 2, Int16.MaxValue), Int16.MinValue);
                                 (State.Controls["motion"] as ControlMotion).AccelerometerY = (Int16)Math.Max(Math.Min((Int32)BitConverter.ToInt16(reportData.ReportBytes.Skip(44).Take(2).Reverse().ToArray(), 0) * 2, Int16.MaxValue), Int16.MinValue);
                                 (State.Controls["motion"] as ControlMotion).AccelerometerZ = (Int16)Math.Max(Math.Min((Int32)BitConverter.ToInt16(reportData.ReportBytes.Skip(40).Take(2).Reverse().ToArray(), 0) * 2, Int16.MaxValue), Int16.MinValue);
-                                (State.Controls["motion"] as ControlMotion).AngularVelocityX = (Int16)Math.Max(Math.Min((Int32)BitConverter.ToInt16(reportData.ReportBytes.Skip(36).Take(2).Reverse().ToArray(), 0) * 2, Int16.MaxValue), Int16.MinValue);
-                                (State.Controls["motion"] as ControlMotion).AngularVelocityY = (Int16)Math.Max(Math.Min((Int32)BitConverter.ToInt16(reportData.ReportBytes.Skip(38).Take(2).Reverse().ToArray(), 0) * 2, Int16.MaxValue), Int16.MinValue);
-                                (State.Controls["motion"] as ControlMotion).AngularVelocityZ = (Int16)Math.Max(Math.Min((Int32)BitConverter.ToInt16(reportData.ReportBytes.Skip(34).Take(2).Reverse().ToArray(), 0) * 2, Int16.MaxValue), Int16.MinValue);
+                                (State.Controls["motion"] as ControlMotion).AngularVelocityX = BitConverter.ToInt16(reportData.ReportBytes.Skip(36).Take(2).Reverse().ToArray(), 0);
+                                (State.Controls["motion"] as ControlMotion).AngularVelocityY = BitConverter.ToInt16(reportData.ReportBytes.Skip(38).Take(2).Reverse().ToArray(), 0);
+                                (State.Controls["motion"] as ControlMotion).AngularVelocityZ = BitConverter.ToInt16(reportData.ReportBytes.Skip(34).Take(2).Reverse().ToArray(), 0);
                             }
                             finally
                             {
