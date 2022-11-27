@@ -103,7 +103,7 @@ namespace ExtendInput.Controller.Test
                 ControllerTypeCode = new string[] { "DEVICE_UNKNOWN" };
                 ConnectionTypeCode = new string[] { "CONNECTION_UNKNOWN" };
             }
-
+            
 
 
             State.Controls["cluster_left"] = new ControlDPad();
@@ -115,7 +115,7 @@ namespace ExtendInput.Controller.Test
             State.Controls["menu_left"] = new ControlButton();
             State.Controls["menu_right"] = new ControlButton();
             //State.Controls["home"] = new ControlButtonLightToggle(AccessMode) { State = "STATE_LIGHT_ON" };
-            State.Controls["home"] = new ControlButtonLightBrightness(AccessMode, Brightness: 1.0f, Levels: 68);
+            State.Controls["home"] = new ControlButtonLightBrightness(AccessMode, Brightness: 1.0f, Levels: 101);
             State.Controls["stick_left"] = new ControlStickWithClick();
             State.Controls["stick_right"] = new ControlStickWithClick();
 
@@ -248,7 +248,8 @@ namespace ExtendInput.Controller.Test
                         if (HomeButton.IsWriteDirty || MuteButton.IsWriteDirty)
                         {
                             //bool success = _device.WriteReport(new byte[] { 0x00, 0x03, 0x00, (byte)(HomeButton.State == HomeButton.States[1] ? 0x01 : 0x00), (byte)(MuteButton.State == MuteButton.States[1] ? 0x01 : 0x00) });
-                            bool success = _device.WriteReport(new byte[] { 0x00, 0x03, 0x00, (byte)(HomeButton.Brightness * (HomeButton.Levels - 1) + (HomeButton.Brightness > 0 ? 32 : 0)), (byte)(MuteButton.State == MuteButton.States[1] ? 0x01 : 0x00) });
+                            //bool success = _device.WriteReport(new byte[] { 0x00, 0x03, 0x00, (byte)(HomeButton.Brightness * (HomeButton.Levels - 1) + (HomeButton.Brightness > 0 ? 32 : 0)), (byte)(MuteButton.State == MuteButton.States[1] ? 0x01 : 0x00) });
+                            bool success = _device.WriteReport(new byte[] { 0x00, 0x03, 0x00, (byte)(HomeButton.Brightness * (HomeButton.Levels - 1)), (byte)(MuteButton.State == MuteButton.States[1] ? 0x01 : 0x00) });
                             HomeButton.CleanWriteDirty();
                             MuteButton.CleanWriteDirty();
                         }
